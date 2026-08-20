@@ -182,6 +182,12 @@ function KanbanCard({ lead, onOpen, onDragStart, onDragEnd, dragging }) {
         <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-ink/20 group-hover:text-ink/40" />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-sm text-ink">{lead.name}</p>
+          {lead.company && (
+            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink/45">
+              <Building2 className="h-3 w-3 shrink-0" />
+              <span className="truncate">{lead.company}</span>
+            </p>
+          )}
           <div className="mt-1.5 space-y-1">
             {lead.phone ? (
               <a
