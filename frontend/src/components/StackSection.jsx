@@ -1,5 +1,5 @@
 import { Children, cloneElement, useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useMotionValue, useScroll, useTransform } from "framer-motion";
 
 const NAV_OFFSET = 96;
 const STACK_GAP = 12;
@@ -31,6 +31,9 @@ export const StackPanel = ({
 }) => {
   const contentRef = useRef(null);
   const [top, setTop] = useState(NAV_OFFSET);
+  const stacked = Boolean(progress);
+  const fallback = useMotionValue(0);
+  const source = progress || fallback;
 
   useEffect(() => {
     const measure = () => {
@@ -50,8 +53,17 @@ export const StackPanel = ({
 
   const depth = Math.min(total - 1 - index, MAX_DEPTH);
   const targetScale = 1 - depth * 0.04;
-  const scale = useTransform(progress, [index / total, 1], [1, targetScale]);
-  const dimOpacity = useTransform(progress, [index / total, 1], [0, depth * 0.15]);
+  const scale = useTransform(source, [index / total, 1], [1, targetScale]);
+  const dimOpacity = useTransform(source, [index / total, 1], [0, depth * 0.15]);
+
+  // Rendered outside a StackedPanels wrapper: plain, non-sticky section.
+  if (!stacked) {
+    return (
+      <div className={className}>
+        <div className={`relative ${innerClassName}`}>{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div className={`sticky ${className}`} style={{ top, zIndex: index + 1 }}>

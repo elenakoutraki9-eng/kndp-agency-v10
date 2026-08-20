@@ -44,10 +44,8 @@ export default function Landing() {
         </StackedPanels>
         <EditorialMarquee />
         <ServicesSection />
-        <StackedPanels>
-          <HowItWorksSection />
-          <PortfolioSection />
-        </StackedPanels>
+        <HowItWorksSection />
+        <PortfolioSection />
         <ContactSection />
         <FaqSection />
       </main>
