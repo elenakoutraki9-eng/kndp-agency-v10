@@ -1,144 +1,248 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 
+const EASE = [0.22, 1, 0.36, 1];
+
+const imageVariants = {
+  enter: (dir) => ({ x: dir > 0 ? "55%" : "-55%", opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir) => ({ x: dir > 0 ? "-45%" : "45%", opacity: 0 }),
+};
+
+const detailVariants = {
+  enter: { opacity: 0, y: 18 },
+  center: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -14 },
+};
+
 export default function ProjectCarousel({ projects }) {
-  const [index, setIndex] = useState(0);
-  const [metrics, setMetrics] = useState({ width: 340, step: 230 });
+  const [[index, direction], setState] = useState([0, 0]);
+  const [paused, setPaused] = useState(false);
   const total = projects.length;
+  const active = projects[index];
 
+  const paginate = useCallback(
+    (dir) => setState(([i]) => [(i + dir + total) % total, dir]),
+    [total]
+  );
+
+  const goTo = useCallback(
+    (next) => setState(([i]) => [next, next > i ? 1 : -1]),
+    []
+  );
+
+  // Gentle autoplay that pauses on hover / drag / touch.
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   useEffect(() => {
-    const calc = () => {
-      const w = window.innerWidth;
-      if (w < 640) setMetrics({ width: 250, step: 150 });
-      else if (w < 1024) setMetrics({ width: 320, step: 210 });
-      else setMetrics({ width: 380, step: 250 });
-    };
-    calc();
-    window.addEventListener("resize", calc);
-    return () => window.removeEventListener("resize", calc);
-  }, []);
-
-  const go = (dir) => setIndex((i) => (i + dir + total) % total);
+    const id = setInterval(() => {
+      if (!pausedRef.current) paginate(1);
+    }, 5200);
+    return () => clearInterval(id);
+  }, [paginate]);
 
   const handleDragEnd = (_e, info) => {
-    if (info.offset.x < -60) go(1);
-    else if (info.offset.x > 60) go(-1);
+    const power = info.offset.x + info.velocity.x * 0.25;
+    if (power < -70) paginate(1);
+    else if (power > 70) paginate(-1);
   };
 
   return (
-    <div data-testid="portfolio-carousel" className="mt-14">
-      <div className="relative h-[440px] sm:h-[480px] md:h-[520px] overflow-hidden">
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-16 md:w-32 z-20 bg-gradient-to-r from-mist to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-32 z-20 bg-gradient-to-l from-mist to-transparent" />
-
-        <motion.div
-          data-testid="portfolio-carousel-track"
-          className="absolute inset-0 cursor-grab active:cursor-grabbing"
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.6}
-          onDragEnd={handleDragEnd}
-        >
-          {projects.map((p, i) => {
-            let offset = i - index;
-            if (offset > total / 2) offset -= total;
-            if (offset < -total / 2) offset += total;
-            const abs = Math.abs(offset);
-            if (abs > 1) return null;
-            const isActive = offset === 0;
-
-            return (
+    <div
+      data-testid="portfolio-carousel"
+      className="mt-12 md:mt-16"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-stretch">
+        {/* Image stage */}
+        <div className="lg:col-span-7 order-1">
+          <motion.div
+            data-testid="portfolio-carousel-track"
+            className="group relative rounded-[2rem] overflow-hidden bg-ink/5 shadow-2xl shadow-ink/15 aspect-[16/11] cursor-grab active:cursor-grabbing"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.18}
+            onDragStart={() => setPaused(true)}
+            onDragEnd={handleDragEnd}
+          >
+            <AnimatePresence initial={false} custom={direction} mode="popLayout">
               <motion.div
-                key={p.title}
-                data-testid={`portfolio-card-${i}`}
-                onClick={() => !isActive && setIndex(i)}
-                className={`absolute top-0 rounded-3xl border bg-white overflow-hidden shadow-xl ${
-                  isActive
-                    ? "border-baby/50 shadow-baby/25 cursor-default"
-                    : "border-ink/8 shadow-ink/10 cursor-pointer"
-                }`}
-                style={{
-                  left: "50%",
-                  width: metrics.width,
-                  marginLeft: -metrics.width / 2,
+                key={active.title}
+                data-testid={`portfolio-card-${index}`}
+                custom={direction}
+                variants={imageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 220, damping: 30 },
+                  opacity: { duration: 0.45, ease: EASE },
                 }}
-                initial={false}
-                animate={{
-                  x: offset * metrics.step,
-                  scale: isActive ? 1 : 0.9,
-                  opacity: isActive ? 1 : 0.55,
-                  zIndex: 10 - abs,
-                }}
-                transition={{ type: "spring", stiffness: 260, damping: 28 }}
+                className="absolute inset-0"
               >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
-                    src={p.img}
-                    alt={p.title}
-                    loading="lazy"
-                    draggable={false}
-                    className="h-full w-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink/25 to-transparent" />
-                  <span className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-full bg-white/85 backdrop-blur px-3.5 py-1.5 text-xs font-bold text-ink/70">
-                    <span className="h-1.5 w-1.5 rounded-full bg-baby-dark animate-pulse" />
-                    Σε εξέλιξη
-                  </span>
-                  <span className="absolute top-4 right-4 inline-flex rounded-full bg-ink/70 backdrop-blur px-3.5 py-1.5 text-xs font-bold text-white">
-                    {p.tag}
-                  </span>
-                </div>
-                <div className="p-6 md:p-7 flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="font-display text-lg md:text-2xl font-medium tracking-tight">
-                      {p.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-ink/60">{p.desc}</p>
-                  </div>
-                  <span className="mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/10">
-                    <ArrowUpRight className="h-4 w-4" />
-                  </span>
+                {/* Ken Burns zoom */}
+                <motion.img
+                  src={active.img}
+                  alt={active.title}
+                  draggable={false}
+                  initial={{ scale: 1.12 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 6.5, ease: "linear" }}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/5 to-transparent" />
+
+                <span className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full bg-white/85 backdrop-blur px-3.5 py-1.5 text-xs font-bold text-ink/70">
+                  <span className="h-1.5 w-1.5 rounded-full bg-baby-dark animate-pulse" />
+                  Σε εξέλιξη
+                </span>
+                <span className="absolute top-5 right-5 inline-flex rounded-full bg-ink/70 backdrop-blur px-3.5 py-1.5 text-xs font-bold text-white">
+                  {active.tag}
+                </span>
+
+                {/* Title overlay on the image for mobile-friendly context */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-7 lg:hidden">
+                  <h3 className="font-display text-2xl font-medium tracking-tight text-white">
+                    {active.title}
+                  </h3>
                 </div>
               </motion.div>
-            );
-          })}
-        </motion.div>
+            </AnimatePresence>
 
-        <button
-          type="button"
-          onClick={() => go(-1)}
-          data-testid="portfolio-carousel-prev"
-          aria-label="Προηγούμενο έργο"
-          className="group absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 inline-flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-white border border-ink/10 shadow-md transition-[background-color,transform] duration-300 hover:bg-baby hover:scale-105"
-        >
-          <ArrowLeft className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-0.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => go(1)}
-          data-testid="portfolio-carousel-next"
-          aria-label="Επόμενο έργο"
-          className="group absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 inline-flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-white border border-ink/10 shadow-md transition-[background-color,transform] duration-300 hover:bg-baby hover:scale-105"
-        >
-          <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
-        </button>
+            {/* Arrows over the image */}
+            <button
+              type="button"
+              onClick={() => paginate(-1)}
+              data-testid="portfolio-carousel-prev"
+              aria-label="Προηγούμενο έργο"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 inline-flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur border border-white/60 shadow-lg text-ink transition-[background-color,transform,opacity] duration-300 hover:bg-baby hover:scale-105 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => paginate(1)}
+              data-testid="portfolio-carousel-next"
+              aria-label="Επόμενο έργο"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 inline-flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur border border-white/60 shadow-lg text-ink transition-[background-color,transform,opacity] duration-300 hover:bg-baby hover:scale-105 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            >
+              <ArrowRight className="h-5 w-5" />
+            </button>
+          </motion.div>
+        </div>
+
+        {/* Editorial detail panel */}
+        <div className="lg:col-span-5 order-2 flex">
+          <div className="relative w-full rounded-[2rem] border border-ink/8 bg-white p-7 md:p-9 flex flex-col overflow-hidden">
+            <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-baby/25 blur-3xl" />
+
+            <div className="relative flex items-center justify-between">
+              <span className="font-display text-5xl md:text-6xl font-light leading-none text-baby-dark">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="text-sm font-semibold text-ink/40">
+                / {String(total).padStart(2, "0")}
+              </span>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active.title}
+                variants={detailVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.45, ease: EASE }}
+                className="relative mt-6 flex-1"
+              >
+                <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-baby-dark">
+                  {active.tag}
+                </span>
+                <h3 className="mt-5 font-display text-2xl md:text-3xl font-medium tracking-tight leading-tight">
+                  {active.title}
+                </h3>
+                <p className="mt-3 text-sm md:text-base leading-relaxed text-ink/60">
+                  {active.desc}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Progress segments */}
+            <div
+              data-testid="portfolio-carousel-dots"
+              className="relative mt-8 flex items-center gap-1.5"
+            >
+              {projects.map((p, i) => (
+                <button
+                  key={p.title}
+                  type="button"
+                  onClick={() => goTo(i)}
+                  data-testid={`portfolio-dot-${i}`}
+                  aria-label={`Μετάβαση στο έργο ${i + 1}`}
+                  className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-ink/10"
+                >
+                  <motion.span
+                    className="absolute inset-0 rounded-full bg-baby-dark origin-left"
+                    initial={false}
+                    animate={{ scaleX: i === index ? 1 : 0 }}
+                    transition={{ duration: 0.5, ease: EASE }}
+                  />
+                </button>
+              ))}
+            </div>
+
+            <div className="relative mt-6 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => paginate(-1)}
+                  aria-label="Προηγούμενο"
+                  className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
+                >
+                  <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => paginate(1)}
+                  aria-label="Επόμενο"
+                  className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
+                >
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                </button>
+              </div>
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-baby text-ink">
+                <ArrowUpRight className="h-5 w-5" />
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-8 flex items-center justify-center gap-2.5" data-testid="portfolio-carousel-dots">
-        {projects.map((_, i) => (
+      {/* Thumbnail filmstrip */}
+      <div className="mt-6 flex gap-2.5 md:gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+        {projects.map((p, i) => (
           <button
-            key={i}
+            key={p.title}
             type="button"
-            onClick={() => {
-              setIndex(i);
-            }}
-            data-testid={`portfolio-dot-${i}`}
-            aria-label={`Μετάβαση στο έργο ${i + 1}`}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === index ? "w-8 bg-baby-dark" : "w-2 bg-ink/15 hover:bg-ink/30"
+            onClick={() => goTo(i)}
+            aria-label={p.title}
+            className={`relative shrink-0 h-16 w-24 md:h-20 md:w-32 rounded-xl overflow-hidden transition-[transform,box-shadow] duration-300 ${
+              i === index
+                ? "ring-2 ring-baby-dark ring-offset-2 ring-offset-mist scale-100"
+                : "opacity-60 hover:opacity-100 hover:scale-[1.03]"
             }`}
-          />
+          >
+            <img
+              src={p.img}
+              alt={p.title}
+              draggable={false}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+            {i !== index && <div className="absolute inset-0 bg-ink/20" />}
+          </button>
         ))}
       </div>
     </div>

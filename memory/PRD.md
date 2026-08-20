@@ -80,6 +80,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-07: Greek translation review — pushed genuine industry/technical terms to English while keeping all descriptive prose + marketing brand names Greek. Changes: Portfolio tags Εσωτερικό Εργαλείο→Internal Tool, Αυτοματισμός→Automation; ChatPhone labels Πρόγραμμα Επιβράβευσης/Επιβράβευση Πελατών→Loyalty Program, Ταμειακό Σύστημα (POS)→POS Integration; service name Αυτοματισμοί/Αυτοματισμός→Automations/Automation across Hero rotating chip, Marquee, Services card, ServicesPhoneMockup, Contact chip. Kept Greek: Έξυπνα Εργαλεία, Προγράμματα, Έξυπνες Ψηφιακές Λύσεις, all prose/headings. Text-only; no layout/animation/style changes.
 
+- 2026-07: Redesigned Portfolio/Our Work carousel (ProjectCarousel.jsx) — from 3-card coverflow to a premium editorial split-stage: large image panel (Ken-Burns zoom, directional spring slide + crossfade, hover arrows, swipe/drag) beside a detail card (big index "01 / 06", tag kicker, title, description, animated progress segments, prev/next + accent CTA), plus a thumbnail filmstrip below. Gentle autoplay (5.2s) pausing on hover/drag. All project data, descriptions, tags and "Σε εξέλιξη" badge unchanged; testids preserved. Added scrollbar-none utility to index.css.
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.
