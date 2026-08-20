@@ -7,10 +7,7 @@ import useIsMobile from "@/hooks/useIsMobile";
 function App() {
   const isMobile = useIsMobile();
   return (
-    <MotionConfig
-      skipAnimations={isMobile}
-      reducedMotion={isMobile ? "always" : "never"}
-    >
+    <MotionConfig reducedMotion={isMobile ? "always" : "never"}>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />

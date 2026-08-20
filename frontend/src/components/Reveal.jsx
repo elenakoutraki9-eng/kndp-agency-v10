@@ -18,9 +18,9 @@ export const MaskLine = ({ children, delay = 0, className = "" }) => {
     <span className={`block overflow-hidden ${className}`}>
       <motion.span
         className="block will-change-transform"
-        initial={{ y: "110%" }}
-        animate={{ y: 0 }}
-        transition={{ duration: isMobile ? 0.5 : 0.9, delay, ease: EASE }}
+        initial={isMobile ? { opacity: 0 } : { y: "110%" }}
+        animate={isMobile ? { opacity: 1 } : { y: 0 }}
+        transition={{ duration: isMobile ? 0.35 : 0.9, delay: isMobile ? 0 : delay, ease: EASE }}
       >
         {children}
       </motion.span>
@@ -31,8 +31,9 @@ export const MaskLine = ({ children, delay = 0, className = "" }) => {
 export const WordMask = ({ text, accent = [], delay = 0, stagger = 0.07, className = "" }) => {
   const isMobile = useIsMobile();
   const words = text.split(" ");
-  const dur = isMobile ? 0.45 : 0.75;
-  const stag = isMobile ? 0.03 : stagger;
+  const dur = isMobile ? 0.35 : 0.75;
+  const stag = isMobile ? 0 : stagger;
+  const baseDelay = isMobile ? 0 : delay;
   return (
     <span className={className}>
       {words.map((w, i) => (
@@ -47,14 +48,24 @@ export const WordMask = ({ text, accent = [], delay = 0, stagger = 0.07, classNa
             className={`inline-block will-change-transform ${
               accent.includes(w) ? "text-baby-dark italic" : ""
             }`}
-            variants={{
-              hidden: { y: "115%", rotate: isMobile ? 0 : 3 },
-              show: {
-                y: 0,
-                rotate: 0,
-                transition: { duration: dur, delay: delay + i * stag, ease: EASE },
-              },
-            }}
+            variants={
+              isMobile
+                ? {
+                    hidden: { opacity: 0 },
+                    show: {
+                      opacity: 1,
+                      transition: { duration: dur, delay: baseDelay, ease: EASE },
+                    },
+                  }
+                : {
+                    hidden: { y: "115%", rotate: 3 },
+                    show: {
+                      y: 0,
+                      rotate: 0,
+                      transition: { duration: dur, delay: baseDelay + i * stag, ease: EASE },
+                    },
+                  }
+            }
           >
             {w}
             {i < words.length - 1 ? "\u00A0" : ""}
@@ -70,15 +81,10 @@ export const Reveal = ({ children, delay = 0, y = 28, x = 0, scale = 1, classNam
   return (
     <motion.div
       className={className}
-      initial={{
-        opacity: 0,
-        y: isMobile ? Math.min(y, 10) : y,
-        x: isMobile ? 0 : x,
-        scale: isMobile ? 1 : scale,
-      }}
+      initial={isMobile ? { opacity: 0 } : { opacity: 0, y, x, scale }}
       whileInView={{ opacity: 1, y: 0, x: 0, scale: 1 }}
       viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: isMobile ? 0.5 : 0.8, delay: isMobile ? Math.min(delay, 0.15) : delay, ease: EASE }}
+      transition={{ duration: isMobile ? 0.35 : 0.8, delay: isMobile ? 0 : delay, ease: EASE }}
     >
       {children}
     </motion.div>

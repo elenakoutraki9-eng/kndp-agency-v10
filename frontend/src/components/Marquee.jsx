@@ -1,5 +1,6 @@
 import Marquee from "react-fast-marquee";
 import { Asterisk } from "lucide-react";
+import useIsMobile from "@/hooks/useIsMobile";
 
 const items = [
   "Websites",
@@ -13,12 +14,13 @@ const items = [
 ];
 
 export default function EditorialMarquee() {
+  const isMobile = useIsMobile();
   return (
     <div
       data-testid="services-marquee"
       className="bg-baby-light border-y border-baby/30 py-6 md:py-8 overflow-hidden"
     >
-      <Marquee speed={32} gradient={false} pauseOnHover>
+      <Marquee speed={32} gradient={false} pauseOnHover play={!isMobile}>
         {items.map((item) => (
           <span key={item} className="flex items-center">
             <span className="font-display text-2xl md:text-4xl font-medium tracking-tight text-ink px-10 md:px-16">
