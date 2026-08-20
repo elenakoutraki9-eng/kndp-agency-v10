@@ -162,14 +162,15 @@ export default function ContactSection(props) {
                   </div>
                   <div>
                     <label htmlFor="contact-company" className="mb-1.5 block text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
-                      Εταιρεία
+                      Εταιρεία *
                     </label>
                     <input
                       id="contact-company"
                       data-testid="contact-company-input"
+                      required
                       value={form.company}
                       onChange={set("company")}
-                      placeholder="Προαιρετικό"
+                      placeholder="Η εταιρεία σου"
                       className={inputCls}
                     />
                   </div>

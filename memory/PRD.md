@@ -92,6 +92,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-07: Added phone number. Backend ContactMessage/Create gained `phone` (Optional). Contact form has a required "Τηλέφωνο" field (tel input) beside Company. Admin Kanban cards now feature name + phone (tel: link) + email (mailto: link) as the primary info (service tag + date demoted to a small footer row); detail modal shows phone too; CSV export includes a Τηλέφωνο column. Legacy leads without phone show "—".
 
+- 2026-07: Card identity + required company. Kanban cards & detail modal now show company as the bold title with the person's name below (falls back to person name when no company). Contact form's Εταιρεία field is now required. Removed unused Building2 import.
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.

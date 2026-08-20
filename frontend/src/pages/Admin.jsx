@@ -9,7 +9,6 @@ import {
   Inbox,
   Mail,
   Phone,
-  Building2,
   Loader2,
   Download,
   Check,
@@ -181,12 +180,9 @@ function KanbanCard({ lead, onOpen, onDragStart, onDragEnd, dragging }) {
       <div className="flex items-start gap-2">
         <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-ink/20 group-hover:text-ink/40" />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-sm text-ink">{lead.name}</p>
+          <p className="truncate font-semibold text-sm text-ink">{lead.company || lead.name}</p>
           {lead.company && (
-            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink/45">
-              <Building2 className="h-3 w-3 shrink-0" />
-              <span className="truncate">{lead.company}</span>
-            </p>
+            <p className="mt-0.5 truncate text-xs text-ink/50">{lead.name}</p>
           )}
           <div className="mt-1.5 space-y-1">
             {lead.phone ? (
@@ -269,12 +265,9 @@ function DetailModal({ lead, onClose, onUpdate }) {
       >
         <div className="sticky top-0 flex items-start justify-between gap-4 border-b border-ink/8 bg-white/90 backdrop-blur px-6 py-5">
           <div>
-            <h2 className="font-display text-xl font-semibold tracking-tight">{lead.name}</h2>
+            <h2 className="font-display text-xl font-semibold tracking-tight">{lead.company || lead.name}</h2>
             {lead.company && (
-              <p className="mt-0.5 flex items-center gap-1 text-xs text-ink/45">
-                <Building2 className="h-3 w-3" />
-                {lead.company}
-              </p>
+              <p className="mt-0.5 text-xs text-ink/50">{lead.name}</p>
             )}
           </div>
           <button
