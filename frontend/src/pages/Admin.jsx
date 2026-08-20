@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Inbox,
   Mail,
+  Phone,
   Building2,
   Loader2,
   Download,
@@ -181,12 +182,31 @@ function KanbanCard({ lead, onOpen, onDragStart, onDragEnd, dragging }) {
         <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-ink/20 group-hover:text-ink/40" />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-sm text-ink">{lead.name}</p>
-          {lead.company && (
-            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink/45">
-              <Building2 className="h-3 w-3 shrink-0" />
-              <span className="truncate">{lead.company}</span>
-            </p>
-          )}
+          <div className="mt-1.5 space-y-1">
+            {lead.phone ? (
+              <a
+                href={`tel:${lead.phone}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1.5 text-xs font-medium text-ink/70 hover:text-baby-dark"
+              >
+                <Phone className="h-3 w-3 shrink-0 text-baby-dark" />
+                <span className="truncate">{lead.phone}</span>
+              </a>
+            ) : (
+              <p className="flex items-center gap-1.5 text-xs text-ink/30">
+                <Phone className="h-3 w-3 shrink-0" />
+                —
+              </p>
+            )}
+            <a
+              href={`mailto:${lead.email}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 text-xs text-ink/55 hover:text-baby-dark"
+            >
+              <Mail className="h-3 w-3 shrink-0" />
+              <span className="truncate">{lead.email}</span>
+            </a>
+          </div>
           <div className="mt-2.5 flex items-center justify-between gap-2">
             {lead.service ? (
               <span className="inline-flex max-w-[65%] truncate rounded-full bg-baby-light border border-baby/40 px-2.5 py-0.5 text-[11px] font-bold text-baby-dark">
@@ -266,6 +286,12 @@ function DetailModal({ lead, onClose, onUpdate }) {
               <Mail className="h-3.5 w-3.5" />
               {lead.email}
             </a>
+            {lead.phone && (
+              <a href={`tel:${lead.phone}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-baby-dark hover:underline">
+                <Phone className="h-3.5 w-3.5" />
+                {lead.phone}
+              </a>
+            )}
             {lead.service && (
               <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-xs font-bold text-baby-dark">
                 {lead.service}
@@ -435,10 +461,10 @@ function Dashboard({ token, onLogout }) {
   };
 
   const exportCSV = () => {
-    const headers = ["Όνομα", "Εταιρεία", "Email", "Υπηρεσία", "Status", "Μήνυμα", "Σημειώσεις", "Ημερομηνία"];
+    const headers = ["Όνομα", "Email", "Τηλέφωνο", "Εταιρεία", "Υπηρεσία", "Status", "Μήνυμα", "Σημειώσεις", "Ημερομηνία"];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const rows = visible.map((m) => [
-      m.name, m.company || "", m.email, m.service || "", m.status || "New", m.message, m.notes || "", formatDate(m.created_at),
+      m.name, m.email, m.phone || "", m.company || "", m.service || "", m.status || "New", m.message, m.notes || "", formatDate(m.created_at),
     ]);
     const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });

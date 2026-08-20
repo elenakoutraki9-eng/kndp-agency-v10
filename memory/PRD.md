@@ -90,6 +90,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-07: Redesigned admin dashboard from cards to a KANBAN board (user: compact + kanban + minimal card info). 4 columns (New/Contacted/Converted/Not Interested) with colored headers + counts. Compact draggable lead cards show name, company, service tag, short date only. Native HTML5 drag-and-drop moves a card between columns to change status (optimistic update + PATCH, persists; drop reads id from state with dataTransfer fallback). Click a card opens a detail modal (email, message, status select, notes editor + save). Kept service filter, date sort, Export CSV. Verified drag persistence via reload.
 
+- 2026-07: Added phone number. Backend ContactMessage/Create gained `phone` (Optional). Contact form has a required "Τηλέφωνο" field (tel input) beside Company. Admin Kanban cards now feature name + phone (tel: link) + email (mailto: link) as the primary info (service tag + date demoted to a small footer row); detail modal shows phone too; CSV export includes a Τηλέφωνο column. Legacy leads without phone show "—".
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.

@@ -40,6 +40,7 @@ class ContactMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     email: str
+    phone: Optional[str] = None
     company: Optional[str] = None
     service: Optional[str] = None
     message: str
@@ -51,6 +52,7 @@ class ContactMessage(BaseModel):
 class ContactMessageCreate(BaseModel):
     name: str
     email: str
+    phone: Optional[str] = None
     company: Optional[str] = None
     service: Optional[str] = None
     message: str

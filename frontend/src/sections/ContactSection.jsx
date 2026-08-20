@@ -21,7 +21,7 @@ const inputCls =
   "w-full rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/25";
 
 export default function ContactSection(props) {
-  const [form, setForm] = useState({ name: "", email: "", company: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", message: "" });
   const [service, setService] = useState(null);
   const [sending, setSending] = useState(false);
 
@@ -34,7 +34,7 @@ export default function ContactSection(props) {
     try {
       await axios.post(`${API}/contact`, { ...form, service });
       toast.success("Το μήνυμα εστάλη — θα επικοινωνήσουμε σύντομα μαζί σου.");
-      setForm({ name: "", email: "", company: "", message: "" });
+      setForm({ name: "", email: "", phone: "", company: "", message: "" });
       setService(null);
     } catch {
       toast.error("Κάτι πήγε στραβά. Δοκίμασε ξανά.");
@@ -144,18 +144,35 @@ export default function ContactSection(props) {
                   </div>
                 </div>
 
-                <div className="mt-3">
-                  <label htmlFor="contact-company" className="mb-1.5 block text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
-                    Εταιρεία
-                  </label>
-                  <input
-                    id="contact-company"
-                    data-testid="contact-company-input"
-                    value={form.company}
-                    onChange={set("company")}
-                    placeholder="Προαιρετικό"
-                    className={inputCls}
-                  />
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="contact-phone" className="mb-1.5 block text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
+                      Τηλέφωνο *
+                    </label>
+                    <input
+                      id="contact-phone"
+                      data-testid="contact-phone-input"
+                      required
+                      type="tel"
+                      value={form.phone}
+                      onChange={set("phone")}
+                      placeholder="π.χ. 69XXXXXXXX"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="contact-company" className="mb-1.5 block text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
+                      Εταιρεία
+                    </label>
+                    <input
+                      id="contact-company"
+                      data-testid="contact-company-input"
+                      value={form.company}
+                      onChange={set("company")}
+                      placeholder="Προαιρετικό"
+                      className={inputCls}
+                    />
+                  </div>
                 </div>
 
                 <div className="mt-4">
