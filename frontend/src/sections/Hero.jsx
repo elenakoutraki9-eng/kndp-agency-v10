@@ -6,11 +6,13 @@ import HeroBackground, { useMouseParallax } from "@/components/HeroBackground";
 import ChatPhone from "@/components/ChatPhone";
 import { StackPanel } from "@/components/StackSection";
 import { scrollToId } from "@/lib/scroll";
+import useIsMobile from "@/hooks/useIsMobile";
 
 const rotatingWords = ["Websites", "Web Apps", "Έξυπνα Εργαλεία", "Automations"];
 
 export default function Hero(props) {
   const heroRef = useRef(null);
+  const isMobile = useIsMobile();
   const { mx, my, onMouseMove, onMouseLeave } = useMouseParallax();
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -94,23 +96,23 @@ export default function Hero(props) {
 
         <div className="lg:col-span-5 relative top-[4px] md:-top-[4px] lg:-top-[12px]">
           <motion.div
-            style={{ x: imgMX, y: imgMY }}
+            style={{ x: isMobile ? 0 : imgMX, y: isMobile ? 0 : imgMY }}
             className="[zoom:0.89] sm:[zoom:0.87] lg:[zoom:0.8] origin-top"
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 24 }}
+              initial={{ opacity: 0, scale: isMobile ? 1 : 0.96, y: isMobile ? 10 : 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: isMobile ? 0.5 : 1, delay: isMobile ? 0.15 : 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="relative w-full flex justify-center"
             >
-              <motion.div style={{ y: phoneY }} className="will-change-transform">
+              <motion.div style={{ y: isMobile ? 0 : phoneY }} className="will-change-transform">
                 <ChatPhone />
               </motion.div>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, y: -16 }}
+              initial={{ opacity: 0, y: isMobile ? -8 : -16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.1 }}
+              transition={{ duration: isMobile ? 0.5 : 0.8, delay: isMobile ? 0.3 : 1.1 }}
               data-testid="hero-rotating-chip"
               className="absolute -top-5 -right-2 md:-right-6 rounded-full bg-ink text-white pl-4 pr-5 py-2.5 flex items-center gap-2.5 shadow-xl text-sm font-semibold"
             >
@@ -129,10 +131,12 @@ export default function Hero(props) {
               </AnimatePresence>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: isMobile ? 10 : 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.25 }}
-              className="absolute -bottom-6 -left-4 md:-left-10 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl px-6 py-5 animate-float-soft"
+              transition={{ duration: isMobile ? 0.5 : 0.8, delay: isMobile ? 0.35 : 1.25 }}
+              className={`absolute -bottom-6 -left-4 md:-left-10 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl px-6 py-5 ${
+                isMobile ? "" : "animate-float-soft"
+              }`}
             >
               <p className="text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
                 Ολοκληρωμένη υπηρεσία

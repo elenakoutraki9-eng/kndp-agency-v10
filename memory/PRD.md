@@ -96,6 +96,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-07: Made the Our Work / Portfolio section more compact so more fits on one screen. Reduced section padding (py-20/28→12/16), heading (6xl→5xl, mt-5→3), intro text (lg→base, mt-6→4); carousel: top margin 12/16→8/10, image aspect 16/11→16/9, detail padding 7/9→5/7, index 5xl/6xl→4xl/5xl, title 2xl/3xl→xl/2xl, tighter internal spacing, nav buttons 11→10, thumbnails 16x24/20x32→12x20/14x24; CTA block padding/text reduced. Layout/animations unchanged.
 
+- 2026-07: Mobile animation reductions (<=767px via new hooks/useIsMobile matchMedia; desktop fully intact). Reveal/WordMask/MaskLine: shorter durations, less/no movement + rotation, tighter stagger. Magnetic: static wrapper on touch. ParallaxY: output 0 on mobile. Hero phone mockup: disabled scroll parallax (phoneY) + pointer parallax (imgMX/imgMY), simplified entrance (no scale pop, smaller y, shorter duration), floating card's animate-float-soft loop removed on mobile. No layout/content/styling changes. ServicesPhoneMockup + ChatPhone demo interactions left as-is (core content, not parallax).
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.

@@ -8,24 +8,31 @@ import {
   useTransform,
   animate,
 } from "framer-motion";
+import useIsMobile from "@/hooks/useIsMobile";
 
 const EASE = [0.22, 1, 0.36, 1];
 
-export const MaskLine = ({ children, delay = 0, className = "" }) => (
-  <span className={`block overflow-hidden ${className}`}>
-    <motion.span
-      className="block will-change-transform"
-      initial={{ y: "110%" }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.9, delay, ease: EASE }}
-    >
-      {children}
-    </motion.span>
-  </span>
-);
+export const MaskLine = ({ children, delay = 0, className = "" }) => {
+  const isMobile = useIsMobile();
+  return (
+    <span className={`block overflow-hidden ${className}`}>
+      <motion.span
+        className="block will-change-transform"
+        initial={{ y: "110%" }}
+        animate={{ y: 0 }}
+        transition={{ duration: isMobile ? 0.5 : 0.9, delay, ease: EASE }}
+      >
+        {children}
+      </motion.span>
+    </span>
+  );
+};
 
 export const WordMask = ({ text, accent = [], delay = 0, stagger = 0.07, className = "" }) => {
+  const isMobile = useIsMobile();
   const words = text.split(" ");
+  const dur = isMobile ? 0.45 : 0.75;
+  const stag = isMobile ? 0.03 : stagger;
   return (
     <span className={className}>
       {words.map((w, i) => (
@@ -41,11 +48,11 @@ export const WordMask = ({ text, accent = [], delay = 0, stagger = 0.07, classNa
               accent.includes(w) ? "text-baby-dark italic" : ""
             }`}
             variants={{
-              hidden: { y: "115%", rotate: 3 },
+              hidden: { y: "115%", rotate: isMobile ? 0 : 3 },
               show: {
                 y: 0,
                 rotate: 0,
-                transition: { duration: 0.75, delay: delay + i * stagger, ease: EASE },
+                transition: { duration: dur, delay: delay + i * stag, ease: EASE },
               },
             }}
           >
@@ -58,27 +65,36 @@ export const WordMask = ({ text, accent = [], delay = 0, stagger = 0.07, classNa
   );
 };
 
-export const Reveal = ({ children, delay = 0, y = 28, x = 0, scale = 1, className = "" }) => (
-  <motion.div
-    className={className}
-    initial={{ opacity: 0, y, x, scale }}
-    whileInView={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-    viewport={{ once: true, margin: "-80px" }}
-    transition={{ duration: 0.8, delay, ease: EASE }}
-  >
-    {children}
-  </motion.div>
-);
+export const Reveal = ({ children, delay = 0, y = 28, x = 0, scale = 1, className = "" }) => {
+  const isMobile = useIsMobile();
+  return (
+    <motion.div
+      className={className}
+      initial={{
+        opacity: 0,
+        y: isMobile ? Math.min(y, 10) : y,
+        x: isMobile ? 0 : x,
+        scale: isMobile ? 1 : scale,
+      }}
+      whileInView={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: isMobile ? 0.5 : 0.8, delay: isMobile ? Math.min(delay, 0.15) : delay, ease: EASE }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 export const ParallaxY = ({ children, distance = 40, className = "" }) => {
+  const isMobile = useIsMobile();
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   });
-  const y = useTransform(scrollYProgress, [0, 1], [distance, -distance]);
+  const yRange = useTransform(scrollYProgress, [0, 1], [distance, -distance]);
   return (
-    <motion.div ref={ref} style={{ y }} className={className}>
+    <motion.div ref={ref} style={{ y: isMobile ? 0 : yRange }} className={className}>
       {children}
     </motion.div>
   );
@@ -105,6 +121,7 @@ export const Counter = ({ to, suffix = "", className = "" }) => {
 };
 
 export const Magnetic = ({ children, strength = 0.3, className = "" }) => {
+  const isMobile = useIsMobile();
   const ref = useRef(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -120,6 +137,11 @@ export const Magnetic = ({ children, strength = 0.3, className = "" }) => {
     x.set(0);
     y.set(0);
   };
+
+  // No cursor on touch devices — render static wrapper to avoid pointer transforms.
+  if (isMobile) {
+    return <div className={`inline-block ${className}`}>{children}</div>;
+  }
 
   return (
     <motion.div
