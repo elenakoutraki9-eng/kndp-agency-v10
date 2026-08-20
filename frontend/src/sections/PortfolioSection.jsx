@@ -47,7 +47,7 @@ export default function PortfolioSection(props) {
   return (
     <StackPanel
       {...props}
-      innerClassName="rounded-[2.5rem] bg-mist border border-ink/5 shadow-2xl shadow-ink/10 overflow-hidden"
+      innerClassName="bg-mist border border-ink/5 shadow-2xl shadow-ink/10 overflow-hidden"
     >
       <section id="portfolio" data-testid="portfolio-section" className="py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-6 md:px-10">
