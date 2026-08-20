@@ -51,16 +51,16 @@ export default function ProjectCarousel({ projects }) {
   return (
     <div
       data-testid="portfolio-carousel"
-      className="mt-8 md:mt-10"
+      className="mt-6 md:mt-8"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-stretch max-w-5xl mx-auto">
         {/* Image stage */}
         <div className="lg:col-span-7 order-1">
           <motion.div
             data-testid="portfolio-carousel-track"
-            className="group relative rounded-[2rem] overflow-hidden bg-ink/5 shadow-2xl shadow-ink/15 aspect-[16/9] cursor-grab active:cursor-grabbing"
+            className="group relative rounded-[1.5rem] overflow-hidden bg-ink/5 shadow-xl shadow-ink/15 aspect-[16/9] cursor-grab active:cursor-grabbing"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.18}
@@ -135,14 +135,14 @@ export default function ProjectCarousel({ projects }) {
 
         {/* Editorial detail panel */}
         <div className="lg:col-span-5 order-2 flex">
-          <div className="relative w-full rounded-[2rem] border border-ink/8 bg-white p-5 md:p-7 flex flex-col overflow-hidden">
+          <div className="relative w-full rounded-[1.5rem] border border-ink/8 bg-white p-4 md:p-5 flex flex-col overflow-hidden">
             <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-baby/25 blur-3xl" />
 
             <div className="relative flex items-center justify-between">
-              <span className="font-display text-4xl md:text-5xl font-light leading-none text-baby-dark">
+              <span className="font-display text-3xl md:text-4xl font-light leading-none text-baby-dark">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="text-sm font-semibold text-ink/40">
+              <span className="text-xs font-semibold text-ink/40">
                 / {String(total).padStart(2, "0")}
               </span>
             </div>
@@ -155,15 +155,15 @@ export default function ProjectCarousel({ projects }) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.45, ease: EASE }}
-                className="relative mt-4 flex-1"
+                className="relative mt-3 flex-1"
               >
-                <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-baby-dark">
+                <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-baby-dark">
                   {active.tag}
                 </span>
-                <h3 className="mt-3 font-display text-xl md:text-2xl font-medium tracking-tight leading-tight">
+                <h3 className="mt-2.5 font-display text-lg md:text-xl font-medium tracking-tight leading-tight">
                   {active.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink/60">
+                <p className="mt-2 text-xs md:text-sm leading-relaxed text-ink/60">
                   {active.desc}
                 </p>
               </motion.div>
@@ -172,7 +172,7 @@ export default function ProjectCarousel({ projects }) {
             {/* Progress segments */}
             <div
               data-testid="portfolio-carousel-dots"
-              className="relative mt-5 flex items-center gap-1.5"
+              className="relative mt-4 flex items-center gap-1.5"
             >
               {projects.map((p, i) => (
                 <button
@@ -193,27 +193,27 @@ export default function ProjectCarousel({ projects }) {
               ))}
             </div>
 
-            <div className="relative mt-5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className="relative mt-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => paginate(-1)}
                   aria-label="Προηγούμενο"
-                  className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
+                  className="group inline-flex h-9 w-9 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
                 >
-                  <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
+                  <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => paginate(1)}
                   aria-label="Επόμενο"
-                  className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
+                  className="group inline-flex h-9 w-9 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
                 >
-                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </button>
               </div>
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-baby text-ink">
-                <ArrowUpRight className="h-5 w-5" />
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-baby text-ink">
+                <ArrowUpRight className="h-4 w-4" />
               </span>
             </div>
           </div>
@@ -221,14 +221,14 @@ export default function ProjectCarousel({ projects }) {
       </div>
 
       {/* Thumbnail filmstrip */}
-      <div className="mt-4 flex gap-2.5 md:gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+      <div className="mt-3 flex justify-center gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
         {projects.map((p, i) => (
           <button
             key={p.title}
             type="button"
             onClick={() => goTo(i)}
             aria-label={p.title}
-            className={`relative shrink-0 h-12 w-20 md:h-14 md:w-24 rounded-lg overflow-hidden transition-[transform,box-shadow] duration-300 ${
+            className={`relative shrink-0 h-10 w-16 md:h-11 md:w-20 rounded-lg overflow-hidden transition-[transform,box-shadow] duration-300 ${
               i === index
                 ? "ring-2 ring-baby-dark ring-offset-2 ring-offset-mist scale-100"
                 : "opacity-60 hover:opacity-100 hover:scale-[1.03]"
