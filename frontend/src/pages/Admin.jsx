@@ -280,23 +280,47 @@ function DetailModal({ lead, onClose, onUpdate }) {
         </div>
 
         <div className="px-6 py-5 space-y-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-baby-dark hover:underline">
-              <Mail className="h-3.5 w-3.5" />
-              {lead.email}
-            </a>
-            {lead.phone && (
-              <a href={`tel:${lead.phone}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-baby-dark hover:underline">
-                <Phone className="h-3.5 w-3.5" />
-                {lead.phone}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+            <div>
+              <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Εταιρεία</span>
+              <p className="mt-1 text-sm font-medium text-ink">{lead.company || "—"}</p>
+            </div>
+            <div>
+              <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Όνομα</span>
+              <p className="mt-1 text-sm font-medium text-ink">{lead.name}</p>
+            </div>
+            <div>
+              <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Email</span>
+              <a href={`mailto:${lead.email}`} className="mt-1 flex items-center gap-1.5 text-sm font-medium text-baby-dark hover:underline break-all">
+                <Mail className="h-3.5 w-3.5 shrink-0" />
+                {lead.email}
               </a>
-            )}
-            {lead.service && (
-              <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-xs font-bold text-baby-dark">
-                {lead.service}
-              </span>
-            )}
-            <span className="text-xs text-ink/40">{formatDate(lead.created_at)}</span>
+            </div>
+            <div>
+              <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Τηλέφωνο</span>
+              {lead.phone ? (
+                <a href={`tel:${lead.phone}`} className="mt-1 flex items-center gap-1.5 text-sm font-medium text-baby-dark hover:underline">
+                  <Phone className="h-3.5 w-3.5 shrink-0" />
+                  {lead.phone}
+                </a>
+              ) : (
+                <p className="mt-1 text-sm text-ink/40">—</p>
+              )}
+            </div>
+            <div>
+              <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Υπηρεσία</span>
+              {lead.service ? (
+                <span className="mt-1 inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-xs font-bold text-baby-dark">
+                  {lead.service}
+                </span>
+              ) : (
+                <p className="mt-1 text-sm text-ink/40">—</p>
+              )}
+            </div>
+            <div>
+              <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Ημερομηνία</span>
+              <p className="mt-1 text-sm text-ink/70">{formatDate(lead.created_at)}</p>
+            </div>
           </div>
 
           <div>
