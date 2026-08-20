@@ -49,13 +49,13 @@ export default function PortfolioSection(props) {
       {...props}
       innerClassName="rounded-[2.5rem] bg-mist border border-ink/5 shadow-2xl shadow-ink/10 overflow-hidden"
     >
-      <section id="portfolio" data-testid="portfolio-section" className="py-20 md:py-28">
+      <section id="portfolio" data-testid="portfolio-section" className="py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-6 md:px-10">
           <Reveal>
             <Kicker>Έργα</Kicker>
             <h2
               data-testid="portfolio-headline"
-              className="mt-5 font-display font-medium tracking-tight text-4xl md:text-6xl"
+              className="mt-3 font-display font-medium tracking-tight text-3xl md:text-5xl"
             >
               <WordMask text="Η δουλειά μας" className="block" />
               <WordMask
@@ -65,7 +65,7 @@ export default function PortfolioSection(props) {
                 className="block"
               />
             </h2>
-            <p className="mt-6 max-w-2xl text-base md:text-lg leading-relaxed text-ink/60">
+            <p className="mt-4 max-w-2xl text-sm md:text-base leading-relaxed text-ink/60">
               Δείτε το είδος των έργων που έχουμε αυτή τη στιγμή υπό εξέλιξη.
               Πλήρη case studies έρχονται σύντομα — ή το δικό σου έργο θα
               μπορούσε να είναι το πρώτο που θα παρουσιάσουμε.
@@ -76,17 +76,17 @@ export default function PortfolioSection(props) {
             <ProjectCarousel projects={projects} />
           </Reveal>
 
-          <Reveal className="mt-16 md:mt-20">
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-ink text-white px-8 md:px-14 py-14 md:py-16 grain text-center">
+          <Reveal className="mt-10 md:mt-12">
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-ink text-white px-8 md:px-14 py-10 md:py-12 grain text-center">
               <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-baby/20 blur-3xl" />
-              <p className="relative font-display text-2xl md:text-4xl font-medium tracking-tight max-w-2xl mx-auto">
+              <p className="relative font-display text-xl md:text-3xl font-medium tracking-tight max-w-2xl mx-auto">
                 Έρχονται περισσότερα έργα — το δικό σου μπορεί να είναι το επόμενο.
               </p>
               <Magnetic strength={0.25} className="relative">
                 <button
                   onClick={() => scrollToId("#contact")}
                   data-testid="portfolio-cta-button"
-                  className="btn-shine group mt-9 inline-flex items-center gap-2 rounded-full bg-baby px-8 py-4 text-sm font-bold text-ink transition-transform duration-300 hover:scale-105"
+                  className="btn-shine group mt-7 inline-flex items-center gap-2 rounded-full bg-baby px-8 py-3.5 text-sm font-bold text-ink transition-transform duration-300 hover:scale-105"
                 >
                   Ζήτησε Δωρεάν Προσφορά
                   <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:rotate-45" />

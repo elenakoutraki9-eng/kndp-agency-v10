@@ -51,7 +51,7 @@ export default function ProjectCarousel({ projects }) {
   return (
     <div
       data-testid="portfolio-carousel"
-      className="mt-12 md:mt-16"
+      className="mt-8 md:mt-10"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -60,7 +60,7 @@ export default function ProjectCarousel({ projects }) {
         <div className="lg:col-span-7 order-1">
           <motion.div
             data-testid="portfolio-carousel-track"
-            className="group relative rounded-[2rem] overflow-hidden bg-ink/5 shadow-2xl shadow-ink/15 aspect-[16/11] cursor-grab active:cursor-grabbing"
+            className="group relative rounded-[2rem] overflow-hidden bg-ink/5 shadow-2xl shadow-ink/15 aspect-[16/9] cursor-grab active:cursor-grabbing"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.18}
@@ -135,11 +135,11 @@ export default function ProjectCarousel({ projects }) {
 
         {/* Editorial detail panel */}
         <div className="lg:col-span-5 order-2 flex">
-          <div className="relative w-full rounded-[2rem] border border-ink/8 bg-white p-7 md:p-9 flex flex-col overflow-hidden">
+          <div className="relative w-full rounded-[2rem] border border-ink/8 bg-white p-5 md:p-7 flex flex-col overflow-hidden">
             <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-baby/25 blur-3xl" />
 
             <div className="relative flex items-center justify-between">
-              <span className="font-display text-5xl md:text-6xl font-light leading-none text-baby-dark">
+              <span className="font-display text-4xl md:text-5xl font-light leading-none text-baby-dark">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="text-sm font-semibold text-ink/40">
@@ -155,15 +155,15 @@ export default function ProjectCarousel({ projects }) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.45, ease: EASE }}
-                className="relative mt-6 flex-1"
+                className="relative mt-4 flex-1"
               >
-                <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-baby-dark">
+                <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-baby-dark">
                   {active.tag}
                 </span>
-                <h3 className="mt-5 font-display text-2xl md:text-3xl font-medium tracking-tight leading-tight">
+                <h3 className="mt-3 font-display text-xl md:text-2xl font-medium tracking-tight leading-tight">
                   {active.title}
                 </h3>
-                <p className="mt-3 text-sm md:text-base leading-relaxed text-ink/60">
+                <p className="mt-2 text-sm leading-relaxed text-ink/60">
                   {active.desc}
                 </p>
               </motion.div>
@@ -172,7 +172,7 @@ export default function ProjectCarousel({ projects }) {
             {/* Progress segments */}
             <div
               data-testid="portfolio-carousel-dots"
-              className="relative mt-8 flex items-center gap-1.5"
+              className="relative mt-5 flex items-center gap-1.5"
             >
               {projects.map((p, i) => (
                 <button
@@ -193,13 +193,13 @@ export default function ProjectCarousel({ projects }) {
               ))}
             </div>
 
-            <div className="relative mt-6 flex items-center justify-between">
+            <div className="relative mt-5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => paginate(-1)}
                   aria-label="Προηγούμενο"
-                  className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
+                  className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
                 >
                   <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
                 </button>
@@ -207,12 +207,12 @@ export default function ProjectCarousel({ projects }) {
                   type="button"
                   onClick={() => paginate(1)}
                   aria-label="Επόμενο"
-                  className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
+                  className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink/12 text-ink transition-[background-color,border-color,transform] duration-300 hover:bg-ink hover:text-white hover:scale-105"
                 >
                   <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </button>
               </div>
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-baby text-ink">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-baby text-ink">
                 <ArrowUpRight className="h-5 w-5" />
               </span>
             </div>
@@ -221,14 +221,14 @@ export default function ProjectCarousel({ projects }) {
       </div>
 
       {/* Thumbnail filmstrip */}
-      <div className="mt-6 flex gap-2.5 md:gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+      <div className="mt-4 flex gap-2.5 md:gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
         {projects.map((p, i) => (
           <button
             key={p.title}
             type="button"
             onClick={() => goTo(i)}
             aria-label={p.title}
-            className={`relative shrink-0 h-16 w-24 md:h-20 md:w-32 rounded-xl overflow-hidden transition-[transform,box-shadow] duration-300 ${
+            className={`relative shrink-0 h-12 w-20 md:h-14 md:w-24 rounded-lg overflow-hidden transition-[transform,box-shadow] duration-300 ${
               i === index
                 ? "ring-2 ring-baby-dark ring-offset-2 ring-offset-mist scale-100"
                 : "opacity-60 hover:opacity-100 hover:scale-[1.03]"
