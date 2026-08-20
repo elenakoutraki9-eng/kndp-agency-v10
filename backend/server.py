@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, Header, Depends
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -18,8 +18,20 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'kndp2025')
+
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
+
+
+class AdminLogin(BaseModel):
+    password: str
+
+
+def verify_admin(x_admin_token: Optional[str] = Header(default=None)):
+    if x_admin_token != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return True
 
 
 class ContactMessage(BaseModel):
@@ -58,6 +70,22 @@ async def create_contact_message(input: ContactMessageCreate):
 
 @api_router.get("/contact", response_model=List[ContactMessage])
 async def get_contact_messages():
+    messages = await db.contact_messages.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    for m in messages:
+        if isinstance(m.get('created_at'), str):
+            m['created_at'] = datetime.fromisoformat(m['created_at'])
+    return messages
+
+
+@api_router.post("/admin/login")
+async def admin_login(body: AdminLogin):
+    if body.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Λάθος κωδικός")
+    return {"token": ADMIN_PASSWORD}
+
+
+@api_router.get("/admin/contacts", response_model=List[ContactMessage])
+async def admin_contacts(_: bool = Depends(verify_admin)):
     messages = await db.contact_messages.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     for m in messages:
         if isinstance(m.get('created_at'), str):

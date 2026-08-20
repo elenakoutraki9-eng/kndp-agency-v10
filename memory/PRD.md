@@ -82,6 +82,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-07: Redesigned Portfolio/Our Work carousel (ProjectCarousel.jsx) — from 3-card coverflow to a premium editorial split-stage: large image panel (Ken-Burns zoom, directional spring slide + crossfade, hover arrows, swipe/drag) beside a detail card (big index "01 / 06", tag kicker, title, description, animated progress segments, prev/next + accent CTA), plus a thumbnail filmstrip below. Gentle autoplay (5.2s) pausing on hover/drag. All project data, descriptions, tags and "Σε εξέλιξη" badge unchanged; testids preserved. Added scrollbar-none utility to index.css.
 
+- 2026-07: Admin dashboard at /admin (P0 backlog item). Backend: ADMIN_PASSWORD env (default kndp2025), POST /api/admin/login returns token, GET /api/admin/contacts protected via X-Admin-Token header. Frontend: introduced react-router-dom (App.js now BrowserRouter with "/"→Landing, "/admin"→Admin; existing landing moved verbatim into pages/Landing.jsx — no visual change). pages/Admin.jsx = simple password login (token in localStorage) + clean dashboard showing all leads (name, company, email, service tag, message, date) as a desktop table / mobile cards, with refresh + logout. Discreet "Admin" link added at very bottom of Footer. No existing sections/styling/animations changed.
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.

@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Magnetic } from "@/components/Reveal";
 import { scrollToId } from "@/lib/scroll";
 
@@ -71,7 +72,16 @@ export default function Footer() {
 
         <div className="relative border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
           <span>© {new Date().getFullYear()} KNDP. Με επιφύλαξη παντός δικαιώματος.</span>
-          <span>Φτιαγμένο με φροντίδα, παραδομένο με σιγουριά.</span>
+          <div className="flex items-center gap-4">
+            <span>Φτιαγμένο με φροντίδα, παραδομένο με σιγουριά.</span>
+            <Link
+              to="/admin"
+              data-testid="footer-admin-link"
+              className="text-white/25 hover:text-baby transition-colors duration-300"
+            >
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
