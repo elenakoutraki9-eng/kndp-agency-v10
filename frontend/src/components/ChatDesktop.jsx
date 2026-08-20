@@ -1,134 +1,71 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
-  UtensilsCrossed,
-  Scissors,
-  Dumbbell,
-  ShoppingBag,
-  CalendarCheck,
-  Gift,
-  Users,
-  MessageSquare,
-  TrendingUp,
-  Bell,
-  Boxes,
-  CreditCard,
   Lock,
   Sparkles,
+  Loader2,
+  Globe,
+  AppWindow,
+  Smartphone,
+  Wrench,
+  Zap,
+  Code2,
+  Boxes,
+  MessagesSquare,
 } from "lucide-react";
+import { scrollToId } from "@/lib/scroll";
 
-const BUSINESSES = [
-  {
-    name: "Εστιατόριο",
-    icon: UtensilsCrossed,
-    results: [
-      { label: "Online Μενού & Παραγγελίες", icon: UtensilsCrossed },
-      { label: "Booking System", icon: CalendarCheck },
-      { label: "Loyalty Program", icon: Gift },
-      { label: "Εργαλείο Προγραμματισμού Προσωπικού", icon: Users },
-    ],
-  },
-  {
-    name: "Κομμωτήριο",
-    icon: Scissors,
-    results: [
-      { label: "Online Κράτηση Ραντεβού", icon: CalendarCheck },
-      { label: "Loyalty Program", icon: Gift },
-      { label: "Διαχείριση Προγράμματος Προσωπικού", icon: Users },
-      { label: "Υπενθυμίσεις Ραντεβού με SMS", icon: MessageSquare },
-    ],
-  },
-  {
-    name: "Γυμναστήριο",
-    icon: Dumbbell,
-    results: [
-      { label: "Κράτηση & Πρόγραμμα Μαθημάτων", icon: CalendarCheck },
-      { label: "Πλατφόρμα Διαχείρισης Συνδρομών", icon: CreditCard },
-      { label: "Εφαρμογή Παρακολούθησης Προόδου", icon: TrendingUp },
-      { label: "Αυτόματες Υπενθυμίσεις Ανανέωσης", icon: Bell },
-    ],
-  },
-  {
-    name: "Κατάστημα Λιανικής",
-    icon: ShoppingBag,
-    results: [
-      { label: "Online Store", icon: ShoppingBag },
-      { label: "Εργαλείο Διαχείρισης Αποθήκης", icon: Boxes },
-      { label: "Loyalty Program", icon: Gift },
-      { label: "POS Integration", icon: CreditCard },
-    ],
-  },
-];
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const CATEGORY_META = {
+  "Ιστοσελίδες": { icon: Globe },
+  "Web Apps": { icon: AppWindow },
+  "Mobile Apps": { icon: Smartphone },
+  "Έξυπνα Εργαλεία": { icon: Sparkles },
+  "Web Tools": { icon: Wrench },
+  "Automations": { icon: Zap },
+  "Προγράμματα": { icon: Code2 },
+};
 
-const Cursor = () => (
-  <motion.span
-    animate={{ opacity: [1, 1, 0, 0] }}
-    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-    className="inline-block w-[2px] h-4 bg-baby-dark ml-0.5 align-middle"
-  />
-);
+const SUGGESTIONS = ["Καφετέρια", "Γυμναστήριο", "Κομμωτήριο", "Ηλεκτρονικό κατάστημα"];
 
 export default function ChatDesktop() {
-  const [bizIndex, setBizIndex] = useState(0);
-  const [typedText, setTypedText] = useState("");
-  const [phase, setPhase] = useState("empty");
-  const [resultsShown, setResultsShown] = useState(0);
+  const [business, setBusiness] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | loading | done | error
+  const [ideas, setIdeas] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [submitted, setSubmitted] = useState("");
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      let biz = 0;
-      while (!cancelled) {
-        const business = BUSINESSES[biz % BUSINESSES.length];
-        setBizIndex(biz % BUSINESSES.length);
-        setPhase("empty");
-        setTypedText("");
-        setResultsShown(0);
-        await sleep(500);
-        if (cancelled) return;
-
-        setPhase("typing");
-        for (let i = 1; i <= business.name.length; i++) {
-          if (cancelled) return;
-          setTypedText(business.name.slice(0, i));
-          await sleep(90);
-        }
-        if (cancelled) return;
-        await sleep(500);
-
-        setPhase("button");
-        await sleep(900);
-        if (cancelled) return;
-
-        setPhase("tap");
-        await sleep(350);
-        if (cancelled) return;
-
-        setPhase("results");
-        for (let i = 1; i <= business.results.length; i++) {
-          if (cancelled) return;
-          setResultsShown(i);
-          await sleep(450);
-        }
-        if (cancelled) return;
-
-        await sleep(2800);
-        biz += 1;
-      }
+  const generate = async (value) => {
+    const q = (value ?? business).trim();
+    if (!q || status === "loading") return;
+    setStatus("loading");
+    setError("");
+    setIdeas([]);
+    setSubmitted(q);
+    try {
+      const { data } = await axios.post(`${API}/generate-ideas`, { business: q });
+      setIdeas(data.ideas || []);
+      setTotal(data.total || (data.ideas ? data.ideas.length : 0));
+      setHasMore(Boolean(data.has_more));
+      setStatus("done");
+    } catch (e) {
+      setError(
+        e?.response?.data?.detail ||
+          "Κάτι πήγε στραβά. Δοκίμασε ξανά σε λίγο."
+      );
+      setStatus("error");
     }
+  };
 
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const business = BUSINESSES[bizIndex];
-  const showResults = phase === "results";
+  const onSubmit = (e) => {
+    e.preventDefault();
+    generate();
+  };
 
   return (
     <div data-testid="hero-desktop" className="relative w-full max-w-[560px] mx-auto">
@@ -162,95 +99,200 @@ export default function ChatDesktop() {
             </div>
           </div>
 
-          {/* Body: two columns */}
-          <div
-            data-testid="hero-business-demo"
-            className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 min-h-[300px]"
-          >
-            {/* Left: input */}
-            <div
-              data-testid="hero-demo-input-screen"
-              className="flex flex-col justify-center gap-4"
-            >
-              <p className="text-[11px] font-bold text-ink/50 uppercase tracking-[0.15em]">
+          <div className="p-5">
+            {/* Input row */}
+            <form onSubmit={onSubmit} className="flex flex-col gap-2">
+              <label className="text-[11px] font-bold text-ink/50 uppercase tracking-[0.15em]">
                 Τι επιχείρηση έχεις;
-              </p>
-              <div className="w-full rounded-2xl border border-ink/10 bg-mist px-4 py-3.5 flex items-center">
-                {typedText ? (
-                  <span className="text-sm font-semibold text-ink">{typedText}</span>
-                ) : (
-                  <span className="text-sm font-medium text-ink/35">
-                    Γράψε την επιχείρησή σου...
-                  </span>
-                )}
-                <Cursor />
+              </label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  data-testid="hero-idea-input"
+                  value={business}
+                  onChange={(e) => setBusiness(e.target.value)}
+                  maxLength={120}
+                  placeholder="π.χ. Καφετέρια, Δικηγορικό γραφείο..."
+                  className="flex-1 rounded-2xl border border-ink/10 bg-mist px-4 py-3 text-sm font-semibold text-ink placeholder:font-medium placeholder:text-ink/35 outline-none focus:border-baby-dark focus:bg-white transition-colors"
+                />
+                <button
+                  type="submit"
+                  data-testid="hero-idea-submit"
+                  disabled={!business.trim() || status === "loading"}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ink px-5 py-3 text-xs font-extrabold text-white transition-[transform,background-color] duration-300 hover:bg-baby-dark hover:text-ink disabled:opacity-40 disabled:pointer-events-none"
+                >
+                  {status === "loading" ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Ετοιμάζουμε...
+                    </>
+                  ) : (
+                    <>
+                      Δες τι χτίζουμε
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
+                </button>
               </div>
-              <motion.button
-                data-testid="hero-demo-cta"
-                animate={{
-                  opacity: phase === "button" || phase === "tap" || showResults ? 1 : 0.45,
-                  scale: phase === "tap" ? 0.94 : 1,
-                }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="inline-flex w-fit items-center gap-2 rounded-full bg-baby px-5 py-2.5 text-xs font-extrabold text-ink"
-              >
-                Δες τι μπορούμε να χτίσουμε
-                <ArrowRight className="h-3.5 w-3.5" />
-              </motion.button>
-            </div>
 
-            {/* Right: results panel */}
-            <div className="rounded-2xl bg-mist/50 border border-ink/5 p-4 flex flex-col overflow-hidden">
+              {/* Quick suggestions (only before first result) */}
+              {status === "idle" && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => {
+                        setBusiness(s);
+                        generate(s);
+                      }}
+                      className="rounded-full border border-ink/10 bg-white px-3 py-1 text-[11px] font-semibold text-ink/60 hover:border-baby-dark hover:text-ink transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </form>
+
+            {/* Results area */}
+            <div
+              data-testid="hero-ideas-results"
+              className="mt-4 min-h-[210px] max-h-[300px] overflow-y-auto overscroll-contain pr-1"
+            >
               <AnimatePresence mode="wait">
-                {showResults ? (
+                {status === "idle" && (
                   <motion.div
-                    key="results"
-                    data-testid="hero-demo-results-screen"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="flex flex-col h-full"
-                  >
-                    <p className="text-[11px] font-bold text-ink/50 flex items-center gap-1.5">
-                      <business.icon className="h-3.5 w-3.5 text-baby-dark" />
-                      Ιδανικό για {business.name}
-                    </p>
-                    <div className="mt-3 flex-1 flex flex-col gap-2">
-                      {business.results.slice(0, resultsShown).map((r, i) => (
-                        <motion.div
-                          key={`${business.name}-${i}`}
-                          data-testid={`hero-demo-result-${i}`}
-                          initial={{ opacity: 0, scale: 0.85, y: 8 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                          className="flex items-center gap-3 rounded-xl bg-white border border-ink/5 p-2.5"
-                        >
-                          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-baby text-ink">
-                            <r.icon className="h-3.5 w-3.5" />
-                          </span>
-                          <p className="text-[11px] font-semibold text-ink leading-snug">
-                            {r.label}
-                          </p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="placeholder"
+                    key="idle"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex flex-col items-center justify-center h-full text-center gap-2 py-6"
+                    className="flex flex-col items-center justify-center h-[210px] text-center gap-2"
                   >
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-ink/5 text-baby-dark">
-                      <Sparkles className="h-4 w-4" />
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-mist border border-ink/5 text-baby-dark">
+                      <Sparkles className="h-5 w-5" />
                     </span>
-                    <p className="text-[11px] font-medium text-ink/40 max-w-[160px] leading-snug">
-                      Οι προτάσεις μας θα εμφανιστούν εδώ
+                    <p className="text-xs font-medium text-ink/45 max-w-[240px] leading-snug">
+                      Γράψε την επιχείρησή σου και δες τι μπορούμε να χτίσουμε ειδικά για εσένα.
                     </p>
+                  </motion.div>
+                )}
+
+                {status === "loading" && (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+                  >
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl bg-mist/70 border border-ink/5 p-2.5 flex items-center gap-3 animate-pulse"
+                      >
+                        <span className="h-8 w-8 shrink-0 rounded-lg bg-ink/10" />
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-2 w-3/4 rounded bg-ink/10" />
+                          <div className="h-2 w-1/2 rounded bg-ink/5" />
+                        </div>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+
+                {status === "error" && (
+                  <motion.div
+                    key="error"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center h-[210px] text-center gap-3 px-4"
+                  >
+                    <p className="text-xs font-medium text-ink/60 max-w-[240px] leading-snug">
+                      {error}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => generate(submitted)}
+                      className="inline-flex items-center gap-2 rounded-full bg-baby px-4 py-2 text-xs font-extrabold text-ink"
+                    >
+                      Δοκίμασε ξανά
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </motion.div>
+                )}
+
+                {status === "done" && (
+                  <motion.div
+                    key="done"
+                    data-testid="hero-demo-results-screen"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <p className="text-[11px] font-bold text-ink/50 mb-2.5 flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-baby-dark" />
+                      {total} ιδέες για: <span className="text-ink">{submitted}</span>
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {ideas.map((idea, i) => {
+                        const Meta = CATEGORY_META[idea.category] || { icon: Boxes };
+                        const Icon = Meta.icon;
+                        return (
+                          <motion.div
+                            key={`${idea.title}-${i}`}
+                            data-testid={`hero-idea-card-${i}`}
+                            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{
+                              duration: 0.3,
+                              delay: Math.min(i * 0.045, 0.5),
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                            className="rounded-xl bg-mist/60 border border-ink/5 p-2.5 flex items-start gap-2.5"
+                          >
+                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-baby text-ink">
+                              <Icon className="h-3.5 w-3.5" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-bold text-ink leading-snug">
+                                {idea.title}
+                              </p>
+                              <p className="text-[10px] font-semibold text-baby-dark leading-tight mt-0.5">
+                                {idea.category}
+                              </p>
+                              {idea.description && (
+                                <p className="text-[10px] text-ink/50 leading-snug mt-1">
+                                  {idea.description}
+                                </p>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+
+                    {/* More ideas → talk to us */}
+                    <motion.button
+                      type="button"
+                      data-testid="hero-ideas-more-cta"
+                      onClick={() => scrollToId("#contact")}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                      className={`mt-3 w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-extrabold transition-colors ${
+                        hasMore
+                          ? "bg-ink text-white hover:bg-baby-dark hover:text-ink"
+                          : "bg-baby-light text-ink border border-baby/40 hover:bg-baby"
+                      }`}
+                    >
+                      <MessagesSquare className="h-3.5 w-3.5" />
+                      {hasMore
+                        ? "Έχουμε κι άλλες ιδέες για σένα — μίλα μαζί μας"
+                        : "Πάρε το πλήρες πλάνο — μίλα μαζί μας"}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>

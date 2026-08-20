@@ -8,7 +8,10 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
+import json
+import re
 from datetime import datetime, timezone
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 
 ROOT_DIR = Path(__file__).parent
@@ -19,6 +22,20 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'kndp2025')
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+
+# Categories KNDP can build for a business (Greek labels shown to the user).
+IDEA_CATEGORIES = [
+    "Ιστοσελίδες",
+    "Web Apps",
+    "Mobile Apps",
+    "Έξυπνα Εργαλεία",
+    "Web Tools",
+    "Automations",
+    "Προγράμματα",
+]
+# How many ideas we show inline before pushing the user to the contact form.
+IDEAS_INLINE_LIMIT = 15
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -66,6 +83,113 @@ class ContactUpdate(BaseModel):
 @api_router.get("/")
 async def root():
     return {"message": "KNDP API"}
+
+
+class IdeaRequest(BaseModel):
+    business: str
+
+
+class Idea(BaseModel):
+    category: str
+    title: str
+    description: str = ""
+
+
+def _extract_json(text: str) -> dict:
+    """Best-effort extraction of a JSON object from an LLM response."""
+    if not text:
+        return {}
+    # Strip markdown code fences if present.
+    fenced = re.search(r"```(?:json)?\s*(\{.*\}|\[.*\])\s*```", text, re.DOTALL)
+    if fenced:
+        candidate = fenced.group(1)
+    else:
+        # Grab the first {...} or [...] block.
+        match = re.search(r"(\{.*\}|\[.*\])", text, re.DOTALL)
+        candidate = match.group(1) if match else text
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        return {}
+
+
+@api_router.post("/generate-ideas")
+async def generate_ideas(req: IdeaRequest):
+    business = (req.business or "").strip()
+    if not business:
+        raise HTTPException(status_code=400, detail="Παρακαλώ γράψε το είδος της επιχείρησής σου.")
+    if len(business) > 120:
+        business = business[:120]
+    if not EMERGENT_LLM_KEY:
+        raise HTTPException(status_code=500, detail="Η υπηρεσία δεν είναι διαθέσιμη αυτή τη στιγμή.")
+
+    categories_str = ", ".join(IDEA_CATEGORIES)
+    system_message = (
+        "Είσαι σύμβουλος ψηφιακών λύσεων για το ψηφιακό στούντιο KNDP. "
+        "Ο χρήστης θα σου δώσει το είδος της επιχείρησής του και εσύ προτείνεις ΟΛΕΣ τις "
+        "ψηφιακές λύσεις που θα μπορούσε να φτιάξει η KNDP ειδικά για αυτή την επιχείρηση: "
+        "ιστοσελίδες, web apps, mobile apps, έξυπνα εργαλεία, web tools, automations και προγράμματα. "
+        f"Χρησιμοποίησε ΜΟΝΟ αυτές τις κατηγορίες (πεδίο category): {categories_str}. "
+        "Δώσε συγκεκριμένες, πρακτικές και σχετικές προτάσεις για το συγκεκριμένο είδος επιχείρησης — όχι γενικόλογες. "
+        "Πρότεινε όσο το δυνατόν περισσότερες σχετικές ιδέες (ιδανικά 12 έως 20), καλύπτοντας πολλές κατηγορίες. "
+        "Απάντησε ΑΠΟΚΛΕΙΣΤΙΚΑ στα Ελληνικά. "
+        "ΜΗΝ αναφέρεις ποτέ τις λέξεις 'AI', 'τεχνητή νοημοσύνη' ή παρόμοια — μίλα σαν να τα φτιάχνει η ομάδα της KNDP. "
+        "Επίστρεψε ΜΟΝΟ έγκυρο JSON, χωρίς επεξηγήσεις, με αυτή τη μορφή: "
+        '{\"ideas\": [{\"category\": \"<μία από τις κατηγορίες>\", \"title\": \"<σύντομος τίτλος 2-5 λέξεις>\", '
+        '\"description\": \"<μία σύντομη πρόταση με το όφελος>\"}]}'
+    )
+
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"ideas-{uuid.uuid4()}",
+        system_message=system_message,
+    ).with_model("gemini", "gemini-3-flash-preview")
+
+    try:
+        response = await chat.send_message(
+            UserMessage(text=f"Η επιχείρησή μου: {business}")
+        )
+    except Exception as exc:  # noqa: BLE001
+        logging.getLogger(__name__).exception("LLM idea generation failed")
+        raise HTTPException(status_code=502, detail="Δεν μπορέσαμε να δημιουργήσουμε ιδέες αυτή τη στιγμή. Δοκίμασε ξανά.") from exc
+
+    data = _extract_json(response if isinstance(response, str) else str(response))
+    raw_ideas = data.get("ideas") if isinstance(data, dict) else (data if isinstance(data, list) else [])
+    if not isinstance(raw_ideas, list):
+        raw_ideas = []
+
+    ideas: List[dict] = []
+    seen = set()
+    for item in raw_ideas:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title", "")).strip()
+        if not title or title.lower() in seen:
+            continue
+        seen.add(title.lower())
+        category = str(item.get("category", "")).strip()
+        if category not in IDEA_CATEGORIES:
+            category = IDEA_CATEGORIES[0]
+        ideas.append({
+            "category": category,
+            "title": title,
+            "description": str(item.get("description", "")).strip(),
+        })
+
+    if not ideas:
+        raise HTTPException(status_code=502, detail="Δεν μπορέσαμε να δημιουργήσουμε ιδέες αυτή τη στιγμή. Δοκίμασε ξανά.")
+
+    total = len(ideas)
+    visible = ideas[:IDEAS_INLINE_LIMIT]
+    has_more = total > IDEAS_INLINE_LIMIT
+
+    return {
+        "business": business,
+        "ideas": visible,
+        "total": total,
+        "has_more": has_more,
+        "limit": IDEAS_INLINE_LIMIT,
+    }
 
 
 @api_router.post("/contact", response_model=ContactMessage)
