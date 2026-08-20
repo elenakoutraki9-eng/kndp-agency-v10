@@ -86,6 +86,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-07: Admin lead management. Backend: ContactMessage gained status (default "New") + notes (default "") fields; new PATCH /api/admin/contacts/{id} (protected) updates status/notes; GET applies defaults to legacy docs via response_model. Frontend (pages/Admin.jsx dashboard rebuilt as 2-col lead cards): per-lead status dropdown (New/Contacted/Converted/Not Interested, colored pills, auto-save) + notes textarea with explicit Save; top controls bar filters by status & by service and sorts by date (newest/oldest); Export CSV button downloads currently-visible/filtered leads (UTF-8 BOM for Greek). Leads counter reflects filtered count. Same clean white/baby-blue style. Verified end-to-end via UI.
 
+- 2026-07: "Spot new leads easily" enhancement (pages/Admin.jsx). New-status leads get a bold baby-blue border + ring + pulsing "NEW" badge, always sort to the top of the list (before the chosen date order), and a clickable "Νέα (N)" counter chip in the header quick-filters to New (toggle). Status persistence verified across reload.
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.

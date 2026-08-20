@@ -163,6 +163,7 @@ function LeadCard({ lead, index, onUpdate }) {
   const [savingStatus, setSavingStatus] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
   const [savedNotes, setSavedNotes] = useState(false);
+  const isNew = (lead.status || "New") === "New";
 
   useEffect(() => {
     setNotes(lead.notes || "");
@@ -187,11 +188,26 @@ function LeadCard({ lead, index, onUpdate }) {
   return (
     <div
       data-testid={`admin-card-${index}`}
-      className="rounded-[1.5rem] border border-ink/8 bg-white p-5 md:p-6 shadow-sm transition-shadow hover:shadow-md"
+      className={`relative rounded-[1.5rem] p-5 md:p-6 shadow-sm transition-shadow hover:shadow-md ${
+        isNew
+          ? "border-2 border-baby-dark bg-baby-light/30 ring-4 ring-baby/20"
+          : "border border-ink/8 bg-white"
+      }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-display text-lg font-semibold tracking-tight">{lead.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-display text-lg font-semibold tracking-tight">{lead.name}</p>
+            {isNew && (
+              <span
+                data-testid={`admin-new-badge-${index}`}
+                className="inline-flex items-center gap-1 rounded-full bg-baby-dark px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                New
+              </span>
+            )}
+          </div>
           {lead.company && (
             <p className="mt-0.5 flex items-center gap-1 text-xs text-ink/45">
               <Building2 className="h-3 w-3" />
@@ -347,6 +363,11 @@ function Dashboard({ token, onLogout }) {
     return Array.from(set).sort();
   }, [messages]);
 
+  const newCount = useMemo(
+    () => messages.filter((m) => (m.status || "New") === "New").length,
+    [messages]
+  );
+
   const filtered = useMemo(() => {
     let list = messages.filter((m) => {
       const s = m.status || "New";
@@ -355,6 +376,9 @@ function Dashboard({ token, onLogout }) {
       return okStatus && okService;
     });
     list = [...list].sort((a, b) => {
+      const aNew = (a.status || "New") === "New" ? 0 : 1;
+      const bNew = (b.status || "New") === "New" ? 0 : 1;
+      if (aNew !== bNew) return aNew - bNew; // New leads always first
       const da = new Date(a.created_at).getTime();
       const db2 = new Date(b.created_at).getTime();
       return sortOrder === "newest" ? db2 - da : da - db2;
@@ -460,13 +484,41 @@ function Dashboard({ token, onLogout }) {
               Όλα τα leads από τη φόρμα επικοινωνίας.
             </p>
           </div>
-          <div className="shrink-0 rounded-2xl border border-ink/8 bg-white px-5 py-3 text-center shadow-sm">
-            <p data-testid="admin-count" className="font-display text-2xl font-semibold text-baby-dark leading-none">
-              {filtered.length}
-            </p>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">
-              Leads
-            </p>
+          <div className="flex shrink-0 items-stretch gap-3">
+            <button
+              type="button"
+              data-testid="admin-new-chip"
+              onClick={() =>
+                setStatusFilter((prev) => (prev === "New" ? "All" : "New"))
+              }
+              className={`rounded-2xl border px-5 py-3 text-center transition-colors ${
+                statusFilter === "New"
+                  ? "border-baby-dark bg-baby-dark text-white"
+                  : newCount > 0
+                  ? "border-baby-dark bg-baby-light text-ink hover:bg-baby"
+                  : "border-ink/8 bg-white text-ink/40"
+              }`}
+            >
+              <p
+                data-testid="admin-new-count"
+                className={`font-display text-2xl font-semibold leading-none ${
+                  statusFilter === "New" ? "text-white" : "text-baby-dark"
+                }`}
+              >
+                {newCount}
+              </p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.2em] font-semibold">
+                {statusFilter === "New" ? "Νέα ✕" : "Νέα"}
+              </p>
+            </button>
+            <div className="rounded-2xl border border-ink/8 bg-white px-5 py-3 text-center shadow-sm">
+              <p data-testid="admin-count" className="font-display text-2xl font-semibold text-ink leading-none">
+                {filtered.length}
+              </p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">
+                {statusFilter === "New" ? "Σε προβολή" : "Σύνολο"}
+              </p>
+            </div>
           </div>
         </div>
 
