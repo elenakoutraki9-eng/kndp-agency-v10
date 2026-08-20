@@ -43,6 +43,8 @@ class ContactMessage(BaseModel):
     company: Optional[str] = None
     service: Optional[str] = None
     message: str
+    status: str = "New"
+    notes: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -52,6 +54,11 @@ class ContactMessageCreate(BaseModel):
     company: Optional[str] = None
     service: Optional[str] = None
     message: str
+
+
+class ContactUpdate(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
 
 
 @api_router.get("/")
@@ -91,6 +98,20 @@ async def admin_contacts(_: bool = Depends(verify_admin)):
         if isinstance(m.get('created_at'), str):
             m['created_at'] = datetime.fromisoformat(m['created_at'])
     return messages
+
+
+@api_router.patch("/admin/contacts/{contact_id}", response_model=ContactMessage)
+async def update_contact(contact_id: str, body: ContactUpdate, _: bool = Depends(verify_admin)):
+    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    result = await db.contact_messages.update_one({"id": contact_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    doc = await db.contact_messages.find_one({"id": contact_id}, {"_id": 0})
+    if isinstance(doc.get('created_at'), str):
+        doc['created_at'] = datetime.fromisoformat(doc['created_at'])
+    return doc
 
 
 app.include_router(api_router)

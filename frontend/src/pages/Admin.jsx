@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import {
@@ -10,10 +10,27 @@ import {
   Mail,
   Building2,
   Loader2,
+  Download,
+  Check,
+  ChevronDown,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const TOKEN_KEY = "kndp_admin_token";
+
+const STATUS_OPTIONS = ["New", "Contacted", "Converted", "Not Interested"];
+const STATUS_DOT = {
+  New: "bg-sky-400",
+  Contacted: "bg-amber-400",
+  Converted: "bg-emerald-500",
+  "Not Interested": "bg-ink/25",
+};
+const STATUS_RING = {
+  New: "border-sky-300 bg-sky-50",
+  Contacted: "border-amber-300 bg-amber-50",
+  Converted: "border-emerald-300 bg-emerald-50",
+  "Not Interested": "border-ink/15 bg-mist",
+};
 
 function formatDate(value) {
   try {
@@ -116,10 +133,176 @@ function LoginScreen({ onSuccess }) {
   );
 }
 
+function StatusSelect({ value, onChange, disabled, testid }) {
+  const status = value || "New";
+  return (
+    <div
+      className={`relative inline-flex items-center gap-2 rounded-full border pl-3 pr-2 py-1.5 text-xs font-bold transition-colors ${STATUS_RING[status]}`}
+    >
+      <span className={`h-2 w-2 rounded-full ${STATUS_DOT[status]}`} />
+      <select
+        data-testid={testid}
+        value={status}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none bg-transparent pr-4 text-ink outline-none cursor-pointer disabled:cursor-wait"
+      >
+        {STATUS_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-ink/40" />
+    </div>
+  );
+}
+
+function LeadCard({ lead, index, onUpdate }) {
+  const [notes, setNotes] = useState(lead.notes || "");
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [savedNotes, setSavedNotes] = useState(false);
+
+  useEffect(() => {
+    setNotes(lead.notes || "");
+  }, [lead.id, lead.notes]);
+
+  const notesDirty = notes !== (lead.notes || "");
+
+  const changeStatus = async (status) => {
+    setSavingStatus(true);
+    await onUpdate(lead.id, { status });
+    setSavingStatus(false);
+  };
+
+  const saveNotes = async () => {
+    setSavingNotes(true);
+    await onUpdate(lead.id, { notes });
+    setSavingNotes(false);
+    setSavedNotes(true);
+    setTimeout(() => setSavedNotes(false), 1800);
+  };
+
+  return (
+    <div
+      data-testid={`admin-card-${index}`}
+      className="rounded-[1.5rem] border border-ink/8 bg-white p-5 md:p-6 shadow-sm transition-shadow hover:shadow-md"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-display text-lg font-semibold tracking-tight">{lead.name}</p>
+          {lead.company && (
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-ink/45">
+              <Building2 className="h-3 w-3" />
+              {lead.company}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          {lead.service ? (
+            <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-xs font-bold text-baby-dark">
+              {lead.service}
+            </span>
+          ) : (
+            <span className="text-xs text-ink/30">—</span>
+          )}
+          <span className="text-xs text-ink/40">{formatDate(lead.created_at)}</span>
+        </div>
+      </div>
+
+      <a
+        href={`mailto:${lead.email}`}
+        className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-baby-dark hover:underline"
+      >
+        <Mail className="h-3.5 w-3.5" />
+        {lead.email}
+      </a>
+
+      <p className="mt-3 text-sm text-ink/70 leading-relaxed whitespace-pre-line">{lead.message}</p>
+
+      <div className="mt-5 border-t border-ink/8 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">
+            Κατάσταση
+          </span>
+          <div className="flex items-center gap-2">
+            {savingStatus && <Loader2 className="h-3.5 w-3.5 animate-spin text-ink/40" />}
+            <StatusSelect
+              value={lead.status}
+              disabled={savingStatus}
+              onChange={changeStatus}
+              testid={`admin-status-select-${index}`}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">
+            Σημειώσεις
+          </span>
+          <textarea
+            data-testid={`admin-notes-${index}`}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            placeholder="Πρόσθεσε σημειώσεις για αυτό το lead…"
+            className="mt-1.5 w-full resize-y rounded-xl border border-ink/10 bg-mist/40 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:bg-white focus:ring-4 focus:ring-baby/20"
+          />
+          <div className="mt-2 flex justify-end">
+            <button
+              type="button"
+              data-testid={`admin-notes-save-${index}`}
+              onClick={saveNotes}
+              disabled={!notesDirty || savingNotes}
+              className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-white transition-[transform,opacity] duration-300 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100"
+            >
+              {savingNotes ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : savedNotes ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : null}
+              {savedNotes ? "Αποθηκεύτηκε" : "Αποθήκευση"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilterSelect({ label, value, onChange, options, testid }) {
+  return (
+    <div className="relative">
+      <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          data-testid={testid}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="appearance-none w-full rounded-xl border border-ink/10 bg-white pl-3.5 pr-9 py-2.5 text-sm font-medium text-ink outline-none cursor-pointer transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40" />
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({ token, onLogout }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [serviceFilter, setServiceFilter] = useState("All");
+  const [sortOrder, setSortOrder] = useState("newest");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -143,6 +326,88 @@ function Dashboard({ token, onLogout }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  const updateLead = useCallback(
+    async (id, patch) => {
+      try {
+        const res = await axios.patch(`${API}/admin/contacts/${id}`, patch, {
+          headers: { "X-Admin-Token": token },
+        });
+        setMessages((prev) => prev.map((m) => (m.id === id ? res.data : m)));
+      } catch (err) {
+        if (err?.response?.status === 401) onLogout();
+        else setError("Η αποθήκευση απέτυχε. Δοκίμασε ξανά.");
+      }
+    },
+    [token, onLogout]
+  );
+
+  const services = useMemo(() => {
+    const set = new Set(messages.map((m) => m.service).filter(Boolean));
+    return Array.from(set).sort();
+  }, [messages]);
+
+  const filtered = useMemo(() => {
+    let list = messages.filter((m) => {
+      const s = m.status || "New";
+      const okStatus = statusFilter === "All" || s === statusFilter;
+      const okService = serviceFilter === "All" || m.service === serviceFilter;
+      return okStatus && okService;
+    });
+    list = [...list].sort((a, b) => {
+      const da = new Date(a.created_at).getTime();
+      const db2 = new Date(b.created_at).getTime();
+      return sortOrder === "newest" ? db2 - da : da - db2;
+    });
+    return list;
+  }, [messages, statusFilter, serviceFilter, sortOrder]);
+
+  const exportCSV = () => {
+    const headers = [
+      "Όνομα",
+      "Εταιρεία",
+      "Email",
+      "Υπηρεσία",
+      "Status",
+      "Μήνυμα",
+      "Σημειώσεις",
+      "Ημερομηνία",
+    ];
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = filtered.map((m) => [
+      m.name,
+      m.company || "",
+      m.email,
+      m.service || "",
+      m.status || "New",
+      m.message,
+      m.notes || "",
+      formatDate(m.created_at),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kndp-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const statusOptions = [
+    { value: "All", label: "Όλα τα status" },
+    ...STATUS_OPTIONS.map((s) => ({ value: s, label: s })),
+  ];
+  const serviceOptions = [
+    { value: "All", label: "Όλες οι υπηρεσίες" },
+    ...services.map((s) => ({ value: s, label: s })),
+  ];
+  const sortOptions = [
+    { value: "newest", label: "Νεότερα πρώτα" },
+    { value: "oldest", label: "Παλαιότερα πρώτα" },
+  ];
 
   return (
     <div className="min-h-screen bg-paper text-ink font-body antialiased">
@@ -197,11 +462,50 @@ function Dashboard({ token, onLogout }) {
           </div>
           <div className="shrink-0 rounded-2xl border border-ink/8 bg-white px-5 py-3 text-center shadow-sm">
             <p data-testid="admin-count" className="font-display text-2xl font-semibold text-baby-dark leading-none">
-              {messages.length}
+              {filtered.length}
             </p>
             <p className="mt-1 text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">
               Leads
             </p>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="mt-8 rounded-[1.5rem] border border-ink/8 bg-white p-4 md:p-5 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-end gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+              <FilterSelect
+                label="Status"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={statusOptions}
+                testid="admin-status-filter"
+              />
+              <FilterSelect
+                label="Υπηρεσία"
+                value={serviceFilter}
+                onChange={setServiceFilter}
+                options={serviceOptions}
+                testid="admin-service-filter"
+              />
+              <FilterSelect
+                label="Ταξινόμηση"
+                value={sortOrder}
+                onChange={setSortOrder}
+                options={sortOptions}
+                testid="admin-sort"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={exportCSV}
+              data-testid="admin-export-csv"
+              disabled={filtered.length === 0}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-baby px-5 py-2.5 text-sm font-bold text-ink transition-[transform,opacity] duration-300 hover:scale-[1.03] disabled:opacity-40 disabled:hover:scale-100"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </button>
           </div>
         </div>
 
@@ -216,115 +520,29 @@ function Dashboard({ token, onLogout }) {
             <Loader2 className="h-6 w-6 animate-spin" />
             <p className="mt-3 text-sm font-semibold">Φόρτωση…</p>
           </div>
-        ) : messages.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div
             data-testid="admin-empty"
-            className="mt-10 rounded-[1.75rem] border border-dashed border-ink/15 bg-white/60 px-8 py-16 text-center"
+            className="mt-8 rounded-[1.75rem] border border-dashed border-ink/15 bg-white/60 px-8 py-16 text-center"
           >
             <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-ink/40">
               <Inbox className="h-6 w-6" />
             </span>
-            <p className="mt-4 font-display text-lg font-medium">Κανένα μήνυμα ακόμη</p>
+            <p className="mt-4 font-display text-lg font-medium">
+              {messages.length === 0 ? "Κανένα μήνυμα ακόμη" : "Κανένα lead με αυτά τα φίλτρα"}
+            </p>
             <p className="mt-1 text-sm text-ink/50">
-              Τα νέα μηνύματα από τη φόρμα θα εμφανίζονται εδώ.
+              {messages.length === 0
+                ? "Τα νέα μηνύματα από τη φόρμα θα εμφανίζονται εδώ."
+                : "Δοκίμασε να αλλάξεις τα φίλτρα παραπάνω."}
             </p>
           </div>
         ) : (
-          <>
-            {/* Table on desktop */}
-            <div className="mt-8 hidden md:block overflow-hidden rounded-[1.5rem] border border-ink/8 bg-white shadow-sm">
-              <table data-testid="admin-table" className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-ink/8 bg-mist/60 text-[11px] uppercase tracking-[0.15em] text-ink/45">
-                    <th className="px-5 py-3.5 font-semibold">Όνομα</th>
-                    <th className="px-5 py-3.5 font-semibold">Email</th>
-                    <th className="px-5 py-3.5 font-semibold">Υπηρεσία</th>
-                    <th className="px-5 py-3.5 font-semibold">Μήνυμα</th>
-                    <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Ημ/νία</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {messages.map((m, i) => (
-                    <tr
-                      key={m.id}
-                      data-testid={`admin-row-${i}`}
-                      className="border-b border-ink/5 last:border-b-0 align-top transition-colors hover:bg-baby-light/40"
-                    >
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-sm">{m.name}</p>
-                        {m.company && (
-                          <p className="mt-0.5 flex items-center gap-1 text-xs text-ink/45">
-                            <Building2 className="h-3 w-3" />
-                            {m.company}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <a
-                          href={`mailto:${m.email}`}
-                          className="text-sm font-medium text-baby-dark hover:underline"
-                        >
-                          {m.email}
-                        </a>
-                      </td>
-                      <td className="px-5 py-4">
-                        {m.service ? (
-                          <span className="inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-xs font-bold text-baby-dark whitespace-nowrap">
-                            {m.service}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-ink/30">—</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4 max-w-md">
-                        <p className="text-sm text-ink/70 leading-relaxed">{m.message}</p>
-                      </td>
-                      <td className="px-5 py-4 text-xs text-ink/45 whitespace-nowrap">
-                        {formatDate(m.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Cards on mobile */}
-            <div className="mt-8 space-y-3 md:hidden">
-              {messages.map((m, i) => (
-                <div
-                  key={m.id}
-                  data-testid={`admin-card-${i}`}
-                  className="rounded-2xl border border-ink/8 bg-white p-5 shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">{m.name}</p>
-                      {m.company && (
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-ink/45">
-                          <Building2 className="h-3 w-3" />
-                          {m.company}
-                        </p>
-                      )}
-                    </div>
-                    {m.service && (
-                      <span className="shrink-0 inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-[11px] font-bold text-baby-dark">
-                        {m.service}
-                      </span>
-                    )}
-                  </div>
-                  <a
-                    href={`mailto:${m.email}`}
-                    className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-baby-dark"
-                  >
-                    <Mail className="h-3.5 w-3.5" />
-                    {m.email}
-                  </a>
-                  <p className="mt-3 text-sm text-ink/70 leading-relaxed">{m.message}</p>
-                  <p className="mt-3 text-xs text-ink/40">{formatDate(m.created_at)}</p>
-                </div>
-              ))}
-            </div>
-          </>
+          <div data-testid="admin-leads" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {filtered.map((lead, i) => (
+              <LeadCard key={lead.id} lead={lead} index={i} onUpdate={updateLead} />
+            ))}
+          </div>
         )}
       </main>
     </div>
