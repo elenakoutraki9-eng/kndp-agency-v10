@@ -107,3 +107,5 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 2. Add lightweight admin login to view enquiries in-browser.
 3. Wire Resend email notifications for new contact messages.
 4. Swap booking placeholder for real scheduling link.
+
+- 2026-07: Enabled full animations on MOBILE (desktop view kept identical). Root fix: App.js MotionConfig changed from `reducedMotion={isMobile?"always":"never"}` to `reducedMotion="never"` (was globally disabling all Framer Motion on phones). Also removed per-component mobile gating in Reveal.jsx (WordMask slide, MaskLine, Reveal fade/slide-up, ParallaxY), Hero.jsx (entrance scale/float/phone scroll-parallax) and Marquee.jsx (marquee now scrolls on mobile). Kept desktop-only: Magnetic buttons (mouse-based) and StackSection sticky-stacking (layout safety on small screens). Verified: WordMask caught mid-animation on mobile, Reveal initial states present + fire on scroll, no horizontal overflow / no layout breakage at 390px.
