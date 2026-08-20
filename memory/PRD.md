@@ -98,6 +98,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-07: Mobile animation reductions (<=767px via new hooks/useIsMobile matchMedia; desktop fully intact). Reveal/WordMask/MaskLine: shorter durations, less/no movement + rotation, tighter stagger. Magnetic: static wrapper on touch. ParallaxY: output 0 on mobile. Hero phone mockup: disabled scroll parallax (phoneY) + pointer parallax (imgMX/imgMY), simplified entrance (no scale pop, smaller y, shorter duration), floating card's animate-float-soft loop removed on mobile. No layout/content/styling changes. ServicesPhoneMockup + ChatPhone demo interactions left as-is (core content, not parallax).
 
+- 2026-07: Sitewide DISABLE all animations/transitions on mobile (<=767px); desktop fully intact. (1) App wrapped in framer-motion <MotionConfig skipAnimations={isMobile} reducedMotion={isMobile?"always":"never"}> so all JS motion snaps to final/static. (2) Global CSS media query zeroes animation/transition durations + iteration-count 1 + scroll-behavior auto on mobile (kills Tailwind transitions, keyframes float-soft/spin/pulse, btn-shine, react-fast-marquee). (3) StackPanel renders static (no scroll-scale/sticky) on mobile. (4) Lenis smooth-scroll skipped on mobile (native scroll). Verified: mobile hero opacity 1 instantly, no hidden-in-view elements, layout intact; desktop phone demo still animating.
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.

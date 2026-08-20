@@ -100,3 +100,19 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Disable ALL animations & transitions on mobile (<=767px) for an instant, static experience. Desktop unaffected. */
+@media (max-width: 767px) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
+  html {
+    scroll-behavior: auto !important;
+  }
+}

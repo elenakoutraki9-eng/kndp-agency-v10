@@ -15,9 +15,16 @@ import PortfolioSection from "@/sections/PortfolioSection";
 import FaqSection from "@/sections/FaqSection";
 import ContactSection from "@/sections/ContactSection";
 import { setLenis } from "@/lib/scroll";
+import useIsMobile from "@/hooks/useIsMobile";
 
 export default function Landing() {
+  const isMobile = useIsMobile();
   useEffect(() => {
+    // On mobile, use native (instant) scrolling — no smooth-scroll inertia.
+    if (isMobile) {
+      setLenis(null);
+      return;
+    }
     const lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
     setLenis(lenis);
     let rafId;
@@ -31,7 +38,7 @@ export default function Landing() {
       setLenis(null);
       lenis.destroy();
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <div className="min-h-screen bg-paper text-ink font-body antialiased">

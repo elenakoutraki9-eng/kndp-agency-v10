@@ -1,5 +1,6 @@
 import { Children, cloneElement, useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useScroll, useTransform } from "framer-motion";
+import useIsMobile from "@/hooks/useIsMobile";
 
 const NAV_OFFSET = 96;
 const STACK_GAP = 12;
@@ -31,7 +32,8 @@ export const StackPanel = ({
 }) => {
   const contentRef = useRef(null);
   const [top, setTop] = useState(NAV_OFFSET);
-  const stacked = Boolean(progress);
+  const isMobile = useIsMobile();
+  const stacked = Boolean(progress) && !isMobile;
   const fallback = useMotionValue(0);
   const source = progress || fallback;
 
