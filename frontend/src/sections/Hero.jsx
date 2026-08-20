@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import { ArrowUpRight, ArrowDown } from "lucide-react";
 import { Kicker, WordMask, Magnetic } from "@/components/Reveal";
 import HeroBackground, { useMouseParallax } from "@/components/HeroBackground";
-import ChatPhone from "@/components/ChatPhone";
+import ChatDesktop from "@/components/ChatDesktop";
 import { StackPanel } from "@/components/StackSection";
 import { scrollToId } from "@/lib/scroll";
 import useIsMobile from "@/hooks/useIsMobile";
@@ -97,7 +97,7 @@ export default function Hero(props) {
         <div className="lg:col-span-5 relative top-[4px] md:-top-[4px] lg:-top-[12px]">
           <motion.div
             style={{ x: isMobile ? 0 : imgMX, y: isMobile ? 0 : imgMY }}
-            className="[zoom:0.89] sm:[zoom:0.87] lg:[zoom:0.8] origin-top"
+            className="w-full origin-top"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 24 }}
@@ -105,8 +105,8 @@ export default function Hero(props) {
               transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="relative w-full flex justify-center"
             >
-              <motion.div style={{ y: phoneY }} className="will-change-transform">
-                <ChatPhone />
+              <motion.div style={{ y: phoneY }} className="will-change-transform w-full">
+                <ChatDesktop />
               </motion.div>
             </motion.div>
             <motion.div
