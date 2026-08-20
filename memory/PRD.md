@@ -88,6 +88,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-07: "Spot new leads easily" enhancement (pages/Admin.jsx). New-status leads get a bold baby-blue border + ring + pulsing "NEW" badge, always sort to the top of the list (before the chosen date order), and a clickable "Νέα (N)" counter chip in the header quick-filters to New (toggle). Status persistence verified across reload.
 
+- 2026-07: Redesigned admin dashboard from cards to a KANBAN board (user: compact + kanban + minimal card info). 4 columns (New/Contacted/Converted/Not Interested) with colored headers + counts. Compact draggable lead cards show name, company, service tag, short date only. Native HTML5 drag-and-drop moves a card between columns to change status (optimistic update + PATCH, persists; drop reads id from state with dataTransfer fallback). Click a card opens a detail modal (email, message, status select, notes editor + save). Kept service filter, date sort, Export CSV. Verified drag persistence via reload.
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.
