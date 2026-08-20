@@ -20,7 +20,7 @@ const projects = [
   {
     title: "Προσαρμοσμένο Dashboard Επιχείρησης",
     desc: "Πωλήσεις, λειτουργίες και αναφορές σε πραγματικό χρόνο, όλα μαζί σε ένα καθαρό εσωτερικό εργαλείο.",
-    tag: "Εσωτερικό Εργαλείο",
+    tag: "Internal Tool",
     img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop",
   },
   {
@@ -32,7 +32,7 @@ const projects = [
   {
     title: "Σουίτα Αυτοματισμού Εργασιών",
     desc: "Τιμολόγηση, παρακολούθηση πελατών και καταχώρηση δεδομένων αυτοματοποιημένα σε όλο το back office.",
-    tag: "Αυτοματισμός",
+    tag: "Automation",
     img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop",
   },
   {

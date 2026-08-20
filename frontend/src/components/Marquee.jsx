@@ -6,7 +6,7 @@ const items = [
   "Web Apps",
   "Mobile Apps",
   "Έξυπνα Εργαλεία",
-  "Αυτοματισμοί",
+  "Automations",
   "Web Tools",
   "Προγράμματα",
   "Ψηφιακές Λύσεις",

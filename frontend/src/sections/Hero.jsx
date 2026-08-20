@@ -7,7 +7,7 @@ import ChatPhone from "@/components/ChatPhone";
 import { StackPanel } from "@/components/StackSection";
 import { scrollToId } from "@/lib/scroll";
 
-const rotatingWords = ["Websites", "Web Apps", "Έξυπνα Εργαλεία", "Αυτοματισμοί"];
+const rotatingWords = ["Websites", "Web Apps", "Έξυπνα Εργαλεία", "Automations"];
 
 export default function Hero(props) {
   const heroRef = useRef(null);

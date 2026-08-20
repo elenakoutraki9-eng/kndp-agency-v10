@@ -78,6 +78,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 ## Known pre-existing (non-blocking) issue
 - Contact form sends `services` (array) but backend model expects singular `service` — selected chip not persisted (name/email/message still save fine).
 
+- 2026-07: Greek translation review — pushed genuine industry/technical terms to English while keeping all descriptive prose + marketing brand names Greek. Changes: Portfolio tags Εσωτερικό Εργαλείο→Internal Tool, Αυτοματισμός→Automation; ChatPhone labels Πρόγραμμα Επιβράβευσης/Επιβράβευση Πελατών→Loyalty Program, Ταμειακό Σύστημα (POS)→POS Integration; service name Αυτοματισμοί/Αυτοματισμός→Automations/Automation across Hero rotating chip, Marquee, Services card, ServicesPhoneMockup, Contact chip. Kept Greek: Έξυπνα Εργαλεία, Προγράμματα, Έξυπνες Ψηφιακές Λύσεις, all prose/headings. Text-only; no layout/animation/style changes.
+
 ## Next Tasks
 1. Fix service field mismatch (services array vs singular service) in ContactSection/backend model.
 2. Add lightweight admin login to view enquiries in-browser.

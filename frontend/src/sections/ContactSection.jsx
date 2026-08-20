@@ -13,7 +13,7 @@ const serviceOptions = [
   { value: "Web App", label: "Web App" },
   { value: "Program", label: "Πρόγραμμα" },
   { value: "Custom Tool", label: "Έξυπνο Εργαλείο" },
-  { value: "Automation", label: "Αυτοματισμός" },
+  { value: "Automation", label: "Automation" },
   { value: "Something Else", label: "Κάτι Άλλο" },
 ];
 

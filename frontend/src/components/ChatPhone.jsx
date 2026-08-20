@@ -23,7 +23,7 @@ const BUSINESSES = [
     results: [
       { label: "Online Μενού & Παραγγελίες", icon: UtensilsCrossed },
       { label: "Booking System", icon: CalendarCheck },
-      { label: "Πρόγραμμα Επιβράβευσης", icon: Gift },
+      { label: "Loyalty Program", icon: Gift },
       { label: "Εργαλείο Προγραμματισμού Προσωπικού", icon: Users },
     ],
   },
@@ -32,7 +32,7 @@ const BUSINESSES = [
     icon: Scissors,
     results: [
       { label: "Online Κράτηση Ραντεβού", icon: CalendarCheck },
-      { label: "Επιβράβευση Πελατών", icon: Gift },
+      { label: "Loyalty Program", icon: Gift },
       { label: "Διαχείριση Προγράμματος Προσωπικού", icon: Users },
       { label: "Υπενθυμίσεις Ραντεβού με SMS", icon: MessageSquare },
     ],
@@ -53,8 +53,8 @@ const BUSINESSES = [
     results: [
       { label: "Online Store", icon: ShoppingBag },
       { label: "Εργαλείο Διαχείρισης Αποθήκης", icon: Boxes },
-      { label: "Πρόγραμμα Επιβράβευσης", icon: Gift },
-      { label: "Ενσωμάτωση Ταμειακού Συστήματος (POS)", icon: CreditCard },
+      { label: "Loyalty Program", icon: Gift },
+      { label: "POS Integration", icon: CreditCard },
     ],
   },
 ];

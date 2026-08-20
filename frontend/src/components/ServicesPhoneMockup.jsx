@@ -20,7 +20,7 @@ const SERVICES = [
   { icon: AppWindow, title: "Web Apps", desc: "Κρατήσεις και πληρωμές, αυτόματα." },
   { icon: CalendarClock, title: "Προγράμματα", desc: "Απόθεμα και πρόγραμμα χωρίς λάθη." },
   { icon: Wrench, title: "Έξυπνα Εργαλεία", desc: "Φτιαγμένο για τον τρόπο που δουλεύεις." },
-  { icon: Zap, title: "Αυτοματισμοί", desc: "Τα συστήματά σου μιλάνε μεταξύ τους." },
+  { icon: Zap, title: "Automations", desc: "Τα συστήματά σου μιλάνε μεταξύ τους." },
   { icon: Lightbulb, title: "Έξυπνες Ψηφιακές Λύσεις", desc: "Οποιοδήποτε πρόβλημα, λύση στα μέτρα σου." },
 ];
 
