@@ -89,6 +89,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-08-21 (session): Visual-editor edit — re-added a fade-in + slide-up scroll animation to ServicesSection, scoped ONLY to the individual service cards (via Reveal, duration 0.35s, staggered delay). Headline, subtitle, category labels, and CTA panel remain static per the earlier "remove animation" request. Verified via testing_agent on mobile/desktop: cards animate in and stay visible permanently, hover effects intact, no console errors.
 
+- 2026-08-21 (session): Added a persistent "scroll companion" feature — a small floating dot matching the KNDP logo's blue dot (new ScrollCompanion.jsx, mounted in Landing.jsx alongside Cursor/Navbar). Fixed position on the right edge, vertical position driven by spring-smoothed scroll progress (14vh top -> 88vh bottom), a subtle sideways nudge tied to scroll velocity, plus idle CSS bob + pulsing glow (App.css keyframes). Fully `pointer-events-none` + `aria-hidden` so it can never block clicks/touch. Verified via testing_agent on mobile/desktop: stays visible the whole page, never intercepts clicks/scroll, no overflow, no console errors.
+
 ## Known pre-existing (non-blocking) issue
 - Contact form sends `services` (array) but backend model expects singular `service` — selected chip not persisted (name/email/message still save fine).
 

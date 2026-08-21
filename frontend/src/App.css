@@ -92,6 +92,26 @@
     animation: float-soft 6s ease-in-out infinite;
 }
 
+/* Scroll companion dot — idle drift + breathing glow, layered on top of the
+   scroll-driven position/x from ScrollCompanion.jsx */
+@keyframes companion-drift {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(0.92); }
+}
+
+.scroll-companion-drift {
+    animation: companion-drift 4.5s ease-in-out infinite;
+}
+
+@keyframes companion-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.3); }
+}
+
+.scroll-companion-pulse {
+    animation: companion-pulse 3s ease-in-out infinite;
+}
+
 /* ---- Mobile performance: trim expensive GPU effects on phones ---- */
 @media (max-width: 767px) {
     /* Lighter blurs — large blur radii are the biggest paint cost on mobile */
