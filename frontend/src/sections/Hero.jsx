@@ -113,7 +113,7 @@ export default function Hero(props) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20, scale: 0.95 }}
                   transition={{ duration: 0.5, delay: demoActive ? 0 : 1.25 }}
-                  className={`absolute -bottom-6 -left-4 md:-left-10 max-w-[230px] rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl px-5 py-4 ${isMobile ? "" : "animate-float-soft"}`}
+                  className={`pointer-events-none absolute -bottom-6 -left-4 md:-left-10 max-w-[230px] rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl px-5 py-4 ${isMobile ? "" : "animate-float-soft"}`}
                 >
                   <p className="text-xs uppercase tracking-[0.18em] font-bold text-baby-dark flex items-center gap-1.5">
                     <MousePointerClick className="h-3.5 w-3.5" />

@@ -75,6 +75,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 - 2026-08: Enlarged Hero phone mockup (~15% bigger via zoom scale bump).
 - 2026-08: Replaced ServicesPhoneMockup content — now an animated app screen cycling through all 8 services: a menu list (icon + title per service) with a looping tap animation that slides into a one-line detail screen per service, then slides back and advances to the next service continuously. Same phone size/position, white/baby-blue palette.
 
+- 2026-08-21 (session): Fixed mobile "stuck scroll for ~10s on first visit" bug. Root cause: IntroOverlay.jsx locked document.documentElement/body overflow="hidden" for the intro's duration, unlocked via a setTimeout-driven cleanup — on a slow first load (bundle download/parse + heavy animation main-thread work) this timer-based unlock could fire much later than the coded ~1.25s, making scroll appear stuck. Fix: on mobile, removed the document-level overflow lock entirely from IntroOverlay (overlay is already a fixed, fully opaque fullscreen layer so nothing is visible/scrollable underneath it regardless); desktop lock/unlock (~1.95s) unchanged. Also added pointer-events-none to Hero.jsx's decorative "Δοκίμασέ το τώρα" floating tooltip card so it can never intercept touch/scroll. Verified via testing_agent on a fresh session: mobile scroll works within ~200ms of first load, intro still plays, session-repeat skips intro correctly, desktop unchanged, no console errors.
+
 ## Known pre-existing (non-blocking) issue
 - Contact form sends `services` (array) but backend model expects singular `service` — selected chip not persisted (name/email/message still save fine).
 

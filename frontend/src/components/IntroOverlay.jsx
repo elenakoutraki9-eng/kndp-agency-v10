@@ -97,6 +97,15 @@ export default function IntroOverlay({ onComplete, duration }) {
   const totalMs = duration ?? (isMobile ? 1250 : 1950);
 
   useEffect(() => {
+    // On mobile, skip the document-level scroll lock entirely — the overlay
+    // is a fixed, fully opaque full-screen layer already, so nothing behind
+    // it is visible. Locking html/body overflow here risks getting stuck if
+    // the main thread is busy (slow first load), so we never touch it there.
+    if (isMobile) {
+      const id = setTimeout(() => onComplete?.(), totalMs);
+      return () => clearTimeout(id);
+    }
+
     const prevHtml = document.documentElement.style.overflow;
     const prevBody = document.body.style.overflow;
     document.documentElement.style.overflow = "hidden";
@@ -108,7 +117,7 @@ export default function IntroOverlay({ onComplete, duration }) {
       document.documentElement.style.overflow = prevHtml;
       document.body.style.overflow = prevBody;
     };
-  }, [onComplete, totalMs]);
+  }, [onComplete, totalMs, isMobile]);
 
   const impactDelays = LETTERS.map((_, i) => base + i * step + (isMobile ? 0.08 : 0.12));
   const finalFlashDelay = base + LETTERS.length * step + (isMobile ? 0.25 : 0.55);
