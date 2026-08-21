@@ -1,18 +1,16 @@
 import Marquee from "react-fast-marquee";
 
 const brands = [
-  "Google",
-  "Microsoft",
-  "Amazon",
-  "Meta",
-  "Shopify",
-  "Stripe",
-  "Spotify",
-  "Airbnb",
-  "Netflix",
-  "Adobe",
-  "Slack",
-  "Uber",
+  "Glovo",
+  "Gorillas",
+  "Swappie",
+  "Zettle",
+  "Frichti",
+  "Jow",
+  "Doctolib",
+  "Qonto",
+  "Alma",
+  "Pennylane",
 ];
 
 export default function EditorialMarquee() {
