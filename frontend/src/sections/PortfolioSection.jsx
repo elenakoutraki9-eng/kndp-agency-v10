@@ -135,7 +135,7 @@ export default function PortfolioSection(props) {
 
   return (
     <StackPanel {...props} innerClassName="">
-      <section id="portfolio" data-testid="portfolio-section" className="py-12 md:py-16">
+      <section id="portfolio" data-testid="portfolio-section" className="pt-12 md:pt-16">
         <div className="mx-auto max-w-7xl px-6 md:px-10">
           <Reveal>
             <Kicker>Έργα</Kicker>

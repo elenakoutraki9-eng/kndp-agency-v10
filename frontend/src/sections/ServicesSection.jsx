@@ -1,5 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
-import { Reveal, Kicker, WordMask, Magnetic } from "@/components/Reveal";
+import { Kicker, Magnetic } from "@/components/Reveal";
 import { scrollToId } from "@/lib/scroll";
 
 
@@ -82,54 +82,53 @@ export default function ServicesSection() {
   return (
     <section id="services" data-testid="services-section" className="py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-6 md:px-10">
-          <Reveal duration={0.35}>
+          <div>
             <Kicker>Υπηρεσίες</Kicker>
             <h2
               data-testid="services-headline"
               className="mt-3 font-display text-3xl md:text-5xl font-medium tracking-tight max-w-3xl"
             >
-              <WordMask text="Αν υπάρχει σε μια οθόνη," className="block" />
-              <WordMask text="μπορούμε να το χτίσουμε." accent={["χτίσουμε."]} delay={0.2} className="block" />
+              <span className="block">Αν υπάρχει σε μια οθόνη,</span>
+              <span className="block">
+                μπορούμε να το <span className="text-baby-dark italic">χτίσουμε.</span>
+              </span>
             </h2>
-          </Reveal>
+          </div>
 
-          <Reveal className="mt-10 md:mt-12" duration={0.35}>
+          <div className="mt-10 md:mt-12">
             <p className="text-xs uppercase tracking-[0.25em] font-semibold text-ink/50">
               Η πλήρης λίστα — ομαδοποιημένη με βάση τι σημαίνει για εσένα
             </p>
-          </Reveal>
+          </div>
           <div className="mt-5 space-y-6" data-testid="services-categories">
-            {categories.map((cat, ci) => (
+            {categories.map((cat) => (
               <div key={cat.slug} data-testid={`services-category-${cat.slug}`}>
-                <Reveal delay={0.05 * ci} margin="200px" duration={0.35}>
-                  <p className="text-sm font-display font-semibold text-baby-dark tracking-tight">
-                    {cat.name}
-                  </p>
-                </Reveal>
+                <p className="text-sm font-display font-semibold text-baby-dark tracking-tight">
+                  {cat.name}
+                </p>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {cat.services.map((s, i) => (
-                    <Reveal key={s.n} delay={0.05 * i} margin="200px" duration={0.35}>
-                      <div
-                        data-testid={`service-card-${s.n}`}
-                        className="group h-full flex flex-col rounded-2xl border border-ink/8 bg-white p-4 md:p-5 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-baby/15 hover:border-baby/50"
-                      >
-                        <span className="font-display text-sm font-light text-baby-dark">{s.n}</span>
-                        <h4 className="mt-1.5 font-display text-lg md:text-xl font-medium tracking-tight">
-                          {s.title}
-                        </h4>
-                        <p className="mt-1.5 text-sm text-ink/60 leading-relaxed flex-1">{s.text}</p>
-                        <p className="mt-2.5 text-xs font-semibold text-baby-dark/80 uppercase tracking-wide">
-                          {s.who}
-                        </p>
-                      </div>
-                    </Reveal>
+                  {cat.services.map((s) => (
+                    <div
+                      key={s.n}
+                      data-testid={`service-card-${s.n}`}
+                      className="group h-full flex flex-col rounded-2xl border border-ink/8 bg-white p-4 md:p-5 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-baby/15 hover:border-baby/50"
+                    >
+                      <span className="font-display text-sm font-light text-baby-dark">{s.n}</span>
+                      <h4 className="mt-1.5 font-display text-lg md:text-xl font-medium tracking-tight">
+                        {s.title}
+                      </h4>
+                      <p className="mt-1.5 text-sm text-ink/60 leading-relaxed flex-1">{s.text}</p>
+                      <p className="mt-2.5 text-xs font-semibold text-baby-dark/80 uppercase tracking-wide">
+                        {s.who}
+                      </p>
+                    </div>
                   ))}
                 </div>
               </div>
             ))}
           </div>
 
-          <Reveal className="mt-10 md:mt-12" duration={0.35}>
+          <div className="mt-10 md:mt-12">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 rounded-[2rem] bg-baby-light border border-baby/40 px-6 md:px-10 py-7 md:py-9 relative overflow-hidden">
               <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-baby/40 blur-3xl" />
               <div className="relative">
@@ -152,7 +151,7 @@ export default function ServicesSection() {
                 </button>
               </Magnetic>
             </div>
-          </Reveal>
+          </div>
         </div>
     </section>
   );

@@ -82,9 +82,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <ScrollReveal>
-          <ServicesSection />
-        </ScrollReveal>
+        <ServicesSection />
         <ScrollReveal>
           <ProblemSolutionSection />
         </ScrollReveal>

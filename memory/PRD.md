@@ -85,6 +85,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-08-21 (session): Sped up ServicesSection fade-in animations per visual editor request. Added an optional `duration` prop to the shared Reveal component (defaults preserved: 0.4s mobile / 0.8s desktop when not passed). All Reveal usages inside ServicesSection.jsx (headline, subtitle, category labels, service cards, CTA panel) now pass `duration={0.35}`, making them noticeably snappier; no other sections affected.
 
+- 2026-08-21 (session): Visual-editor edits — (1) Removed all entrance animations from ServicesSection: dropped the Reveal/WordMask wrappers (replaced WordMask headline with plain styled spans) and unwrapped it from the sitewide ScrollReveal fade+slide wrapper in Landing.jsx; content now renders instantly, hover effects untouched. (2) Removed blank space between Portfolio and Services sections by dropping Portfolio's bottom padding (`py-12 md:py-16` -> `pt-12 md:pt-16`), since Services' own top padding already provides spacing. Verified via testing_agent: 0px gap on mobile/desktop, no animation remnants in Services, no regressions elsewhere.
+
 ## Known pre-existing (non-blocking) issue
 - Contact form sends `services` (array) but backend model expects singular `service` — selected chip not persisted (name/email/message still save fine).
 
