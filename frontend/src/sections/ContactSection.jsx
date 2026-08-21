@@ -7,6 +7,7 @@ import { WordMask, Reveal, Kicker, Magnetic } from "@/components/Reveal";
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const serviceOptions = [
+  { value: "Not Sure", label: "Δεν ξέρω ακόμα" },
   { value: "Website", label: "Website" },
   { value: "Web Tool", label: "Web Tool" },
   { value: "App", label: "Mobile App" },
@@ -176,8 +177,11 @@ export default function ContactSection(props) {
                 </div>
 
                 <div className="mt-4">
-                  <p className="mb-2 text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
-                    Τι χρειάζεσαι;
+                  <p className="mb-1 text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
+                    Τι χρειάζεσαι; <span className="normal-case tracking-normal font-medium text-ink/30">· προαιρετικό</span>
+                  </p>
+                  <p className="mb-2 text-xs text-ink/45">
+                    Δεν είσαι σίγουρος; Κανένα πρόβλημα — διάλεξε «Δεν ξέρω ακόμα» και θα το βρούμε μαζί.
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {serviceOptions.map((s) => (
