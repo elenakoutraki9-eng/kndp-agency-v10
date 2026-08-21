@@ -46,7 +46,7 @@ export default function Hero(props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
           >
-            <Kicker>KNDP — Ψηφιακό Στούντιο</Kicker>
+            <Kicker>KNDP — Digital Studio</Kicker>
           </motion.div>
           <h1
             data-testid="hero-headline"

@@ -171,9 +171,6 @@ export default function ChatDesktop() {
                     <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-mist border border-ink/5 text-baby-dark">
                       <Sparkles className="h-5 w-5" />
                     </span>
-                    <p className="text-xs font-medium text-ink/45 max-w-[240px] leading-snug">
-                      Γράψε την επιχείρησή σου και δες τι μπορούμε να χτίσουμε ειδικά για εσένα.
-                    </p>
                   </motion.div>
                 )}
 
