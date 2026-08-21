@@ -56,7 +56,7 @@ function StackCard({ p, i, total, progress, isMobile }) {
 
   return (
     <div
-      className="sticky mb-[20vh] md:mb-[58vh] last:mb-0"
+      className="sticky mb-[20vh] md:mb-[58vh]"
       style={{ top: `${top}px` }}
     >
       <motion.article
@@ -140,7 +140,7 @@ export default function PortfolioSection(props) {
           </Reveal>
 
           {/* Sticky stacking case study cards */}
-          <div ref={containerRef} className="relative mt-10 md:mt-14 pb-10">
+          <div ref={containerRef} className="relative mt-10 md:mt-14 pb-[100vh]">
             {projects.map((p, i) => (
               <StackCard
                 key={p.title}
