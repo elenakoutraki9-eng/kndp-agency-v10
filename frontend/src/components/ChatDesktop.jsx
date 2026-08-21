@@ -29,8 +29,6 @@ const CATEGORY_META = {
   "Προγράμματα": { icon: Code2 },
 };
 
-const SUGGESTIONS = ["Καφετέρια", "Γυμναστήριο", "Κομμωτήριο", "Ηλεκτρονικό κατάστημα"];
-
 export default function ChatDesktop({ onActiveChange }) {
   const [business, setBusiness] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
@@ -100,7 +98,6 @@ export default function ChatDesktop({ onActiveChange }) {
             </span>
             <div>
               <p className="text-xs font-bold text-ink leading-tight">KNDP Studio</p>
-              <p className="text-[10px] text-ink/45">Τι μπορούμε να χτίσουμε για εσένα;</p>
             </div>
           </div>
 
@@ -139,24 +136,6 @@ export default function ChatDesktop({ onActiveChange }) {
                 </button>
               </div>
 
-              {/* Quick suggestions (only before first result) */}
-              {status === "idle" && (
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {SUGGESTIONS.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => {
-                        setBusiness(s);
-                        generate(s);
-                      }}
-                      className="rounded-full border border-ink/10 bg-white px-3 py-1 text-[11px] font-semibold text-ink/60 hover:border-baby-dark hover:text-ink transition-colors"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
             </form>
 
             {/* Results area */}
