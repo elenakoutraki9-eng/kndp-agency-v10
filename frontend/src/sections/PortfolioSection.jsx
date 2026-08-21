@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { WordMask, Reveal, Kicker, Magnetic } from "@/components/Reveal";
@@ -45,7 +45,7 @@ const projects = [
   },
 ];
 
-function StackCard({ p, i, total, progress, isMobile, cardRef }) {
+function StackCard({ p, i, total, progress, isMobile }) {
   // Deck-of-cards look: cards stay nearly full size — only a very slight
   // recede so the stack still reads as having depth, not a fade-away.
   const targetScale = 1 - (total - 1 - i) * 0.015;
@@ -57,12 +57,16 @@ function StackCard({ p, i, total, progress, isMobile, cardRef }) {
   // top of the previous, leaving a thin visible sliver of it at the top —
   // like a physical deck of cards, hinting there's more behind.
   const top = isMobile ? 88 + i * 16 : 96 + i * 26;
+  const isLast = i === total - 1;
+  // Every card but the last keeps the big margin that paces the stack.
+  // The last card only needs just enough room (its own top offset + a small
+  // buffer) to finish its short sticky travel — almost no gap after it.
+  const marginBottom = isLast ? `${top + 40}px` : undefined;
 
   return (
     <div
-      ref={cardRef}
-      className="sticky mb-[34vh] md:mb-[54vh]"
-      style={{ top: `${top}px` }}
+      className={isLast ? "sticky" : "sticky mb-[34vh] md:mb-[54vh]"}
+      style={{ top: `${top}px`, marginBottom }}
     >
       <motion.article
         data-testid={`case-study-${i}`}
@@ -114,30 +118,10 @@ function StackCard({ p, i, total, progress, isMobile, cardRef }) {
 export default function PortfolioSection(props) {
   const isMobile = useIsMobile();
   const containerRef = useRef(null);
-  const lastCardRef = useRef(null);
-  const [lastCardHeight, setLastCardHeight] = useState(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
-
-  // Give the container a bit of extra room so the LAST card also gets to
-  // fully slide up and complete its sticky travel instead of staying static
-  // at the bottom — a fraction of its height is enough, not the full height,
-  // to avoid a big gap before the CTA panel below.
-  useEffect(() => {
-    const el = lastCardRef.current;
-    if (!el) return;
-    const update = () => setLastCardHeight(el.offsetHeight);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    window.addEventListener("resize", update);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", update);
-    };
-  }, [isMobile]);
 
   return (
     <StackPanel {...props} innerClassName="">
@@ -165,11 +149,7 @@ export default function PortfolioSection(props) {
           </Reveal>
 
           {/* Sticky stacking case study cards */}
-          <div
-            ref={containerRef}
-            className="relative mt-10 md:mt-14"
-            style={{ paddingBottom: lastCardHeight ? `${Math.round(lastCardHeight * 0.05)}px` : undefined }}
-          >
+          <div ref={containerRef} className="relative mt-10 md:mt-14">
             {projects.map((p, i) => (
               <StackCard
                 key={p.title}
@@ -178,7 +158,6 @@ export default function PortfolioSection(props) {
                 total={projects.length}
                 progress={scrollYProgress}
                 isMobile={isMobile}
-                cardRef={i === projects.length - 1 ? lastCardRef : undefined}
               />
             ))}
           </div>
