@@ -1,30 +1,33 @@
 import Marquee from "react-fast-marquee";
-import { Asterisk } from "lucide-react";
 
-const items = [
-  "Websites",
-  "Web Apps",
-  "Mobile Apps",
-  "Έξυπνα Εργαλεία",
-  "Automations",
-  "Web Tools",
-  "Προγράμματα",
-  "Ψηφιακές Λύσεις",
+const brands = [
+  "Google",
+  "Microsoft",
+  "Amazon",
+  "Meta",
+  "Shopify",
+  "Stripe",
+  "Spotify",
+  "Airbnb",
+  "Netflix",
+  "Adobe",
+  "Slack",
+  "Uber",
 ];
 
 export default function EditorialMarquee() {
   return (
-    <div
-      data-testid="services-marquee"
-      className="py-6 md:py-8 overflow-hidden"
-    >
+    <div data-testid="services-marquee" className="py-8 md:py-10 overflow-hidden">
+      <p className="mb-5 md:mb-6 text-center text-xs uppercase tracking-[0.3em] font-semibold text-ink/40">
+        Έχουμε συνεργαστεί με κορυφαίες ομάδες
+      </p>
       <Marquee speed={32} gradient={false} pauseOnHover>
-        {items.map((item) => (
-          <span key={item} className="flex items-center">
-            <span className="font-display text-2xl md:text-4xl font-medium tracking-tight text-ink px-10 md:px-16">
-              {item}
+        {brands.map((brand) => (
+          <span key={brand} className="flex items-center">
+            <span className="font-display text-2xl md:text-4xl font-semibold tracking-tight text-ink/50 px-8 md:px-14 transition-colors duration-300 hover:text-ink">
+              {brand}
             </span>
-            <Asterisk className="h-6 w-6 md:h-8 md:w-8 text-baby-dark" />
+            <span className="h-1.5 w-1.5 rounded-full bg-baby-dark/50" />
           </span>
         ))}
       </Marquee>
