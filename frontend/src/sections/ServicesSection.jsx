@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { Reveal, Kicker, WordMask, Magnetic } from "@/components/Reveal";
 import { scrollToId } from "@/lib/scroll";
-import ServicesPhoneMockup from "@/components/ServicesPhoneMockup";
 
 
 const categories = [
@@ -34,6 +33,12 @@ const categories = [
         title: "Web Apps",
         text: "Οι πελάτες κρατούν, πληρώνουν και διαχειρίζονται τα πάντα μόνοι τους — λιγότερος χρόνος στο τηλέφωνο.",
         who: "Για επιχειρήσεις που πνίγονται στις συνεχείς επικοινωνίες",
+      },
+      {
+        n: "09",
+        title: "eShop",
+        text: "Ένα ολοκληρωμένο online κατάστημα — προϊόντα, καλάθι και ασφαλείς πληρωμές, έτοιμα να πουλήσουν 24/7.",
+        who: "Για επιχειρήσεις που θέλουν να πουλάνε online",
       },
     ],
   },
@@ -133,53 +138,46 @@ export default function ServicesSection() {
               Η πλήρης λίστα — ομαδοποιημένη με βάση τι σημαίνει για εσένα
             </p>
           </Reveal>
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-            <div className="lg:col-span-8 space-y-10" data-testid="services-categories">
-              {categories.map((cat, ci) => (
-                <div key={cat.slug} data-testid={`services-category-${cat.slug}`}>
-                  <Reveal delay={0.05 * ci}>
-                    <p className="text-sm font-display font-semibold text-baby-dark tracking-tight">
-                      {cat.name}
-                    </p>
-                  </Reveal>
-                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {cat.services.map((s, i) => (
-                      <Reveal key={s.n} delay={0.05 * i}>
-                        <div
-                          data-testid={`service-card-${s.n}`}
-                          className="group h-full flex flex-col rounded-2xl border border-ink/8 bg-white p-5 md:p-6 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-baby/15 hover:border-baby/50"
-                        >
-                          <span className="font-display text-sm font-light text-baby-dark">{s.n}</span>
-                          <h4 className="mt-2 font-display text-lg md:text-xl font-medium tracking-tight">
-                            {s.title}
-                          </h4>
-                          <p className="mt-2 text-sm text-ink/60 leading-relaxed flex-1">{s.text}</p>
-                          <p className="mt-3 text-xs font-semibold text-baby-dark/80 uppercase tracking-wide">
-                            {s.who}
-                          </p>
-                          <Magnetic strength={0.2} className="mt-4 self-start">
-                            <button
-                              type="button"
-                              onClick={() => scrollToId("#contact")}
-                              data-testid={`service-lets-talk-${s.n}`}
-                              className="group/btn inline-flex items-center gap-1.5 rounded-full border border-ink/10 px-4 py-2 text-xs font-bold text-ink transition-[background-color,border-color,transform] duration-300 hover:scale-105 hover:bg-baby hover:border-baby"
-                            >
-                              Ας μιλήσουμε
-                              <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:rotate-45" />
-                            </button>
-                          </Magnetic>
-                        </div>
-                      </Reveal>
-                    ))}
-                  </div>
+          <div className="mt-6 space-y-10" data-testid="services-categories">
+            {categories.map((cat, ci) => (
+              <div key={cat.slug} data-testid={`services-category-${cat.slug}`}>
+                <Reveal delay={0.05 * ci}>
+                  <p className="text-sm font-display font-semibold text-baby-dark tracking-tight">
+                    {cat.name}
+                  </p>
+                </Reveal>
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {cat.services.map((s, i) => (
+                    <Reveal key={s.n} delay={0.05 * i}>
+                      <div
+                        data-testid={`service-card-${s.n}`}
+                        className="group h-full flex flex-col rounded-2xl border border-ink/8 bg-white p-5 md:p-6 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-baby/15 hover:border-baby/50"
+                      >
+                        <span className="font-display text-sm font-light text-baby-dark">{s.n}</span>
+                        <h4 className="mt-2 font-display text-lg md:text-xl font-medium tracking-tight">
+                          {s.title}
+                        </h4>
+                        <p className="mt-2 text-sm text-ink/60 leading-relaxed flex-1">{s.text}</p>
+                        <p className="mt-3 text-xs font-semibold text-baby-dark/80 uppercase tracking-wide">
+                          {s.who}
+                        </p>
+                        <Magnetic strength={0.2} className="mt-4 self-start">
+                          <button
+                            type="button"
+                            onClick={() => scrollToId("#contact")}
+                            data-testid={`service-lets-talk-${s.n}`}
+                            className="group/btn inline-flex items-center gap-1.5 rounded-full border border-ink/10 px-4 py-2 text-xs font-bold text-ink transition-[background-color,border-color,transform] duration-300 hover:scale-105 hover:bg-baby hover:border-baby"
+                          >
+                            Ας μιλήσουμε
+                            <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:rotate-45" />
+                          </button>
+                        </Magnetic>
+                      </div>
+                    </Reveal>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="lg:col-span-4">
-              <Reveal delay={0.1} className="lg:sticky lg:top-28">
-                <ServicesPhoneMockup />
-              </Reveal>
-            </div>
+              </div>
+            ))}
           </div>
 
           <Reveal className="mt-10 md:mt-12">
