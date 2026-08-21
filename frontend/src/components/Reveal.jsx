@@ -64,13 +64,13 @@ export const WordMask = ({ text, accent = [], delay = 0, stagger = 0.07, classNa
   );
 };
 
-export const Reveal = ({ children, delay = 0, y = 28, x = 0, scale = 1, className = "", margin = "-80px" }) => {
+export const Reveal = ({ children, delay = 0, y = 28, x = 0, scale = 1, className = "", margin = "-80px", duration }) => {
   const isMobile = useIsMobile();
   // On mobile, trigger as soon as any part of the element enters the viewport
   // (near-zero threshold, no negative margin delaying it) and appear faster once triggered.
   const effectiveMargin = isMobile ? "0px" : margin;
   const effectiveDelay = isMobile ? Math.min(delay, 0.1) : delay;
-  const effectiveDuration = isMobile ? 0.4 : 0.8;
+  const effectiveDuration = duration ?? (isMobile ? 0.4 : 0.8);
   return (
     <motion.div
       className={className}

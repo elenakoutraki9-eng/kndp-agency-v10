@@ -83,6 +83,8 @@ Build the KNDP agency website. Clean, modern startup look; white + baby blue col
 
 - 2026-08-21 (session): Fixed "Our Work" last card exit delay (regression from the previous same-session fix). The trailing spacer added to make the last card stick/stack was initially sized too generously (208px, then 16vh/54vh), which fixed stacking but caused the last card to linger noticeably after the second-to-last card had already moved on. Reduced the spacer to `isMobile ? 16 : 26`px — the same tiny per-card top-offset step used for the sliver-peek elsewhere in the stack — just enough for it to still momentarily reach its fully-stacked position without outlasting the rest. Verified via testing_agent: last card still fully stacks, and both cards now unstick at the exact same scroll position (0px measured delay, previously ~120px), no regressions, no console errors.
 
+- 2026-08-21 (session): Sped up ServicesSection fade-in animations per visual editor request. Added an optional `duration` prop to the shared Reveal component (defaults preserved: 0.4s mobile / 0.8s desktop when not passed). All Reveal usages inside ServicesSection.jsx (headline, subtitle, category labels, service cards, CTA panel) now pass `duration={0.35}`, making them noticeably snappier; no other sections affected.
+
 ## Known pre-existing (non-blocking) issue
 - Contact form sends `services` (array) but backend model expects singular `service` — selected chip not persisted (name/email/message still save fine).
 
