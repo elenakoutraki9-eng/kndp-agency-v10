@@ -30,12 +30,13 @@ const steps = [
   },
 ];
 
-// Scroll-progress ranges where each card fades/slides in — timed so a card
-// appears right as the drawing line reaches its position.
+// Scroll-progress points where each card finishes fading in — set to the
+// path-length fraction where that step sits, so the drawn line reaches a
+// step exactly as it appears (step1 ~top, step2 ~middle, step3 ~bottom).
 const REVEAL_RANGES = [
-  [0.05, 0.24],
-  [0.4, 0.58],
-  [0.72, 0.9],
+  [0.0, 0.12],
+  [0.34, 0.48],
+  [0.7, 0.85],
 ];
 
 // Zigzag snake path (desktop) and a straight center line (mobile).
@@ -86,18 +87,16 @@ export default function HowItWorksSection(props) {
 
   const { scrollYProgress } = useScroll({
     target: stepsRef,
-    // Wide window: the line spans almost the entire time the section is
-    // on screen, so full draw takes a lot of scrolling (i.e. slow).
-    offset: ["start 0.85", "end 0.1"],
+    // Symmetric window: progress maps ~1:1 to how far you've scrolled
+    // through the section, so the line tip tracks the steps as they pass.
+    offset: ["start 0.8", "end 0.2"],
   });
-  // Add a noticeable "delay" dead-zone: the first ~15% of the tracked
-  // scroll does NOT draw the line yet, then it draws across the rest.
-  const drawProgress = useTransform(scrollYProgress, [0, 0.15, 1], [0, 0, 1]);
-  // Soft, low-stiffness spring so the line clearly lags behind the wheel
-  // and visibly keeps drawing itself as you scroll (never snaps).
-  const pathLength = useSpring(drawProgress, {
-    stiffness: 32,
-    damping: 24,
+  // Tie the drawn length DIRECTLY to scroll position. A very stiff spring
+  // only removes sub-pixel jitter — there is effectively no lag, so the
+  // line extends exactly as far as the user has scrolled (never pre-drawn).
+  const pathLength = useSpring(scrollYProgress, {
+    stiffness: 400,
+    damping: 45,
     restDelta: 0.0005,
   });
 
@@ -183,7 +182,7 @@ export default function HowItWorksSection(props) {
                   key={step.n}
                   step={step}
                   index={i}
-                  progress={drawProgress}
+                  progress={scrollYProgress}
                   isMobile={isMobile}
                 />
               ))}
