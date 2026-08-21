@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, Fragment } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { WordMask, Reveal, Kicker, Magnetic } from "@/components/Reveal";
@@ -57,17 +57,16 @@ function StackCard({ p, i, total, progress, isMobile }) {
   // top of the previous, leaving a thin visible sliver of it at the top —
   // like a physical deck of cards, hinting there's more behind.
   const top = isMobile ? 88 + i * 16 : 96 + i * 26;
-  const isLast = i === total - 1;
-  // Every card but the last keeps the big margin that paces the stack.
-  // The last card gets no margin of its own — a sticky element's OWN
-  // trailing margin/padding does not give IT room to stick (browsers only
-  // grant "stuck" dwell time from what comes AFTER it in its containing
-  // block), so its dwell room is provided by the container's paddingBottom
-  // instead (see containerRef below).
-  const marginClass = isLast ? "" : isMobile ? "mb-[16vh]" : "mb-[54vh]";
 
+  // No margin on the sticky wrapper. Spacing between cards is provided by
+  // SEPARATE spacer siblings in the container (see below). A trailing margin
+  // would make the card unstick EARLY (the margin reserves space at the bottom
+  // of its containing block), so the previous card would leave before the next
+  // one arrived — the cards would never truly stack. With no margin, every card
+  // stays stuck until the container's real end, so they accumulate into a deck
+  // and release together.
   return (
-    <div className={`sticky ${marginClass}`.trim()} style={{ top: `${top}px` }}>
+    <div className="sticky" style={{ top: `${top}px` }}>
       <motion.article
         data-testid={`case-study-${i}`}
         style={{ scale }}
@@ -122,14 +121,14 @@ export default function PortfolioSection(props) {
     target: containerRef,
     offset: ["start start", "end end"],
   });
-  // The last card needs a real trailing sibling to get any sticky "dwell"
-  // (a sticky element's own margin/padding doesn't grant it stuck time — only
-  // content AFTER it in the containing block does). Keep this dwell MODEST:
-  // there is no next card to rise during it, so a large value just freezes the
-  // last card on screen while the previous card scrolls far up alone (jank).
-  // A short window is enough for the last card to visibly lock over the deck
-  // and then release the whole section cleanly into the CTA / next section.
-  const lastCardDwellVh = isMobile ? 32 : 28;
+  // Spacing that paces the staggered REVEAL between cards (a spacer sibling
+  // between each pair). Because the cards themselves carry no margin, they all
+  // stay stuck until the container ends and accumulate into a deck.
+  const gapVh = isMobile ? 22 : 50;
+  // A final hold so the fully-stacked deck registers before the whole stack
+  // releases together into the CTA / next section. Kept modest to avoid dead
+  // scroll — this time the WHOLE deck holds (not one lonely card).
+  const finalHoldVh = isMobile ? 26 : 30;
 
   return (
     <StackPanel {...props} innerClassName="">
@@ -156,24 +155,28 @@ export default function PortfolioSection(props) {
             </p>
           </Reveal>
 
-          {/* Sticky stacking case study cards. A sticky element only gets
-              "stuck" dwell time from real content that follows it within
-              its containing block — its own margin/padding, or even
-              padding-bottom on this container, does NOT give it that room
-              (verified: only an actual trailing sibling element works). So
-              the last card's dwell room comes from the spacer div below. */}
+          {/* Sticky stacking case study cards. The cards carry NO margin;
+              the reveal pacing comes from spacer siblings placed BETWEEN them.
+              This lets every card stay stuck until the container's real end, so
+              they accumulate into a deck (each new one covers the previous,
+              leaving a thin sliver peek) and then release TOGETHER — instead of
+              each card peeling off before the next arrives. */}
           <div ref={containerRef} className="relative mt-10 md:mt-14">
             {projects.map((p, i) => (
-              <StackCard
-                key={p.title}
-                p={p}
-                i={i}
-                total={projects.length}
-                progress={scrollYProgress}
-                isMobile={isMobile}
-              />
+              <Fragment key={p.title}>
+                <StackCard
+                  p={p}
+                  i={i}
+                  total={projects.length}
+                  progress={scrollYProgress}
+                  isMobile={isMobile}
+                />
+                {i < projects.length - 1 && (
+                  <div aria-hidden style={{ height: `${gapVh}vh` }} />
+                )}
+              </Fragment>
             ))}
-            <div aria-hidden style={{ height: `${lastCardDwellVh}vh` }} />
+            <div aria-hidden style={{ height: `${finalHoldVh}vh` }} />
           </div>
 
           <Reveal className="mt-10 md:mt-14">
