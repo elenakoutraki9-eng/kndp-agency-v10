@@ -157,6 +157,7 @@ export default function ChatDesktop() {
             {/* Results area */}
             <div
               data-testid="hero-ideas-results"
+              data-lenis-prevent
               className="mt-4 min-h-[210px] max-h-[300px] overflow-y-auto overscroll-contain pr-1"
             >
               <AnimatePresence mode="wait">
