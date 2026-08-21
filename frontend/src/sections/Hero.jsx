@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight, ArrowDown, MousePointerClick } from "lucide-react";
 import { Kicker, WordMask, Magnetic } from "@/components/Reveal";
@@ -7,8 +7,6 @@ import ChatDesktop from "@/components/ChatDesktop";
 import { StackPanel } from "@/components/StackSection";
 import { scrollToId } from "@/lib/scroll";
 import useIsMobile from "@/hooks/useIsMobile";
-
-const rotatingWords = ["Websites", "Web Apps", "Έξυπνα Εργαλεία", "Automations"];
 
 export default function Hero(props) {
   const heroRef = useRef(null);
@@ -22,12 +20,7 @@ export default function Hero(props) {
   const imgMX = useTransform(mx, [-1, 1], [-10, 10]);
   const imgMY = useTransform(my, [-1, 1], [-8, 8]);
 
-  const [wordIndex, setWordIndex] = useState(0);
   const [demoActive, setDemoActive] = useState(false);
-  useEffect(() => {
-    const id = setInterval(() => setWordIndex((v) => (v + 1) % rotatingWords.length), 2200);
-    return () => clearInterval(id);
-  }, []);
 
   return (
     <StackPanel {...props} innerClassName="bg-paper">
@@ -109,27 +102,6 @@ export default function Hero(props) {
               <motion.div style={{ y: phoneY }} className="will-change-transform w-full">
                 <ChatDesktop onActiveChange={setDemoActive} />
               </motion.div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: -16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.1 }}
-              data-testid="hero-rotating-chip"
-              className="absolute -top-5 -right-2 md:-right-6 rounded-full bg-ink text-white pl-4 pr-5 py-2.5 flex items-center gap-2.5 shadow-xl text-sm font-semibold"
-            >
-              <span className="h-2 w-2 rounded-full bg-baby animate-pulse" />
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={rotatingWords[wordIndex]}
-                  initial={{ y: 12, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -12, opacity: 0 }}
-                  transition={{ duration: 0.35 }}
-                  className="inline-block"
-                >
-                  {rotatingWords[wordIndex]}
-                </motion.span>
-              </AnimatePresence>
             </motion.div>
             <AnimatePresence>
               {!demoActive && (
