@@ -59,18 +59,15 @@ function StackCard({ p, i, total, progress, isMobile }) {
   const top = isMobile ? 88 + i * 16 : 96 + i * 26;
   const isLast = i === total - 1;
   // Every card but the last keeps the big margin that paces the stack.
-  // The last card only needs just enough room (its own top offset + a small
-  // buffer) to finish its short sticky travel — almost no gap after it.
-  const marginBottom = isLast ? `${top + 40}px` : undefined;
-  // Mobile gets a noticeably shorter scroll distance between cards so the
-  // stack advances faster as the user scrolls; desktop pacing stays the same.
+  // The last card gets no margin of its own — a sticky element's OWN
+  // trailing margin/padding does not give IT room to stick (browsers only
+  // grant "stuck" dwell time from what comes AFTER it in its containing
+  // block), so its dwell room is provided by the container's paddingBottom
+  // instead (see containerRef below).
   const marginClass = isLast ? "" : isMobile ? "mb-[16vh]" : "mb-[54vh]";
 
   return (
-    <div
-      className={`sticky ${marginClass}`.trim()}
-      style={{ top: `${top}px`, marginBottom }}
-    >
+    <div className={`sticky ${marginClass}`.trim()} style={{ top: `${top}px` }}>
       <motion.article
         data-testid={`case-study-${i}`}
         style={{ scale }}
@@ -125,6 +122,13 @@ export default function PortfolioSection(props) {
     target: containerRef,
     offset: ["start start", "end end"],
   });
+  // A sticky element only gets "stuck" dwell time from space that follows it
+  // within its containing block — its OWN trailing margin/padding doesn't
+  // count. Since the last card has no sibling after it, we give the
+  // container itself this paddingBottom so the last card actually sticks
+  // and fully stacks, instead of sliding straight through its "top" offset.
+  const lastTop = isMobile ? 88 + (projects.length - 1) * 16 : 96 + (projects.length - 1) * 26;
+  const lastCardDwell = lastTop + 40;
 
   return (
     <StackPanel {...props} innerClassName="">
@@ -151,7 +155,12 @@ export default function PortfolioSection(props) {
             </p>
           </Reveal>
 
-          {/* Sticky stacking case study cards */}
+          {/* Sticky stacking case study cards. A sticky element only gets
+              "stuck" dwell time from real content that follows it within
+              its containing block — its own margin/padding, or even
+              padding-bottom on this container, does NOT give it that room
+              (verified: only an actual trailing sibling element works). So
+              the last card's dwell room comes from the spacer div below. */}
           <div ref={containerRef} className="relative mt-10 md:mt-14">
             {projects.map((p, i) => (
               <StackCard
@@ -163,6 +172,7 @@ export default function PortfolioSection(props) {
                 isMobile={isMobile}
               />
             ))}
+            <div aria-hidden style={{ height: `${lastCardDwell}px` }} />
           </div>
 
           <Reveal className="mt-10 md:mt-14">
