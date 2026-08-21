@@ -88,12 +88,19 @@ export default function HowItWorksSection(props) {
     target: stepsRef,
     offset: ["start 0.8", "end 0.45"],
   });
-  // Smooth the raw scroll progress a touch for the line drawing.
+  // Smooth the raw scroll progress a touch for the line drawing so it
+  // reveals gradually (eased) rather than snapping 1:1 with the wheel.
   const pathLength = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 30,
+    stiffness: 70,
+    damping: 26,
     restDelta: 0.001,
   });
+
+  // A short bright "comet head" segment that rides the tip of the drawn
+  // line, so it feels like travelling forward through each step.
+  const HEAD_LEN = 0.06;
+  const headOffset = useTransform(pathLength, (p) => Math.max(0, p - HEAD_LEN));
+  const headOpacity = useTransform(pathLength, [0, 0.02, 0.985, 1], [0, 1, 1, 0]);
 
   const linePath = isMobile ? MOBILE_PATH : DESKTOP_PATH;
 
@@ -116,7 +123,7 @@ export default function HowItWorksSection(props) {
             </h2>
           </Reveal>
 
-          {/* Zigzag steps with self-drawing snake line */}
+          {/* Zigzag steps with self-drawing snake line + travelling comet head */}
           <div ref={stepsRef} className="relative mt-10 md:mt-16">
             <svg
               className="absolute inset-0 h-full w-full pointer-events-none"
@@ -125,7 +132,17 @@ export default function HowItWorksSection(props) {
               fill="none"
               aria-hidden="true"
             >
-              {/* faint static track */}
+              <defs>
+                <filter id="how-line-glow" x="-60%" y="-60%" width="220%" height="220%">
+                  <feGaussianBlur stdDeviation="1.6" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* faint static track — the full journey ahead */}
               <path
                 d={linePath}
                 stroke="rgba(137,207,240,0.16)"
@@ -133,8 +150,9 @@ export default function HowItWorksSection(props) {
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
               />
-              {/* animated line that draws on scroll */}
+              {/* drawn trail that grows from the first step as you scroll */}
               <motion.path
+                data-testid="how-line-trail"
                 d={linePath}
                 stroke="#89cff0"
                 strokeWidth="2.5"
@@ -142,9 +160,19 @@ export default function HowItWorksSection(props) {
                 vectorEffect="non-scaling-stroke"
                 style={{ pathLength }}
               />
+              {/* bright comet head riding the tip of the trail */}
+              <motion.path
+                d={linePath}
+                stroke="#eaf6fd"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                filter="url(#how-line-glow)"
+                style={{ pathLength: HEAD_LEN, pathOffset: headOffset, opacity: headOpacity }}
+              />
             </svg>
 
-            <div className="relative z-10 flex flex-col gap-10 md:gap-14">
+            <div className="relative z-10 flex flex-col gap-14 md:gap-24">
               {steps.map((step, i) => (
                 <StepCard
                   key={step.n}
