@@ -51,16 +51,17 @@ function StackCard({ p, i, total, progress, isMobile }) {
   const scale = useTransform(progress, [i / total, 1], [1, targetScale]);
   const imageRight = i % 2 === 1;
   // Each card sticks slightly lower than the previous so the stack "peeks".
-  const top = 80 + i * 22;
+  // Mobile viewports are shorter, so the base offset and per-card step are smaller.
+  const top = isMobile ? 16 + i * 12 : 80 + i * 22;
 
   return (
     <div
-      className={isMobile ? "mb-6" : "sticky mb-[42vh] md:mb-[58vh] last:mb-0"}
-      style={isMobile ? undefined : { top: `${top}px` }}
+      className="sticky mb-[20vh] md:mb-[58vh] last:mb-0"
+      style={{ top: `${top}px` }}
     >
       <motion.article
         data-testid={`case-study-${i}`}
-        style={{ scale: isMobile ? 1 : scale }}
+        style={{ scale }}
         className="group origin-top mx-auto w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 items-center gap-4 md:gap-6 rounded-2xl border border-white/10 bg-ink text-white p-3 md:p-4 shadow-2xl shadow-ink/30"
       >
         {/* Image / mockup */}
