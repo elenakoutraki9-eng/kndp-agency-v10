@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "@/App.css";
 import Lenis from "lenis";
+import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
+import IntroOverlay from "@/components/IntroOverlay";
 import EditorialMarquee from "@/components/Marquee";
 import { StackedPanels } from "@/components/StackSection";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -20,6 +22,10 @@ import useIsMobile from "@/hooks/useIsMobile";
 
 export default function Landing() {
   const isMobile = useIsMobile();
+  const [introDone, setIntroDone] = useState(
+    () => typeof window !== "undefined" && sessionStorage.getItem("kndp_intro_seen") === "1"
+  );
+
   useEffect(() => {
     // On mobile, use native (instant) scrolling — no smooth-scroll inertia.
     if (isMobile) {
@@ -43,6 +49,17 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-paper text-ink font-body antialiased">
+      <AnimatePresence>
+        {!introDone && (
+          <IntroOverlay
+            key="intro"
+            onComplete={() => {
+              sessionStorage.setItem("kndp_intro_seen", "1");
+              setIntroDone(true);
+            }}
+          />
+        )}
+      </AnimatePresence>
       <Cursor />
       <Navbar />
       <main>
