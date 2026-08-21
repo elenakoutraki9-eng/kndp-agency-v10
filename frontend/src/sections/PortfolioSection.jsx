@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { WordMask, Reveal, Kicker, Magnetic } from "@/components/Reveal";
@@ -45,7 +45,7 @@ const projects = [
   },
 ];
 
-function StackCard({ p, i, total, progress, isMobile }) {
+function StackCard({ p, i, total, progress, isMobile, cardRef }) {
   // Earlier cards recede (scale down) as later ones stack over them.
   const targetScale = 1 - (total - 1 - i) * 0.03;
   const scale = useTransform(progress, [i / total, 1], [1, targetScale]);
@@ -56,6 +56,7 @@ function StackCard({ p, i, total, progress, isMobile }) {
 
   return (
     <div
+      ref={cardRef}
       className="sticky mb-[20vh] md:mb-[58vh]"
       style={{ top: `${top}px` }}
     >
@@ -109,10 +110,28 @@ function StackCard({ p, i, total, progress, isMobile }) {
 export default function PortfolioSection(props) {
   const isMobile = useIsMobile();
   const containerRef = useRef(null);
+  const lastCardRef = useRef(null);
+  const [lastCardHeight, setLastCardHeight] = useState(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
+
+  // Container's bottom padding equals exactly one card's height, giving the
+  // last card enough room to complete its sticky travel without ballooning the page.
+  useEffect(() => {
+    const el = lastCardRef.current;
+    if (!el) return;
+    const update = () => setLastCardHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [isMobile]);
 
   return (
     <StackPanel {...props} innerClassName="">
@@ -140,7 +159,11 @@ export default function PortfolioSection(props) {
           </Reveal>
 
           {/* Sticky stacking case study cards */}
-          <div ref={containerRef} className="relative mt-10 md:mt-14 pb-[100vh]">
+          <div
+            ref={containerRef}
+            className="relative mt-10 md:mt-14"
+            style={{ paddingBottom: lastCardHeight ? `${lastCardHeight}px` : undefined }}
+          >
             {projects.map((p, i) => (
               <StackCard
                 key={p.title}
@@ -149,6 +172,7 @@ export default function PortfolioSection(props) {
                 total={projects.length}
                 progress={scrollYProgress}
                 isMobile={isMobile}
+                cardRef={i === projects.length - 1 ? lastCardRef : undefined}
               />
             ))}
           </div>
