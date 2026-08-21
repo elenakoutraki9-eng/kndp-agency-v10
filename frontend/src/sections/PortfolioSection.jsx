@@ -124,11 +124,14 @@ export default function PortfolioSection(props) {
   });
   // A sticky element only gets "stuck" dwell time from space that follows it
   // within its containing block — its OWN trailing margin/padding doesn't
-  // count. Since the last card has no sibling after it, we give the
-  // container itself this paddingBottom so the last card actually sticks
-  // and fully stacks, instead of sliding straight through its "top" offset.
-  const lastTop = isMobile ? 88 + (projects.length - 1) * 16 : 96 + (projects.length - 1) * 26;
-  const lastCardDwell = lastTop + 40;
+  // count. The last card has no sibling after it, so it needs a real
+  // trailing spacer sibling just to stick/stack at all. Kept deliberately
+  // tiny — the same per-card step (16px mobile / 26px desktop) used for the
+  // sliver-peek between every other pair of cards — so the last card
+  // reaches its fully-stacked position and then releases again almost
+  // immediately, in sync with the rest of the stack, instead of visibly
+  // lagging behind once the user scrolls on to the next section.
+  const lastCardDwell = isMobile ? 16 : 26;
 
   return (
     <StackPanel {...props} innerClassName="">
