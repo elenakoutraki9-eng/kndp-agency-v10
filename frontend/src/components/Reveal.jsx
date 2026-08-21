@@ -64,13 +64,13 @@ export const WordMask = ({ text, accent = [], delay = 0, stagger = 0.07, classNa
   );
 };
 
-export const Reveal = ({ children, delay = 0, y = 28, x = 0, scale = 1, className = "" }) => {
+export const Reveal = ({ children, delay = 0, y = 28, x = 0, scale = 1, className = "", margin = "-80px" }) => {
   return (
     <motion.div
       className={className}
       initial={{ opacity: 0, y, x, scale }}
       whileInView={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-80px" }}
+      viewport={{ once: true, margin }}
       transition={{ duration: 0.8, delay, ease: EASE }}
     >
       {children}

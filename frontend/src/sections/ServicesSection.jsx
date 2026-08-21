@@ -101,14 +101,14 @@ export default function ServicesSection() {
           <div className="mt-5 space-y-6" data-testid="services-categories">
             {categories.map((cat, ci) => (
               <div key={cat.slug} data-testid={`services-category-${cat.slug}`}>
-                <Reveal delay={0.05 * ci}>
+                <Reveal delay={0.05 * ci} margin="200px">
                   <p className="text-sm font-display font-semibold text-baby-dark tracking-tight">
                     {cat.name}
                   </p>
                 </Reveal>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {cat.services.map((s, i) => (
-                    <Reveal key={s.n} delay={0.05 * i}>
+                    <Reveal key={s.n} delay={0.05 * i} margin="200px">
                       <div
                         data-testid={`service-card-${s.n}`}
                         className="group h-full flex flex-col rounded-2xl border border-ink/8 bg-white p-4 md:p-5 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-baby/15 hover:border-baby/50"
