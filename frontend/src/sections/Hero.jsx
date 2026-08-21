@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { ArrowUpRight, ArrowDown } from "lucide-react";
+import { ArrowUpRight, ArrowDown, MousePointerClick } from "lucide-react";
 import { Kicker, WordMask, Magnetic } from "@/components/Reveal";
 import HeroBackground, { useMouseParallax } from "@/components/HeroBackground";
 import ChatDesktop from "@/components/ChatDesktop";
@@ -134,13 +134,14 @@ export default function Hero(props) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 1.25 }}
-              className="absolute -bottom-6 -left-4 md:-left-10 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl px-6 py-5 animate-float-soft"
+              className="absolute -bottom-6 -left-4 md:-left-10 max-w-[230px] rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl px-5 py-4 animate-float-soft"
             >
-              <p className="text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
-                Ολοκληρωμένη υπηρεσία
+              <p className="text-xs uppercase tracking-[0.18em] font-bold text-baby-dark flex items-center gap-1.5">
+                <MousePointerClick className="h-3.5 w-3.5" />
+                Δοκίμασέ το τώρα
               </p>
-              <p className="mt-1 font-display font-semibold tracking-tight">
-                Σχεδίαση → Ανάπτυξη → Κυκλοφορία
+              <p className="mt-1.5 font-display font-semibold tracking-tight leading-snug text-sm text-ink">
+                Γράψε την επιχείρησή σου και δες τι μπορούμε να χτίσουμε για σένα.
               </p>
             </motion.div>
           </motion.div>
