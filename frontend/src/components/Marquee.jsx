@@ -16,7 +16,7 @@ export default function EditorialMarquee() {
   return (
     <div
       data-testid="services-marquee"
-      className="bg-baby-light border-y border-baby/30 py-6 md:py-8 overflow-hidden"
+      className="bg-paper py-6 md:py-8 overflow-hidden"
     >
       <Marquee speed={32} gradient={false} pauseOnHover>
         {items.map((item) => (
