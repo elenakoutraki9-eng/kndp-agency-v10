@@ -121,9 +121,10 @@ export default function PortfolioSection(props) {
     offset: ["start start", "end end"],
   });
 
-  // Give the container enough extra room (one card's height) so the LAST
-  // card also gets to fully slide up and complete its sticky travel instead
-  // of staying static at the bottom.
+  // Give the container a bit of extra room so the LAST card also gets to
+  // fully slide up and complete its sticky travel instead of staying static
+  // at the bottom — a fraction of its height is enough, not the full height,
+  // to avoid a big gap before the CTA panel below.
   useEffect(() => {
     const el = lastCardRef.current;
     if (!el) return;
@@ -167,7 +168,7 @@ export default function PortfolioSection(props) {
           <div
             ref={containerRef}
             className="relative mt-10 md:mt-14"
-            style={{ paddingBottom: lastCardHeight ? `${lastCardHeight}px` : undefined }}
+            style={{ paddingBottom: lastCardHeight ? `${Math.round(lastCardHeight * 0.35)}px` : undefined }}
           >
             {projects.map((p, i) => (
               <StackCard
