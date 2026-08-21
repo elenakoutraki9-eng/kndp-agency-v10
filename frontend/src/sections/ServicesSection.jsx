@@ -161,17 +161,6 @@ export default function ServicesSection() {
                         <p className="mt-2.5 text-xs font-semibold text-baby-dark/80 uppercase tracking-wide">
                           {s.who}
                         </p>
-                        <Magnetic strength={0.2} className="mt-3 self-start">
-                          <button
-                            type="button"
-                            onClick={() => scrollToId("#contact")}
-                            data-testid={`service-lets-talk-${s.n}`}
-                            className="group/btn inline-flex items-center gap-1.5 rounded-full border border-ink/10 px-4 py-2 text-xs font-bold text-ink transition-[background-color,border-color,transform] duration-300 hover:scale-105 hover:bg-baby hover:border-baby"
-                          >
-                            Ας μιλήσουμε
-                            <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:rotate-45" />
-                          </button>
-                        </Magnetic>
                       </div>
                     </Reveal>
                   ))}
