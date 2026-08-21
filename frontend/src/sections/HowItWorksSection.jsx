@@ -86,14 +86,19 @@ export default function HowItWorksSection(props) {
 
   const { scrollYProgress } = useScroll({
     target: stepsRef,
-    offset: ["start 0.8", "end 0.45"],
+    // Wide window: the line spans almost the entire time the section is
+    // on screen, so full draw takes a lot of scrolling (i.e. slow).
+    offset: ["start 0.85", "end 0.1"],
   });
-  // Smooth the raw scroll progress a touch for the line drawing so it
-  // reveals gradually (eased) rather than snapping 1:1 with the wheel.
-  const pathLength = useSpring(scrollYProgress, {
-    stiffness: 70,
-    damping: 26,
-    restDelta: 0.001,
+  // Add a noticeable "delay" dead-zone: the first ~15% of the tracked
+  // scroll does NOT draw the line yet, then it draws across the rest.
+  const drawProgress = useTransform(scrollYProgress, [0, 0.15, 1], [0, 0, 1]);
+  // Soft, low-stiffness spring so the line clearly lags behind the wheel
+  // and visibly keeps drawing itself as you scroll (never snaps).
+  const pathLength = useSpring(drawProgress, {
+    stiffness: 32,
+    damping: 24,
+    restDelta: 0.0005,
   });
 
   // A short bright "comet head" segment that rides the tip of the drawn
@@ -172,13 +177,13 @@ export default function HowItWorksSection(props) {
               />
             </svg>
 
-            <div className="relative z-10 flex flex-col gap-14 md:gap-24">
+            <div className="relative z-10 flex flex-col gap-24 md:gap-40 py-4 md:py-8">
               {steps.map((step, i) => (
                 <StepCard
                   key={step.n}
                   step={step}
                   index={i}
-                  progress={scrollYProgress}
+                  progress={drawProgress}
                   isMobile={isMobile}
                 />
               ))}
