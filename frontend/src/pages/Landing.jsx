@@ -6,7 +6,6 @@ import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
-import ScrollCompanion from "@/components/ScrollCompanion";
 import IntroOverlay from "@/components/IntroOverlay";
 import EditorialMarquee from "@/components/Marquee";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -61,7 +60,6 @@ export default function Landing() {
         )}
       </AnimatePresence>
       <Cursor />
-      <ScrollCompanion />
       <Navbar />
       <main>
         {/* Hero, partners marquee and Our Work share ONE continuous
