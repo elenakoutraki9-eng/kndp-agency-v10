@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
 import EditorialMarquee from "@/components/Marquee";
 import { StackedPanels } from "@/components/StackSection";
+import ScrollReveal from "@/components/ScrollReveal";
 import Hero from "@/sections/Hero";
 import ProblemSolutionSection from "@/sections/ProblemSolutionSection";
 import ServicesSection from "@/sections/ServicesSection";
@@ -47,14 +48,24 @@ export default function Landing() {
       <main>
         <StackedPanels>
           <Hero />
-          <ProblemSolutionSection />
+          <ScrollReveal>
+            <ProblemSolutionSection />
+          </ScrollReveal>
         </StackedPanels>
         <EditorialMarquee />
-        <ServicesSection />
+        <ScrollReveal>
+          <ServicesSection />
+        </ScrollReveal>
         <HowItWorksSection />
-        <PortfolioSection />
-        <ContactSection />
-        <FaqSection />
+        <ScrollReveal>
+          <PortfolioSection />
+        </ScrollReveal>
+        <ScrollReveal>
+          <ContactSection />
+        </ScrollReveal>
+        <ScrollReveal>
+          <FaqSection />
+        </ScrollReveal>
       </main>
       <Footer />
       <Toaster position="bottom-right" richColors />

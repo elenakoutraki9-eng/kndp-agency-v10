@@ -37,7 +37,7 @@
         @apply border-border;
     }
     html {
-        scroll-behavior: auto;
+        scroll-behavior: smooth;
     }
     html.lenis,
     html.lenis body {
@@ -114,5 +114,26 @@
   }
   html {
     scroll-behavior: auto !important;
+  }
+}
+
+/* Scroll-triggered section entrance — driven by IntersectionObserver (see ScrollReveal.jsx).
+   Fade in + slide up once, GPU-friendly (opacity/transform only). */
+.reveal-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-section {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
