@@ -121,6 +121,18 @@ backend:
           comment: "✅ ALL 7 BACKEND TESTS PASSED! Comprehensive testing of POST /api/generate-ideas endpoint completed successfully. ✅ VALID BUSINESS INPUTS: Test 1 'Καφετέρια' returned 200 with 18 total ideas, 15 visible ideas, has_more=true, limit=15. All 15 ideas validated: each has non-empty title, valid category (one of 7 allowed categories: Ιστοσελίδες, Web Apps, Mobile Apps, Έξυπνα Εργαλεία, Web Tools, Automations, Προγράμματα), and description. NO forbidden content detected (no 'AI' or 'τεχνητή νοημοσύνη' found in any titles/descriptions). Test 2 'Γυμναστήριο' returned 200 with 15 ideas. Test 3 'Δικηγορικό γραφείο' returned 200 with 15 ideas. ✅ EMPTY/WHITESPACE VALIDATION: Test 4 empty business '' returned 400 as expected. Test 5 whitespace-only business '   ' returned 400 as expected. ✅ LONG INPUT HANDLING: Test 6 very long business (146 chars) returned 200 with business truncated to exactly 120 chars and ideas generated successfully. No crash or error. ✅ HAS_MORE LOGIC: Verified has_more field is boolean. When total=18 > 15, ideas length=15 and has_more=true (correct). ✅ MALFORMED REQUEST: Test 7 missing 'business' key returned 422 (FastAPI validation error) as expected. ✅ RESPONSE SHAPE: All responses have correct structure with keys: business, ideas, total, has_more, limit. Each idea has category, title, description fields. ✅ CATEGORY VALIDATION: All returned categories match exactly one of the 7 allowed categories. ✅ CONTENT RULE: NO instances of standalone 'AI' or 'τεχνητή νοημοσύνη' found in any response text (case-insensitive check). The endpoint is production-ready and meets all requirements from the review request."
 
 frontend:
+  - task: "Scroll-triggered staggered animations in Problems We Solve section"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/sections/ProblemSolutionSection.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added scroll-triggered entrance animations to the 'Problems We Solve' section (data-testid='problem-solution-section', 4 rows data-testid='problem-solution-row-0..3'). Implemented with the existing IntersectionObserver hook (useInViewOnce) + pure CSS transitions (no new libraries). Behavior: (1) Section title block (Kicker + headline 'Σου ακούγεται γνωστό;') fades in + slides up from translateY(20px) with 0s delay FIRST. (2) Each row then animates in staggered (rowDelay = 0.28 + i*0.14s): left/problem card slides in from translateX(-40px), the center arrow fades in (opacity only), and the right/solution card slides in from translateX(+40px) — all three simultaneously per row. (3) opacity 0->1, ~0.5s duration, ease-out cubic-bezier(0.22,1,0.36,1). Fires ONCE via IntersectionObserver (threshold 0.2). Solution card hover-lift preserved via an inner wrapper. Compiles clean, lint passes. Could not verify visually via screenshot tool due to Lenis smooth-scroll + sticky StackPanel. Needs frontend testing to confirm rows animate in staggered order and all cards reach opacity 1 / translate 0."
+
   - task: "Interactive AI Idea Generator in Hero (ChatDesktop) - frontend UI"
     implemented: true
     working: "NA"
@@ -593,12 +605,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "AI Idea Generator endpoint POST /api/generate-ideas (Gemini via Emergent LLM key)"
+    - "Scroll-triggered staggered animations in Problems We Solve section"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+    - agent: "main"
+      message: "NEW FRONTEND CHANGE to verify: scroll-triggered staggered entrance animations in the 'Problems We Solve' section (data-testid='problem-solution-section'). Please scroll this section into view (site uses Lenis smooth scroll + sticky stacked panels, so scroll gradually) and confirm: (1) the section title 'Σου ακούγεται γνωστό;' fades + slides up FIRST; (2) then the 4 rows (data-testid='problem-solution-row-0' through '-row-3') animate in one-by-one with a staggered delay — the left problem card slides in from the left, the center arrow fades in, and the right solution card slides in from the right, all simultaneously per row; (3) after the animation completes all cards are fully visible (opacity 1, no residual translate offset) with NO clipping/overlap; (4) it fires once (does not replay on further scroll within the section). Check both 1440x900 desktop and 390x844 mobile (on mobile the center arrow is hidden by design, cards stack vertically). Confirm NO console errors and no horizontal overflow. This is the ONLY thing to test."
     - agent: "main"
       message: "NEW BACKEND ENDPOINT to test: POST /api/generate-ideas with JSON body {\"business\": \"<text>\"}. It calls Google Gemini (gemini-3-flash-preview) via emergentintegrations + EMERGENT_LLM_KEY to generate tailored digital-solution ideas for that business, in Greek. Expected 200 response shape: {business:str, ideas:[{category:str,title:str,description:str}], total:int, has_more:bool, limit:15}. ideas length must be <= 15. category must be one of: Ιστοσελίδες, Web Apps, Mobile Apps, Έξυπνα Εργαλεία, Web Tools, Automations, Προγράμματα. Please test: (1) valid business e.g. 'Καφετέρια' returns >=1 idea with correct shape and all categories valid; (2) empty/whitespace business returns 400; (3) very long business (>120 chars) still works (truncated); (4) has_more is true only when total>15 and ideas is capped at 15; (5) response contains NO occurrence of the words 'AI' or 'τεχνητή νοημοσύνη' in returned text. Do NOT test frontend. EMERGENT_LLM_KEY is set in backend/.env."
 
