@@ -41,20 +41,20 @@ function StepCard({ step, index }) {
     >
       <div
         data-testid={`how-step-${index + 1}`}
-        className="group relative rounded-2xl bg-white/5 border border-white/10 p-5 md:p-6 backdrop-blur-sm transition-[background-color,border-color,transform] duration-500 hover:bg-white/10 hover:border-baby/40 hover:-translate-y-1"
+        className="group relative h-full rounded-xl bg-white/5 border border-white/10 p-4 backdrop-blur-sm transition-[background-color,border-color,transform] duration-500 hover:bg-white/10 hover:border-baby/40 hover:-translate-y-1"
       >
-        <div className="flex items-center gap-4">
-          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-baby/15 text-baby transition-[background-color,color,transform] duration-500 group-hover:bg-baby group-hover:text-ink group-hover:-rotate-12">
-            <Icon className="h-5 w-5" />
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-baby/15 text-baby transition-[background-color,color,transform] duration-500 group-hover:bg-baby group-hover:text-ink group-hover:-rotate-12">
+            <Icon className="h-4 w-4" />
           </span>
-          <span className="font-display text-3xl md:text-4xl font-light text-baby leading-none">
+          <span className="font-display text-2xl md:text-3xl font-light text-baby leading-none">
             {step.n}
           </span>
         </div>
-        <h3 className="mt-3 font-display text-lg md:text-xl font-medium tracking-tight">
+        <h3 className="mt-2.5 font-display text-base md:text-lg font-medium tracking-tight">
           {step.title}
         </h3>
-        <p className="mt-1.5 text-sm text-white/60 leading-relaxed">{step.text}</p>
+        <p className="mt-1 text-[13px] text-white/60 leading-relaxed">{step.text}</p>
       </div>
     </motion.div>
   );
@@ -67,27 +67,27 @@ export default function HowItWorksSection(props) {
       innerClassName="rounded-[2.5rem] bg-ink text-white shadow-2xl shadow-ink/20 overflow-hidden grain relative"
     >
       <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-baby/15 blur-3xl pointer-events-none" />
-      <section id="how-it-works" data-testid="how-it-works-section" className="py-12 md:py-16 relative">
+      <section id="how-it-works" data-testid="how-it-works-section" className="py-10 md:py-12 relative">
         <div className="mx-auto max-w-6xl px-6 md:px-10">
           <Reveal>
             <Kicker light>Πώς δουλεύουμε</Kicker>
             <h2
               data-testid="how-it-works-headline"
-              className="mt-3 font-display font-medium tracking-tight text-3xl md:text-5xl"
+              className="mt-3 font-display font-medium tracking-tight text-2xl md:text-4xl"
             >
               <WordMask text="Τρία βήματα." className="inline-block" />{" "}
               <WordMask text="Καμία ταλαιπωρία." accent={["Καμία", "ταλαιπωρία."]} delay={0.2} className="inline-block" />
             </h2>
           </Reveal>
 
-          {/* Compact stacked step cards */}
-          <div className="mt-8 md:mt-10 flex flex-col gap-4 md:gap-5 max-w-2xl">
+          {/* Compact 3-up step cards */}
+          <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             {steps.map((step, i) => (
               <StepCard key={step.n} step={step} index={i} />
             ))}
           </div>
 
-          <Reveal className="mt-10 md:mt-14 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <Reveal className="mt-8 md:mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Magnetic strength={0.25}>
               <button
                 onClick={() => scrollToId("#contact")}

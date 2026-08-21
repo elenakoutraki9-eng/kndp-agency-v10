@@ -1,12 +1,4 @@
-import {
-  ArrowUpRight,
-  Smartphone,
-  UtensilsCrossed,
-  Boxes,
-  Users,
-  ShoppingBag,
-  Zap,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Reveal, Kicker, WordMask, Magnetic } from "@/components/Reveal";
 import { scrollToId } from "@/lib/scroll";
 
@@ -86,15 +78,6 @@ const categories = [
   },
 ];
 
-const ideas = [
-  { icon: UtensilsCrossed, text: "Ένα booking system για το εστιατόριό σου" },
-  { icon: Boxes, text: "Ένα εργαλείο διαχείρισης αποθήκης" },
-  { icon: Users, text: "Ένα custom CRM για την ομάδα πωλήσεων" },
-  { icon: ShoppingBag, text: "Ένα online store για τα προϊόντα σου" },
-  { icon: Smartphone, text: "Ένα mobile app για τους πελάτες σου" },
-  { icon: Zap, text: "Έναν αυτοματισμό που σου εξοικονομεί ώρες κάθε εβδομάδα" },
-];
-
 export default function ServicesSection() {
   return (
     <section id="services" data-testid="services-section" className="py-12 md:py-16">
@@ -109,29 +92,6 @@ export default function ServicesSection() {
               <WordMask text="μπορούμε να το χτίσουμε." accent={["χτίσουμε."]} delay={0.2} className="block" />
             </h2>
           </Reveal>
-
-          <Reveal className="mt-10 md:mt-12">
-            <p className="text-xs uppercase tracking-[0.25em] font-semibold text-ink/50">
-              Μερικά παραδείγματα
-            </p>
-          </Reveal>
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="ideas-grid">
-            {ideas.map((idea, i) => (
-              <Reveal key={idea.text} delay={0.05 * i}>
-                <div
-                  data-testid={`idea-card-${i}`}
-                  className="group h-full rounded-xl border border-ink/8 bg-white p-3.5 flex items-center gap-3 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-baby/15 hover:border-baby/50"
-                >
-                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-baby-light text-baby-dark transition-[background-color,color,transform] duration-500 group-hover:bg-baby group-hover:text-ink group-hover:-rotate-12">
-                    <idea.icon className="h-4 w-4" />
-                  </span>
-                  <p className="font-display text-sm md:text-base font-medium tracking-tight leading-snug">
-                    {idea.text}
-                  </p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
 
           <Reveal className="mt-10 md:mt-12">
             <p className="text-xs uppercase tracking-[0.25em] font-semibold text-ink/50">
