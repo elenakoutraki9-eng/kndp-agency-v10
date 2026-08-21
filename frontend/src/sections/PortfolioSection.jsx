@@ -47,22 +47,22 @@ const projects = [
 
 function StackCard({ p, i, total, progress, isMobile }) {
   // Earlier cards recede (scale down) as later ones stack over them.
-  const targetScale = 1 - (total - 1 - i) * 0.035;
+  const targetScale = 1 - (total - 1 - i) * 0.03;
   const scale = useTransform(progress, [i / total, 1], [1, targetScale]);
   const imageRight = i % 2 === 1;
   // Each card sticks slightly lower than the previous so the stack "peeks".
-  const top = 88 + i * 26;
+  const top = 80 + i * 22;
 
   return (
-    <div className="sticky" style={{ top: `${top}px` }}>
+    <div className="sticky mb-[42vh] md:mb-[58vh] last:mb-0" style={{ top: `${top}px` }}>
       <motion.article
         data-testid={`case-study-${i}`}
         style={{ scale: isMobile ? 1 : scale }}
-        className="group origin-top grid grid-cols-1 md:grid-cols-2 items-center gap-5 md:gap-10 rounded-3xl border border-ink/8 bg-white p-4 md:p-6 shadow-xl shadow-ink/10"
+        className="group origin-top mx-auto w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 items-center gap-4 md:gap-6 rounded-2xl border border-white/10 bg-ink text-white p-3 md:p-4 shadow-2xl shadow-ink/30"
       >
         {/* Image / mockup */}
         <div
-          className={`relative overflow-hidden rounded-2xl bg-mist ${
+          className={`relative overflow-hidden rounded-xl bg-white/5 ${
             imageRight ? "md:order-2" : "md:order-1"
           }`}
         >
@@ -75,26 +75,26 @@ function StackCard({ p, i, total, progress, isMobile }) {
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
             />
           </div>
-          <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-ink/5" />
+          <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10" />
         </div>
 
         {/* Details */}
-        <div className={`px-1 md:px-4 ${imageRight ? "md:order-1" : "md:order-2"}`}>
-          <span className="inline-flex items-center rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-baby-dark">
+        <div className={`px-1 md:px-3 ${imageRight ? "md:order-1" : "md:order-2"}`}>
+          <span className="inline-flex items-center rounded-full bg-white/10 border border-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-baby">
             {p.tag}
           </span>
-          <h3 className="mt-4 font-display text-2xl md:text-3xl font-medium tracking-tight leading-tight">
+          <h3 className="mt-3 font-display text-xl md:text-2xl font-medium tracking-tight leading-tight text-white">
             {p.title}
           </h3>
-          <p className="mt-3 text-sm md:text-base leading-relaxed text-ink/60">{p.desc}</p>
+          <p className="mt-2 text-sm leading-relaxed text-white/60">{p.desc}</p>
           <button
             type="button"
             onClick={() => scrollToId("#contact")}
             data-testid={`case-study-cta-${i}`}
-            className="group/btn mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-ink"
+            className="group/btn mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-white"
           >
             Θέλω κάτι παρόμοιο
-            <ArrowUpRight className="h-4 w-4 text-baby-dark transition-transform duration-300 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+            <ArrowUpRight className="h-4 w-4 text-baby transition-transform duration-300 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
           </button>
         </div>
       </motion.article>
