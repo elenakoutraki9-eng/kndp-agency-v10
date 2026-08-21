@@ -23,7 +23,7 @@ export default function Hero(props) {
   const [demoActive, setDemoActive] = useState(false);
 
   return (
-    <StackPanel {...props} innerClassName="bg-paper">
+    <StackPanel {...props} innerClassName="">
       <section
         id="hero"
       ref={heroRef}

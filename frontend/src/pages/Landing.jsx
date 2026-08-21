@@ -46,16 +46,31 @@ export default function Landing() {
       <Cursor />
       <Navbar />
       <main>
-        <StackedPanels>
-          <Hero />
-          <ScrollReveal>
-            <ProblemSolutionSection />
-          </ScrollReveal>
-        </StackedPanels>
-        <EditorialMarquee />
-        <ScrollReveal>
-          <ServicesSection />
-        </ScrollReveal>
+        {/* Hero + the three sections directly below share ONE continuous
+            blue-tinted background so all four flow together with no seams. */}
+        <div className="relative bg-paper">
+          <div
+            className="pointer-events-none absolute inset-0 overflow-hidden"
+            aria-hidden="true"
+          >
+            <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-baby/25 blur-2xl" />
+            <div className="absolute top-[28%] -left-40 h-[26rem] w-[26rem] rounded-full bg-baby/15 blur-3xl" />
+            <div className="absolute top-[60%] -right-44 h-[26rem] w-[26rem] rounded-full bg-baby/15 blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-baby/20 blur-2xl" />
+          </div>
+          <div className="relative">
+            <StackedPanels>
+              <Hero />
+              <ScrollReveal>
+                <ProblemSolutionSection />
+              </ScrollReveal>
+            </StackedPanels>
+            <EditorialMarquee />
+            <ScrollReveal>
+              <ServicesSection />
+            </ScrollReveal>
+          </div>
+        </div>
         <HowItWorksSection />
         <ScrollReveal>
           <PortfolioSection />

@@ -39,7 +39,7 @@ export default function ProblemSolutionSection(props) {
   return (
     <StackPanel
       {...props}
-      innerClassName="bg-paper overflow-hidden"
+      innerClassName="overflow-hidden"
     >
       <section id="problems" data-testid="problem-solution-section" className="py-12 md:py-16">
         <div ref={ref} className="mx-auto max-w-7xl px-6 md:px-10">

@@ -38,17 +38,6 @@ export default function HeroBackground({ mx, my }) {
     <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
       <div className="bg-grid absolute inset-0" />
 
-      <motion.div
-        className="absolute -top-32 -right-32 h-[24rem] w-[24rem] rounded-full bg-baby/25 blur-2xl will-change-transform"
-        animate={{ x: [0, 40, -15, 0], y: [0, -30, 20, 0] }}
-        transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute -bottom-24 -left-24 h-[18rem] w-[18rem] rounded-full bg-baby/15 blur-2xl will-change-transform"
-        animate={{ x: [0, -20, 30, 0], y: [0, 20, -15, 0] }}
-        transition={{ duration: 34, repeat: Infinity, ease: "easeInOut" }}
-      />
-
       <FloatingShape mx={mx} my={my} depth={36} duration={8} className="top-[14%] right-[34%]">
         <div className="h-24 w-24 md:h-28 md:w-28 rounded-full border-[3px] border-baby-dark/30" />
       </FloatingShape>
