@@ -138,7 +138,7 @@ export default function PortfolioSection(props) {
       <section id="portfolio" data-testid="portfolio-section" className="pt-12 md:pt-16">
         <div className="mx-auto max-w-7xl px-6 md:px-10">
           <Reveal>
-            <Kicker>Έργα</Kicker>
+            <Kicker waypoint="portfolio">Έργα</Kicker>
             <h2
               data-testid="portfolio-headline"
               className="mt-3 font-display font-medium tracking-tight text-3xl md:text-5xl"
