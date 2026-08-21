@@ -47,13 +47,20 @@ const projects = [
 
 function StackCard({ p, i, total, progress, isMobile }) {
   // Earlier cards recede (scale down) as later ones stack over them.
-  const targetScale = 1 - (total - 1 - i) * 0.03;
-  const scale = useTransform(progress, [i / total, 1], [1, targetScale]);
+  // Mobile shrinks earlier cards more so they fully hide behind the new one
+  // (no incremental top offset there, so nothing peeks above the current card).
+  const recedeStep = isMobile ? 0.08 : 0.03;
+  const targetScale = 1 - (total - 1 - i) * recedeStep;
+  // On mobile, finish receding within this card's own slot (not the whole
+  // remaining scroll) so it's already fully shrunk by the time the next
+  // card takes over — otherwise it still shows full-size and peeks above it.
+  const scaleRange = isMobile ? [i / total, (i + 1) / total] : [i / total, 1];
+  const scale = useTransform(progress, scaleRange, [1, targetScale]);
   const imageRight = i % 2 === 1;
-  // Each card sticks slightly lower than the previous so the stack "peeks".
-  // Base offset uses vh so the pinned card sits around vertical center of the
-  // viewport (not near the top); per-card px step still creates the peek.
-  const top = isMobile ? `calc(24vh + ${i * 12}px)` : `calc(32vh + ${i * 22}px)`;
+  // Desktop still staggers the top offset for a peeking stack, centered around
+  // mid-viewport. Mobile pins every card at the same spot, just below the fixed
+  // navbar (h-20 = 80px), so each new card fully covers the one beneath it.
+  const top = isMobile ? "96px" : `calc(32vh + ${i * 22}px)`;
 
   return (
     <div
