@@ -54,7 +54,10 @@ function StackCard({ p, i, total, progress, isMobile }) {
   const top = 80 + i * 22;
 
   return (
-    <div className="sticky mb-[42vh] md:mb-[58vh] last:mb-0" style={{ top: `${top}px` }}>
+    <div
+      className={isMobile ? "mb-6" : "sticky mb-[42vh] md:mb-[58vh] last:mb-0"}
+      style={isMobile ? undefined : { top: `${top}px` }}
+    >
       <motion.article
         data-testid={`case-study-${i}`}
         style={{ scale: isMobile ? 1 : scale }}
