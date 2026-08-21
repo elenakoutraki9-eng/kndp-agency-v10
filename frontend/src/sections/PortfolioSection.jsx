@@ -168,7 +168,7 @@ export default function PortfolioSection(props) {
           <div
             ref={containerRef}
             className="relative mt-10 md:mt-14"
-            style={{ paddingBottom: lastCardHeight ? `${Math.round(lastCardHeight * 0.12)}px` : undefined }}
+            style={{ paddingBottom: lastCardHeight ? `${Math.round(lastCardHeight * 0.05)}px` : undefined }}
           >
             {projects.map((p, i) => (
               <StackCard
