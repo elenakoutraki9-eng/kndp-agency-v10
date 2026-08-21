@@ -54,7 +54,7 @@ export default function ProblemSolutionSection(props) {
               willChange: "opacity, transform",
             }}
           >
-            <Kicker>Προβλήματα που λύνουμε</Kicker>
+            <Kicker waypoint="problems">Προβλήματα που λύνουμε</Kicker>
             <h2
               data-testid="problem-solution-headline"
               className="mt-3 font-display font-medium tracking-tight text-3xl md:text-5xl"

@@ -61,7 +61,7 @@ export default function ContactSection(props) {
       <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/30 blur-3xl pointer-events-none" />
       <div className="mx-auto max-w-6xl px-6 md:px-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 relative">
           <div className="lg:col-span-6">
-            <Kicker className="text-ink/70">Επικοινωνία</Kicker>
+            <Kicker waypoint="contact" className="text-ink/70">Επικοινωνία</Kicker>
             <h2
               data-testid="contact-headline"
               className="mt-3 font-display font-bold tracking-tighter leading-[0.95] text-4xl md:text-5xl"

@@ -83,7 +83,7 @@ export default function ServicesSection() {
     <section id="services" data-testid="services-section" className="py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-6 md:px-10">
           <div>
-            <Kicker>Υπηρεσίες</Kicker>
+            <Kicker waypoint="services">Υπηρεσίες</Kicker>
             <h2
               data-testid="services-headline"
               className="mt-3 font-display text-3xl md:text-5xl font-medium tracking-tight max-w-3xl"

@@ -121,6 +121,18 @@ backend:
           comment: "✅ ALL 7 BACKEND TESTS PASSED! Comprehensive testing of POST /api/generate-ideas endpoint completed successfully. ✅ VALID BUSINESS INPUTS: Test 1 'Καφετέρια' returned 200 with 18 total ideas, 15 visible ideas, has_more=true, limit=15. All 15 ideas validated: each has non-empty title, valid category (one of 7 allowed categories: Ιστοσελίδες, Web Apps, Mobile Apps, Έξυπνα Εργαλεία, Web Tools, Automations, Προγράμματα), and description. NO forbidden content detected (no 'AI' or 'τεχνητή νοημοσύνη' found in any titles/descriptions). Test 2 'Γυμναστήριο' returned 200 with 15 ideas. Test 3 'Δικηγορικό γραφείο' returned 200 with 15 ideas. ✅ EMPTY/WHITESPACE VALIDATION: Test 4 empty business '' returned 400 as expected. Test 5 whitespace-only business '   ' returned 400 as expected. ✅ LONG INPUT HANDLING: Test 6 very long business (146 chars) returned 200 with business truncated to exactly 120 chars and ideas generated successfully. No crash or error. ✅ HAS_MORE LOGIC: Verified has_more field is boolean. When total=18 > 15, ideas length=15 and has_more=true (correct). ✅ MALFORMED REQUEST: Test 7 missing 'business' key returned 422 (FastAPI validation error) as expected. ✅ RESPONSE SHAPE: All responses have correct structure with keys: business, ideas, total, has_more, limit. Each idea has category, title, description fields. ✅ CATEGORY VALIDATION: All returned categories match exactly one of the 7 allowed categories. ✅ CONTENT RULE: NO instances of standalone 'AI' or 'τεχνητή νοημοσύνη' found in any response text (case-insensitive check). The endpoint is production-ready and meets all requirements from the review request."
 
 frontend:
+  - task: "Scroll-driven journey dot (ScrollCompanion) visiting section accent dots"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/ScrollCompanion.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Rewrote ScrollCompanion into a scroll-driven journey dot (the blue KNDP logo dot). It starts merged with the navbar logo dot (data-scroll-waypoint='logo-start'), then as the user scrolls it smoothly travels to each accent marker IN ORDER: hero three window dots (data-scroll-waypoint='hero' on ChatDesktop chrome), then each section Kicker accent dot (waypoint props added: portfolio, services, problems, howitworks, faq, contact). Movement is tied to scrollY (not time): each frame computes the target by interpolating between consecutive waypoints based on real scroll position, merging onto each marker as it crosses ~45% viewport (reading zone), with a light per-frame smoothing (ease 0.14) for fluidity that settles when scrolling stops (no idle drift). Logo anchored at scroll 0 with a short eased launch leg to the hero dots; monotonic anchors with a min-gap so waypoints never bunch. Works with Lenis (desktop, real scroll) and native scroll (mobile) via window.scrollY + live getBoundingClientRect. aria-hidden + pointer-events-none (verified passthrough). VERIFIED via screenshots: desktop top dot at logo (192,44), small scroll sits at hero window dots (851,152), travels to Έργα kicker; mobile top at logo (96,44), services kicker x-aligned (28), no horizontal overflow, pointer-events passthrough, no console errors."
+
   - task: "Mobile scroll lag below Hero (sticky Portfolio cards)"
     implemented: true
     working: true

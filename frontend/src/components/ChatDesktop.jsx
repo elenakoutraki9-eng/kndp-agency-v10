@@ -75,7 +75,7 @@ export default function ChatDesktop({ onActiveChange }) {
       <div className="rounded-2xl bg-white shadow-2xl shadow-ink/20 border border-ink/10 overflow-hidden">
         {/* Browser chrome */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-ink/5 bg-mist/70">
-          <div className="flex gap-1.5">
+          <div data-scroll-waypoint="hero" className="flex gap-1.5">
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
             <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
             <span className="h-3 w-3 rounded-full bg-[#28c840]" />

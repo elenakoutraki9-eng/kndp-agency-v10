@@ -70,7 +70,7 @@ export default function HowItWorksSection(props) {
       <section id="how-it-works" data-testid="how-it-works-section" className="py-10 md:py-12 relative">
         <div className="mx-auto max-w-6xl px-6 md:px-10">
           <Reveal>
-            <Kicker light>Πώς δουλεύουμε</Kicker>
+            <Kicker light waypoint="howitworks">Πώς δουλεύουμε</Kicker>
             <h2
               data-testid="how-it-works-headline"
               className="mt-3 font-display font-medium tracking-tight text-2xl md:text-4xl"

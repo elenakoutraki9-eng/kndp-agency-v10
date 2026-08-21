@@ -88,7 +88,7 @@ export default function FaqSection() {
       <div className="mx-auto max-w-7xl px-6 md:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4">
             <Reveal>
-              <Kicker>Συχνές Ερωτήσεις</Kicker>
+              <Kicker waypoint="faq">Συχνές Ερωτήσεις</Kicker>
               <h2
                 data-testid="faq-headline"
                 className="mt-3 font-display font-medium tracking-tight text-3xl md:text-4xl"

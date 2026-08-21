@@ -47,7 +47,7 @@ export default function Navbar() {
           className="font-display font-bold text-2xl tracking-tighter flex items-center gap-1"
         >
           KNDP
-          <span className="h-2.5 w-2.5 rounded-full bg-baby translate-y-1" />
+          <span data-scroll-waypoint="logo-start" className="h-2.5 w-2.5 rounded-full bg-baby translate-y-1" />
         </button>
 
         <nav className="hidden md:flex items-center gap-8">
