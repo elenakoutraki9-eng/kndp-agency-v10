@@ -78,9 +78,7 @@ export default function Landing() {
           <div className="relative">
             <Hero />
             <EditorialMarquee />
-            <ScrollReveal>
-              <PortfolioSection />
-            </ScrollReveal>
+            <PortfolioSection />
           </div>
         </div>
 
