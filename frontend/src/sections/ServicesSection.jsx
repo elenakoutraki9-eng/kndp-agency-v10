@@ -1,5 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
-import { Kicker, Magnetic } from "@/components/Reveal";
+import { Kicker, Magnetic, Reveal } from "@/components/Reveal";
 import { scrollToId } from "@/lib/scroll";
 
 
@@ -107,21 +107,22 @@ export default function ServicesSection() {
                   {cat.name}
                 </p>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {cat.services.map((s) => (
-                    <div
-                      key={s.n}
-                      data-testid={`service-card-${s.n}`}
-                      className="group h-full flex flex-col rounded-2xl border border-ink/8 bg-white p-4 md:p-5 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-baby/15 hover:border-baby/50"
-                    >
-                      <span className="font-display text-sm font-light text-baby-dark">{s.n}</span>
-                      <h4 className="mt-1.5 font-display text-lg md:text-xl font-medium tracking-tight">
-                        {s.title}
-                      </h4>
-                      <p className="mt-1.5 text-sm text-ink/60 leading-relaxed flex-1">{s.text}</p>
-                      <p className="mt-2.5 text-xs font-semibold text-baby-dark/80 uppercase tracking-wide">
-                        {s.who}
-                      </p>
-                    </div>
+                  {cat.services.map((s, i) => (
+                    <Reveal key={s.n} delay={0.05 * i} margin="200px" duration={0.35}>
+                      <div
+                        data-testid={`service-card-${s.n}`}
+                        className="group h-full flex flex-col rounded-2xl border border-ink/8 bg-white p-4 md:p-5 transition-[transform,box-shadow,border-color] duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-baby/15 hover:border-baby/50"
+                      >
+                        <span className="font-display text-sm font-light text-baby-dark">{s.n}</span>
+                        <h4 className="mt-1.5 font-display text-lg md:text-xl font-medium tracking-tight">
+                          {s.title}
+                        </h4>
+                        <p className="mt-1.5 text-sm text-ink/60 leading-relaxed flex-1">{s.text}</p>
+                        <p className="mt-2.5 text-xs font-semibold text-baby-dark/80 uppercase tracking-wide">
+                          {s.who}
+                        </p>
+                      </div>
+                    </Reveal>
                   ))}
                 </div>
               </div>
