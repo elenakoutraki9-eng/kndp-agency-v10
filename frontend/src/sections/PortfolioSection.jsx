@@ -122,16 +122,14 @@ export default function PortfolioSection(props) {
     target: containerRef,
     offset: ["start start", "end end"],
   });
-  // A sticky element only gets "stuck" dwell time from space that follows it
-  // within its containing block — its OWN trailing margin/padding doesn't
-  // count. The last card has no sibling after it, so it needs a real
-  // trailing spacer sibling just to stick/stack at all. Kept deliberately
-  // tiny — the same per-card step (16px mobile / 26px desktop) used for the
-  // sliver-peek between every other pair of cards — so the last card
-  // reaches its fully-stacked position and then releases again almost
-  // immediately, in sync with the rest of the stack, instead of visibly
-  // lagging behind once the user scrolls on to the next section.
-  const lastCardDwell = isMobile ? 16 : 26;
+  // The last card needs a real trailing sibling to get any sticky "dwell"
+  // (a sticky element's own margin/padding doesn't grant it stuck time — only
+  // content AFTER it in the containing block does). With a tiny spacer the last
+  // card reached its stacked position only for an instant, so it read as "never
+  // stacking". Give it a generous dwell so it clearly rises, locks over the
+  // whole deck (with the sliver peek), and holds before releasing into the next
+  // section. Mobile cards are tighter so it needs proportionally more runway.
+  const lastCardDwellVh = isMobile ? 55 : 110;
 
   return (
     <StackPanel {...props} innerClassName="">
@@ -175,7 +173,7 @@ export default function PortfolioSection(props) {
                 isMobile={isMobile}
               />
             ))}
-            <div aria-hidden style={{ height: `${lastCardDwell}px` }} />
+            <div aria-hidden style={{ height: `${lastCardDwellVh}vh` }} />
           </div>
 
           <Reveal className="mt-10 md:mt-14">
