@@ -1,10 +1,8 @@
-import { useRef } from "react";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowUpRight, MessageSquareText, FileText, Rocket } from "lucide-react";
 import { WordMask, Reveal, Kicker, Magnetic } from "@/components/Reveal";
 import { StackPanel } from "@/components/StackSection";
 import { scrollToId } from "@/lib/scroll";
-import useIsMobile from "@/hooks/useIsMobile";
 
 const steps = [
   {
@@ -30,39 +28,20 @@ const steps = [
   },
 ];
 
-// Scroll-progress points where each card finishes fading in — set to the
-// path-length fraction where that step sits, so the drawn line reaches a
-// step exactly as it appears (step1 ~top, step2 ~middle, step3 ~bottom).
-const REVEAL_RANGES = [
-  [0.0, 0.12],
-  [0.34, 0.48],
-  [0.7, 0.85],
-];
-
-// Zigzag snake path (desktop) and a straight center line (mobile).
-// viewBox is 0 0 100 100, stretched with preserveAspectRatio="none";
-// vector-effect keeps the stroke width crisp/constant.
-const DESKTOP_PATH = "M27 2 L27 17 C27 31 73 35 73 50 C73 65 27 69 27 83 L27 98";
-const MOBILE_PATH = "M50 2 L50 98";
-
-function StepCard({ step, index, progress, isMobile }) {
-  const range = REVEAL_RANGES[index];
-  const fromX = (step.side === "left" ? -1 : 1) * (isMobile ? 26 : 64);
-  const opacity = useTransform(progress, range, [0, 1]);
-  const x = useTransform(progress, range, [fromX, 0]);
+function StepCard({ step, index }) {
   const Icon = step.icon;
-
-  const alignment =
-    step.side === "left" ? "mr-auto md:pr-6" : "ml-auto md:pl-6";
 
   return (
     <motion.div
-      style={{ opacity, x }}
-      className={`relative w-[86%] md:w-[54%] ${alignment}`}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.4 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: index * 0.08 }}
+      className="w-full"
     >
       <div
         data-testid={`how-step-${index + 1}`}
-        className="group relative rounded-2xl bg-white/5 border border-white/10 p-6 md:p-7 backdrop-blur-sm transition-[background-color,border-color,transform] duration-500 hover:bg-white/10 hover:border-baby/40 hover:-translate-y-1"
+        className="group relative rounded-2xl bg-white/5 border border-white/10 p-5 md:p-6 backdrop-blur-sm transition-[background-color,border-color,transform] duration-500 hover:bg-white/10 hover:border-baby/40 hover:-translate-y-1"
       >
         <div className="flex items-center gap-4">
           <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-baby/15 text-baby transition-[background-color,color,transform] duration-500 group-hover:bg-baby group-hover:text-ink group-hover:-rotate-12">
@@ -72,7 +51,7 @@ function StepCard({ step, index, progress, isMobile }) {
             {step.n}
           </span>
         </div>
-        <h3 className="mt-4 font-display text-lg md:text-xl font-medium tracking-tight">
+        <h3 className="mt-3 font-display text-lg md:text-xl font-medium tracking-tight">
           {step.title}
         </h3>
         <p className="mt-1.5 text-sm text-white/60 leading-relaxed">{step.text}</p>
@@ -82,32 +61,6 @@ function StepCard({ step, index, progress, isMobile }) {
 }
 
 export default function HowItWorksSection(props) {
-  const isMobile = useIsMobile();
-  const stepsRef = useRef(null);
-
-  const { scrollYProgress } = useScroll({
-    target: stepsRef,
-    // Symmetric window: progress maps ~1:1 to how far you've scrolled
-    // through the section, so the line tip tracks the steps as they pass.
-    offset: ["start 0.8", "end 0.2"],
-  });
-  // Tie the drawn length DIRECTLY to scroll position. A very stiff spring
-  // only removes sub-pixel jitter — there is effectively no lag, so the
-  // line extends exactly as far as the user has scrolled (never pre-drawn).
-  const pathLength = useSpring(scrollYProgress, {
-    stiffness: 400,
-    damping: 45,
-    restDelta: 0.0005,
-  });
-
-  // A short bright "comet head" segment that rides the tip of the drawn
-  // line, so it feels like travelling forward through each step.
-  const HEAD_LEN = 0.06;
-  const headOffset = useTransform(pathLength, (p) => Math.max(0, p - HEAD_LEN));
-  const headOpacity = useTransform(pathLength, [0, 0.02, 0.985, 1], [0, 1, 1, 0]);
-
-  const linePath = isMobile ? MOBILE_PATH : DESKTOP_PATH;
-
   return (
     <StackPanel
       {...props}
@@ -127,66 +80,11 @@ export default function HowItWorksSection(props) {
             </h2>
           </Reveal>
 
-          {/* Zigzag steps with self-drawing snake line + travelling comet head */}
-          <div ref={stepsRef} className="relative mt-10 md:mt-16">
-            <svg
-              className="absolute inset-0 h-full w-full pointer-events-none"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              fill="none"
-              aria-hidden="true"
-            >
-              <defs>
-                <filter id="how-line-glow" x="-60%" y="-60%" width="220%" height="220%">
-                  <feGaussianBlur stdDeviation="1.6" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* faint static track — the full journey ahead */}
-              <path
-                d={linePath}
-                stroke="rgba(137,207,240,0.16)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
-              />
-              {/* drawn trail that grows from the first step as you scroll */}
-              <motion.path
-                data-testid="how-line-trail"
-                d={linePath}
-                stroke="#89cff0"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
-                style={{ pathLength }}
-              />
-              {/* bright comet head riding the tip of the trail */}
-              <motion.path
-                d={linePath}
-                stroke="#eaf6fd"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
-                filter="url(#how-line-glow)"
-                style={{ pathLength: HEAD_LEN, pathOffset: headOffset, opacity: headOpacity }}
-              />
-            </svg>
-
-            <div className="relative z-10 flex flex-col gap-24 md:gap-40 py-4 md:py-8">
-              {steps.map((step, i) => (
-                <StepCard
-                  key={step.n}
-                  step={step}
-                  index={i}
-                  progress={scrollYProgress}
-                  isMobile={isMobile}
-                />
-              ))}
-            </div>
+          {/* Compact stacked step cards */}
+          <div className="mt-8 md:mt-10 flex flex-col gap-4 md:gap-5 max-w-2xl">
+            {steps.map((step, i) => (
+              <StepCard key={step.n} step={step} index={i} />
+            ))}
           </div>
 
           <Reveal className="mt-10 md:mt-14 flex flex-col sm:flex-row items-start sm:items-center gap-4">
