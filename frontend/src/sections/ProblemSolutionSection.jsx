@@ -3,6 +3,7 @@ import { ArrowRight, CircleX, CheckCircle2 } from "lucide-react";
 import { Kicker } from "@/components/Reveal";
 import { StackPanel } from "@/components/StackSection";
 import useInViewOnce from "@/hooks/useInViewOnce";
+import useIsMobile from "@/hooks/useIsMobile";
 
 const pairs = [
   {
@@ -28,6 +29,7 @@ const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const DURATION = 0.5; // seconds
 
 export default function ProblemSolutionSection(props) {
+  const isMobile = useIsMobile();
   const [ref, inView] = useInViewOnce({ threshold: 0.2, rootMargin: "0px 0px -12% 0px" });
 
   // The title animates first; rows begin staggering after it.
@@ -95,8 +97,8 @@ export default function ProblemSolutionSection(props) {
                     }}
                   >
                     <motion.span
-                      animate={{ x: [0, 6, 0] }}
-                      transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                      animate={isMobile ? undefined : { x: [0, 6, 0] }}
+                      transition={isMobile ? undefined : { repeat: Infinity, duration: 2, ease: "easeInOut" }}
                       className="inline-flex"
                     >
                       <ArrowRight className="h-4 w-4" />
