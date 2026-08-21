@@ -23,6 +23,7 @@ export default function Hero(props) {
   const imgMY = useTransform(my, [-1, 1], [-8, 8]);
 
   const [wordIndex, setWordIndex] = useState(0);
+  const [demoActive, setDemoActive] = useState(false);
   useEffect(() => {
     const id = setInterval(() => setWordIndex((v) => (v + 1) % rotatingWords.length), 2200);
     return () => clearInterval(id);
@@ -106,7 +107,7 @@ export default function Hero(props) {
               className="relative w-full flex justify-center"
             >
               <motion.div style={{ y: phoneY }} className="will-change-transform w-full">
-                <ChatDesktop />
+                <ChatDesktop onActiveChange={setDemoActive} />
               </motion.div>
             </motion.div>
             <motion.div
@@ -130,20 +131,25 @@ export default function Hero(props) {
                 </motion.span>
               </AnimatePresence>
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.25 }}
-              className="absolute -bottom-6 -left-4 md:-left-10 max-w-[230px] rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl px-5 py-4 animate-float-soft"
-            >
-              <p className="text-xs uppercase tracking-[0.18em] font-bold text-baby-dark flex items-center gap-1.5">
-                <MousePointerClick className="h-3.5 w-3.5" />
-                Δοκίμασέ το τώρα
-              </p>
-              <p className="mt-1.5 font-display font-semibold tracking-tight leading-snug text-sm text-ink">
-                Γράψε την επιχείρησή σου και δες τι μπορούμε να χτίσουμε για σένα.
-              </p>
-            </motion.div>
+            <AnimatePresence>
+              {!demoActive && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                  transition={{ duration: 0.5, delay: demoActive ? 0 : 1.25 }}
+                  className="absolute -bottom-6 -left-4 md:-left-10 max-w-[230px] rounded-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl px-5 py-4 animate-float-soft"
+                >
+                  <p className="text-xs uppercase tracking-[0.18em] font-bold text-baby-dark flex items-center gap-1.5">
+                    <MousePointerClick className="h-3.5 w-3.5" />
+                    Δοκίμασέ το τώρα
+                  </p>
+                  <p className="mt-1.5 font-display font-semibold tracking-tight leading-snug text-sm text-ink">
+                    Γράψε την επιχείρησή σου και δες τι μπορούμε να χτίσουμε για σένα.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </div>

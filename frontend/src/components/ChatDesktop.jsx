@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -31,7 +31,7 @@ const CATEGORY_META = {
 
 const SUGGESTIONS = ["Καφετέρια", "Γυμναστήριο", "Κομμωτήριο", "Ηλεκτρονικό κατάστημα"];
 
-export default function ChatDesktop() {
+export default function ChatDesktop({ onActiveChange }) {
   const [business, setBusiness] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
   const [ideas, setIdeas] = useState([]);
@@ -39,6 +39,11 @@ export default function ChatDesktop() {
   const [hasMore, setHasMore] = useState(false);
   const [submitted, setSubmitted] = useState("");
   const [error, setError] = useState("");
+
+  // Let the parent (Hero) know when the demo is active so it can hide overlays.
+  useEffect(() => {
+    if (onActiveChange) onActiveChange(status !== "idle");
+  }, [status, onActiveChange]);
 
   const generate = async (value) => {
     const q = (value ?? business).trim();
