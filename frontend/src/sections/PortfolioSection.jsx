@@ -124,12 +124,12 @@ export default function PortfolioSection(props) {
   });
   // The last card needs a real trailing sibling to get any sticky "dwell"
   // (a sticky element's own margin/padding doesn't grant it stuck time — only
-  // content AFTER it in the containing block does). With a tiny spacer the last
-  // card reached its stacked position only for an instant, so it read as "never
-  // stacking". Give it a generous dwell so it clearly rises, locks over the
-  // whole deck (with the sliver peek), and holds before releasing into the next
-  // section. Mobile cards are tighter so it needs proportionally more runway.
-  const lastCardDwellVh = isMobile ? 55 : 110;
+  // content AFTER it in the containing block does). Keep this dwell MODEST:
+  // there is no next card to rise during it, so a large value just freezes the
+  // last card on screen while the previous card scrolls far up alone (jank).
+  // A short window is enough for the last card to visibly lock over the deck
+  // and then release the whole section cleanly into the CTA / next section.
+  const lastCardDwellVh = isMobile ? 32 : 28;
 
   return (
     <StackPanel {...props} innerClassName="">
