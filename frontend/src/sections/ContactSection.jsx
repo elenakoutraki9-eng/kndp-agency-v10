@@ -62,8 +62,9 @@ export default function ContactSection(props) {
             </h2>
             <Reveal delay={0.3}>
               <p className="mt-4 max-w-md text-sm md:text-base leading-relaxed text-ink/70">
-                Πες μας τι θέλεις να χτίσεις ή να διορθώσεις. Δωρεάν προσφορά,
-                χωρίς καμία δέσμευση — απαντάμε εντός 2 ωρών τις εργάσιμες μέρες.
+                Χρειάζονται μόνο το όνομα και το email σου — τα υπόλοιπα είναι προαιρετικά.
+                Πάρε λιγότερο από 30 δευτερόλεπτα. Δωρεάν προσφορά, χωρίς καμία δέσμευση —
+                απαντάμε εντός 2 ωρών τις εργάσιμες μέρες.
               </p>
             </Reveal>
 
@@ -147,12 +148,11 @@ export default function ContactSection(props) {
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label htmlFor="contact-phone" className="mb-1.5 block text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
-                      Τηλέφωνο *
+                      Τηλέφωνο <span className="normal-case tracking-normal font-medium text-ink/30">· προαιρετικό</span>
                     </label>
                     <input
                       id="contact-phone"
                       data-testid="contact-phone-input"
-                      required
                       type="tel"
                       value={form.phone}
                       onChange={set("phone")}
@@ -162,12 +162,11 @@ export default function ContactSection(props) {
                   </div>
                   <div>
                     <label htmlFor="contact-company" className="mb-1.5 block text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
-                      Εταιρεία *
+                      Εταιρεία <span className="normal-case tracking-normal font-medium text-ink/30">· προαιρετικό</span>
                     </label>
                     <input
                       id="contact-company"
                       data-testid="contact-company-input"
-                      required
                       value={form.company}
                       onChange={set("company")}
                       placeholder="Η εταιρεία σου"
@@ -202,16 +201,15 @@ export default function ContactSection(props) {
 
                 <div className="mt-4">
                   <label htmlFor="contact-message" className="mb-1.5 block text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
-                    Πες μας περισσότερα *
+                    Πες μας λίγα λόγια <span className="normal-case tracking-normal font-medium text-ink/30">· προαιρετικό</span>
                   </label>
                   <textarea
                     id="contact-message"
                     data-testid="contact-message-input"
-                    required
                     rows={3}
                     value={form.message}
                     onChange={set("message")}
-                    placeholder="Τι θέλεις να χτίσεις ή να διορθώσεις; Μια αρχική ιδέα είναι απόλυτα εντάξει."
+                    placeholder="Π.χ. «Θέλω μια ιστοσελίδα για την καφετέρια μου». Ή άφησέ το κενό — θα τα πούμε από κοντά."
                     className={`${inputCls} resize-none`}
                   />
                 </div>
