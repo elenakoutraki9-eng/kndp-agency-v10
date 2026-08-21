@@ -2,19 +2,82 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 
 const LETTERS = ["K", "N", "D", "P"];
-
-const EASE = [0.22, 1, 0.36, 1];
+const BASE = 0.16; // first letter delay
+const STEP = 0.15; // gap between letters (fast)
+const SNAP = [0.16, 1, 0.3, 1]; // sharp ease-out overshoot
 
 /**
- * Fullscreen premium intro animation shown on first landing.
- * Dark backdrop with flowing baby-blue blobs, an animated grid, drifting
- * geometric shapes and a clip-reveal KNDP wordmark. Calls onComplete after
- * the sequence; the curtain-up exit is handled by the `exit` variant via the
- * parent's <AnimatePresence>.
+ * Bold, high-energy glitch intro. Each letter snaps in with an RGB-split
+ * shatter, punctuated by light flashes and glitch bars, peaks with a whole
+ * word shudder, then a white flash transitions into the site.
  */
-export default function IntroOverlay({ onComplete, duration = 2600 }) {
+function GlitchLetter({ char, i }) {
+  const delay = BASE + i * STEP;
+  return (
+    <span className="relative inline-block">
+      {/* cyan ghost slice */}
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 text-baby mix-blend-screen"
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: [0, 0.95, 0.4, 0.7, 0],
+          x: [10, 12, -8, 4, 0],
+          clipPath: [
+            "inset(30% 0 30% 0)",
+            "inset(8% 0 62% 0)",
+            "inset(55% 0 8% 0)",
+            "inset(0% 0 0% 0)",
+            "inset(0% 0 0% 0)",
+          ],
+        }}
+        transition={{ delay, duration: 0.5, times: [0, 0.25, 0.5, 0.75, 1], ease: "linear" }}
+      >
+        {char}
+      </motion.span>
+
+      {/* red ghost slice */}
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 text-[#ff3b4e] mix-blend-screen"
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: [0, 0.95, 0.5, 0.6, 0],
+          x: [-10, -12, 8, -4, 0],
+          clipPath: [
+            "inset(20% 0 50% 0)",
+            "inset(62% 0 8% 0)",
+            "inset(0% 0 45% 0)",
+            "inset(0% 0 0% 0)",
+            "inset(0% 0 0% 0)",
+          ],
+        }}
+        transition={{ delay, duration: 0.5, times: [0, 0.25, 0.5, 0.75, 1], ease: "linear" }}
+      >
+        {char}
+      </motion.span>
+
+      {/* solid letter snapping into place */}
+      <motion.span
+        className="relative inline-block"
+        initial={{ opacity: 0, scale: 2.2, filter: "blur(12px)" }}
+        animate={{
+          opacity: [0, 1, 1, 1],
+          scale: [2.2, 0.84, 1.09, 1],
+          filter: ["blur(12px)", "blur(0px)", "blur(0px)", "blur(0px)"],
+          x: [0, -7, 5, 0],
+          skewX: [16, -9, 3, 0],
+        }}
+        transition={{ delay, duration: 0.32, times: [0, 0.55, 0.8, 1], ease: SNAP }}
+      >
+        {char}
+      </motion.span>
+    </span>
+  );
+}
+
+export default function IntroOverlay({ onComplete, duration = 1950 }) {
   useEffect(() => {
-    // Lock scroll while the intro plays.
     const prevHtml = document.documentElement.style.overflow;
     const prevBody = document.body.style.overflow;
     document.documentElement.style.overflow = "hidden";
@@ -28,123 +91,95 @@ export default function IntroOverlay({ onComplete, duration = 2600 }) {
     };
   }, [onComplete, duration]);
 
+  const impactDelays = LETTERS.map((_, i) => BASE + i * STEP + 0.12);
+
   return (
     <motion.div
       data-testid="intro-overlay"
       role="presentation"
       className="fixed inset-0 z-[120] overflow-hidden bg-ink text-white flex items-center justify-center"
       initial={{ opacity: 1 }}
-      exit={{ y: "-100%", transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1] } }}
+      exit={{ opacity: 0, filter: "blur(6px)", transition: { duration: 0.3, ease: "easeIn" } }}
     >
-      {/* animated grid texture */}
-      <motion.div
-        className="bg-grid absolute inset-0"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.18 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
+      {/* scanline texture */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, #fff 0, #fff 1px, transparent 1px, transparent 3px)",
+        }}
       />
 
-      {/* flowing colour blobs */}
+      {/* moving glitch bars */}
       <motion.div
-        className="absolute -top-48 -left-40 h-[38rem] w-[38rem] rounded-full bg-baby/25 blur-3xl"
-        animate={{ x: [0, 70, 10, 0], y: [0, 40, -20, 0] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute left-0 right-0 h-[3px] bg-baby/70"
+        style={{ top: "37%" }}
+        initial={{ opacity: 0, x: "-100%" }}
+        animate={{ opacity: [0, 1, 0, 1, 0], x: ["-100%", "-30%", "10%", "-10%", "100%"] }}
+        transition={{ delay: 0.85, duration: 0.55, times: [0, 0.2, 0.45, 0.7, 1], ease: "linear" }}
       />
       <motion.div
-        className="absolute -bottom-48 -right-40 h-[42rem] w-[42rem] rounded-full bg-baby-dark/25 blur-3xl"
-        animate={{ x: [0, -60, -10, 0], y: [0, -30, 20, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute top-1/2 left-1/2 h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-baby/10 blur-3xl"
-        animate={{ scale: [0.9, 1.15, 0.9], opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* drifting geometric shapes */}
-      <motion.div
-        className="absolute top-[18%] left-[16%] h-20 w-20 rounded-full border-2 border-baby/40"
-        initial={{ opacity: 0, scale: 0.4 }}
-        animate={{ opacity: 1, scale: 1, y: [0, -16, 0] }}
-        transition={{ opacity: { duration: 0.8 }, scale: { duration: 0.8 }, y: { duration: 7, repeat: Infinity, ease: "easeInOut" } }}
-      />
-      <motion.div
-        className="absolute bottom-[20%] right-[18%] h-10 w-10 rounded-md bg-baby/50"
-        initial={{ opacity: 0, rotate: -45 }}
-        animate={{ opacity: 1, rotate: [0, 90, 0] }}
-        transition={{ opacity: { duration: 0.8, delay: 0.3 }, rotate: { duration: 9, repeat: Infinity, ease: "easeInOut" } }}
-      />
-      <motion.div
-        className="absolute top-[26%] right-[24%] h-3 w-3 rounded-full bg-baby-light"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1, 0.4, 1], y: [0, 18, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute left-0 right-0 h-[2px] bg-[#ff3b4e]/70"
+        style={{ top: "61%" }}
+        initial={{ opacity: 0, x: "100%" }}
+        animate={{ opacity: [0, 1, 0, 1, 0], x: ["100%", "30%", "-15%", "12%", "-100%"] }}
+        transition={{ delay: 1.0, duration: 0.55, times: [0, 0.2, 0.45, 0.7, 1], ease: "linear" }}
       />
 
-      {/* centre wordmark */}
-      <div className="relative z-10 flex flex-col items-center">
-        {/* rotating dashed ring behind the logo */}
-        <motion.svg
-          className="absolute -z-10 h-[16rem] w-[16rem] md:h-[22rem] md:w-[22rem] text-baby/30"
-          viewBox="0 0 100 100"
-          fill="none"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1, rotate: 360 }}
-          transition={{
-            opacity: { duration: 1 },
-            scale: { duration: 1, ease: EASE },
-            rotate: { duration: 22, repeat: Infinity, ease: "linear" },
-          }}
-        >
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            stroke="currentColor"
-            strokeWidth="0.5"
-            strokeDasharray="4 6"
-          />
-        </motion.svg>
-
-        <div className="flex items-end overflow-hidden py-2" aria-label="KNDP">
-          {LETTERS.map((c, i) => (
-            <span key={c} className="overflow-hidden inline-block">
-              <motion.span
-                className="inline-block font-display text-6xl sm:text-7xl md:text-9xl font-bold tracking-tighter leading-none"
-                initial={{ y: "115%", opacity: 0 }}
-                animate={{ y: "0%", opacity: 1 }}
-                transition={{ delay: 0.3 + i * 0.12, duration: 0.75, ease: EASE }}
-              >
-                {c}
-              </motion.span>
-            </span>
-          ))}
-          {/* brand dot */}
-          <motion.span
-            className="mb-3 ml-2 md:ml-3 inline-block h-3 w-3 md:h-4 md:w-4 rounded-full bg-baby"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3 + LETTERS.length * 0.12, duration: 0.5, ease: EASE }}
-          />
-        </div>
-
-        {/* accent underline */}
+      {/* per-letter impact flashes */}
+      {impactDelays.map((d, i) => (
         <motion.div
-          className="mt-4 h-[3px] w-44 origin-left rounded-full bg-gradient-to-r from-baby via-baby-dark to-transparent"
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ delay: 1.05, duration: 0.7, ease: EASE }}
+          key={`flash-${i}`}
+          className="pointer-events-none absolute inset-0 bg-white"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.32, 0] }}
+          transition={{ delay: d, duration: 0.12, times: [0, 0.35, 1], ease: "linear" }}
         />
+      ))}
 
-        <motion.p
-          className="mt-5 text-[0.7rem] md:text-xs uppercase tracking-[0.45em] text-white/55"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.25, duration: 0.6, ease: EASE }}
+      {/* peak colour + white flashes */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 bg-baby"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 0.5, 0] }}
+        transition={{ delay: 1.0, duration: 0.2, times: [0, 0.4, 1], ease: "linear" }}
+      />
+      <motion.div
+        className="pointer-events-none absolute inset-0 bg-white"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 0.9, 0] }}
+        transition={{ delay: 1.32, duration: 0.22, times: [0, 0.4, 1], ease: "linear" }}
+      />
+      {/* final flash that carries into the site reveal */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 bg-white"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 0, 1] }}
+        transition={{ delay: 1.55, duration: 0.4, times: [0, 0.35, 1], ease: "easeIn" }}
+      />
+
+      {/* wordmark — stays still, then shudders at the peak */}
+      <motion.div
+        className="relative z-10 flex items-end"
+        animate={{ x: [0, 0, -9, 8, -4, 0], skewX: [0, 0, -6, 5, -2, 0] }}
+        transition={{ duration: 1.45, times: [0, 0.62, 0.68, 0.74, 0.82, 0.92], ease: "linear" }}
+      >
+        <span
+          aria-label="KNDP"
+          className="flex items-end font-display font-extrabold tracking-tighter leading-none text-7xl sm:text-8xl md:text-9xl"
         >
-          Digital Studio
-        </motion.p>
-      </div>
+          {LETTERS.map((c, i) => (
+            <GlitchLetter key={c} char={c} i={i} />
+          ))}
+        </span>
+        {/* brand dot punch-in */}
+        <motion.span
+          className="mb-2 ml-2 md:mb-3 md:ml-3 inline-block h-3 w-3 md:h-5 md:w-5 rounded-full bg-baby"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: [0, 1.7, 1], opacity: [0, 1, 1] }}
+          transition={{ delay: BASE + LETTERS.length * STEP, duration: 0.3, times: [0, 0.6, 1], ease: SNAP }}
+        />
+      </motion.div>
     </motion.div>
   );
 }
