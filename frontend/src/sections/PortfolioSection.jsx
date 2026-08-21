@@ -51,13 +51,14 @@ function StackCard({ p, i, total, progress, isMobile }) {
   const scale = useTransform(progress, [i / total, 1], [1, targetScale]);
   const imageRight = i % 2 === 1;
   // Each card sticks slightly lower than the previous so the stack "peeks".
-  // Mobile viewports are shorter, so the base offset and per-card step are smaller.
-  const top = isMobile ? 16 + i * 12 : 80 + i * 22;
+  // Base offset uses vh so the pinned card sits around vertical center of the
+  // viewport (not near the top); per-card px step still creates the peek.
+  const top = isMobile ? `calc(24vh + ${i * 12}px)` : `calc(32vh + ${i * 22}px)`;
 
   return (
     <div
       className="sticky mb-[20vh] md:mb-[58vh] last:mb-0"
-      style={{ top: `${top}px` }}
+      style={{ top }}
     >
       <motion.article
         data-testid={`case-study-${i}`}
