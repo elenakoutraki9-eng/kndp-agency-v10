@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { WordMask, Reveal, Kicker, Magnetic } from "@/components/Reveal";
@@ -45,27 +45,24 @@ const projects = [
   },
 ];
 
-function StackCard({ p, i, total, progress, isMobile }) {
-  // Earlier cards recede (scale down) as later ones stack over them.
-  // Mobile shrinks earlier cards more so they fully hide behind the new one
-  // (no incremental top offset there, so nothing peeks above the current card).
-  const recedeStep = isMobile ? 0.08 : 0.03;
-  const targetScale = 1 - (total - 1 - i) * recedeStep;
-  // On mobile, finish receding within this card's own slot (not the whole
-  // remaining scroll) so it's already fully shrunk by the time the next
-  // card takes over — otherwise it still shows full-size and peeks above it.
-  const scaleRange = isMobile ? [i / total, (i + 1) / total] : [i / total, 1];
-  const scale = useTransform(progress, scaleRange, [1, targetScale]);
+function StackCard({ p, i, total, progress, isMobile, cardRef }) {
+  // Deck-of-cards look: cards stay nearly full size — only a very slight
+  // recede so the stack still reads as having depth, not a fade-away.
+  const targetScale = 1 - (total - 1 - i) * 0.015;
+  // Recede finishes within this card's own slot, so it's already settled by
+  // the time the next card arrives and stacks on top of it.
+  const scale = useTransform(progress, [i / total, (i + 1) / total], [1, targetScale]);
   const imageRight = i % 2 === 1;
-  // Desktop still staggers the top offset for a peeking stack, centered around
-  // mid-viewport. Mobile pins every card at the same spot, just below the fixed
-  // navbar (h-20 = 80px), so each new card fully covers the one beneath it.
-  const top = isMobile ? "96px" : `calc(32vh + ${i * 22}px)`;
+  // Small, consistent step per card so each new one slides up and stacks on
+  // top of the previous, leaving a thin visible sliver of it at the top —
+  // like a physical deck of cards, hinting there's more behind.
+  const top = isMobile ? 88 + i * 16 : 96 + i * 26;
 
   return (
     <div
-      className="sticky mb-[20vh] md:mb-[58vh] last:mb-0"
-      style={{ top }}
+      ref={cardRef}
+      className="sticky mb-[34vh] md:mb-[54vh]"
+      style={{ top: `${top}px` }}
     >
       <motion.article
         data-testid={`case-study-${i}`}
@@ -117,10 +114,29 @@ function StackCard({ p, i, total, progress, isMobile }) {
 export default function PortfolioSection(props) {
   const isMobile = useIsMobile();
   const containerRef = useRef(null);
+  const lastCardRef = useRef(null);
+  const [lastCardHeight, setLastCardHeight] = useState(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
+
+  // Give the container enough extra room (one card's height) so the LAST
+  // card also gets to fully slide up and complete its sticky travel instead
+  // of staying static at the bottom.
+  useEffect(() => {
+    const el = lastCardRef.current;
+    if (!el) return;
+    const update = () => setLastCardHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [isMobile]);
 
   return (
     <StackPanel {...props} innerClassName="">
@@ -148,7 +164,11 @@ export default function PortfolioSection(props) {
           </Reveal>
 
           {/* Sticky stacking case study cards */}
-          <div ref={containerRef} className="relative mt-10 md:mt-14 pb-10">
+          <div
+            ref={containerRef}
+            className="relative mt-10 md:mt-14"
+            style={{ paddingBottom: lastCardHeight ? `${lastCardHeight}px` : undefined }}
+          >
             {projects.map((p, i) => (
               <StackCard
                 key={p.title}
@@ -157,6 +177,7 @@ export default function PortfolioSection(props) {
                 total={projects.length}
                 progress={scrollYProgress}
                 isMobile={isMobile}
+                cardRef={i === projects.length - 1 ? lastCardRef : undefined}
               />
             ))}
           </div>
