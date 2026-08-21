@@ -91,3 +91,22 @@
 .animate-float-soft {
     animation: float-soft 6s ease-in-out infinite;
 }
+
+/* ---- Mobile performance: trim expensive GPU effects on phones ---- */
+@media (max-width: 767px) {
+    /* Lighter blurs — large blur radii are the biggest paint cost on mobile */
+    .blur-3xl { --tw-blur: blur(28px) !important; }
+    .blur-2xl { --tw-blur: blur(20px) !important; }
+
+    /* backdrop-filter blur is very expensive on mobile GPUs — drop it */
+    .backdrop-blur-sm,
+    .backdrop-blur,
+    .backdrop-blur-md,
+    .backdrop-blur-lg {
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    /* the film-grain noise overlay adds an extra full-screen paint layer */
+    .grain::after { display: none; }
+}
