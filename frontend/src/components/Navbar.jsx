@@ -5,8 +5,8 @@ import { scrollToId } from "@/lib/scroll";
 
 const links = [
   { id: "#hero", label: "Αρχική", testid: "nav-link-home" },
-  { id: "#services", label: "Υπηρεσίες", testid: "nav-link-services" },
   { id: "#portfolio", label: "Έργα", testid: "nav-link-portfolio" },
+  { id: "#services", label: "Υπηρεσίες", testid: "nav-link-services" },
   { id: "#contact", label: "Επικοινωνία", testid: "nav-link-contact" },
 ];
 

@@ -8,7 +8,6 @@ import Footer from "@/components/Footer";
 import Cursor from "@/components/Cursor";
 import IntroOverlay from "@/components/IntroOverlay";
 import EditorialMarquee from "@/components/Marquee";
-import { StackedPanels } from "@/components/StackSection";
 import ScrollReveal from "@/components/ScrollReveal";
 import Hero from "@/sections/Hero";
 import ProblemSolutionSection from "@/sections/ProblemSolutionSection";
@@ -63,40 +62,37 @@ export default function Landing() {
       <Cursor />
       <Navbar />
       <main>
-        {/* Hero + the three sections directly below share ONE continuous
-            blue-tinted background so all four flow together with no seams. */}
+        {/* Hero (+ partners marquee) keeps its blue-tinted backdrop */}
         <div className="relative bg-paper">
           <div
             className="pointer-events-none absolute inset-0 overflow-hidden"
             aria-hidden="true"
           >
             <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-baby/25 blur-2xl" />
-            <div className="absolute top-[28%] -left-40 h-[26rem] w-[26rem] rounded-full bg-baby/15 blur-3xl" />
-            <div className="absolute top-[60%] -right-44 h-[26rem] w-[26rem] rounded-full bg-baby/15 blur-3xl" />
+            <div className="absolute top-[38%] -left-40 h-[26rem] w-[26rem] rounded-full bg-baby/15 blur-3xl" />
             <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-baby/20 blur-2xl" />
           </div>
           <div className="relative">
-            <StackedPanels>
-              <Hero />
-              <ScrollReveal>
-                <ProblemSolutionSection />
-              </ScrollReveal>
-            </StackedPanels>
+            <Hero />
             <EditorialMarquee />
-            <ScrollReveal>
-              <ServicesSection />
-            </ScrollReveal>
           </div>
         </div>
-        <HowItWorksSection />
+
         <ScrollReveal>
           <PortfolioSection />
         </ScrollReveal>
         <ScrollReveal>
-          <ContactSection />
+          <ServicesSection />
         </ScrollReveal>
         <ScrollReveal>
+          <ProblemSolutionSection />
+        </ScrollReveal>
+        <HowItWorksSection />
+        <ScrollReveal>
           <FaqSection />
+        </ScrollReveal>
+        <ScrollReveal>
+          <ContactSection />
         </ScrollReveal>
       </main>
       <Footer />
