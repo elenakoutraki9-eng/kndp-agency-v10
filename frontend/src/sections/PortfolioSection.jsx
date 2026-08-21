@@ -57,7 +57,7 @@ function StackCard({ p, i, total, progress, isMobile }) {
 
   return (
     <div
-      className="sticky mb-[20vh] md:mb-[58vh] last:mb-0"
+      className="sticky mb-[12vh] md:mb-[32vh] last:mb-0"
       style={{ top }}
     >
       <motion.article
