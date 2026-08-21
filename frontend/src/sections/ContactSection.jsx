@@ -23,20 +23,28 @@ const inputCls =
 
 export default function ContactSection(props) {
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", message: "" });
-  const [service, setService] = useState(null);
+  const [services, setServices] = useState([]);
   const [sending, setSending] = useState(false);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  const toggleService = (value) =>
+    setServices((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
 
   const submit = async (e) => {
     e.preventDefault();
     if (sending) return;
     setSending(true);
     try {
-      await axios.post(`${API}/contact`, { ...form, service });
+      await axios.post(`${API}/contact`, {
+        ...form,
+        service: services.length ? services.join(", ") : null,
+      });
       toast.success("Το μήνυμα εστάλη — θα επικοινωνήσουμε σύντομα μαζί σου.");
       setForm({ name: "", email: "", phone: "", company: "", message: "" });
-      setService(null);
+      setServices([]);
     } catch {
       toast.error("Κάτι πήγε στραβά. Δοκίμασε ξανά.");
     } finally {
@@ -181,25 +189,29 @@ export default function ContactSection(props) {
                     Τι χρειάζεσαι; <span className="normal-case tracking-normal font-medium text-ink/30">· προαιρετικό</span>
                   </p>
                   <p className="mb-2 text-xs text-ink/45">
-                    Δεν είσαι σίγουρος; Κανένα πρόβλημα — διάλεξε «Δεν ξέρω ακόμα» και θα το βρούμε μαζί.
+                    Διάλεξε ένα ή περισσότερα. Δεν είσαι σίγουρος; Διάλεξε «Δεν ξέρω ακόμα» και θα το βρούμε μαζί.
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {serviceOptions.map((s) => (
-                      <button
-                        key={s.value}
-                        type="button"
-                        data-testid={`service-chip-${s.value.toLowerCase().replace(/\s+/g, "-")}`}
-                        onClick={() => setService(service === s.value ? null : s.value)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,color,transform] duration-300 hover:scale-105 active:scale-95 ${
-                          service === s.value
-                            ? "bg-ink text-white border-ink"
-                            : "bg-white text-ink/70 border-ink/10 hover:border-baby-dark"
-                        }`}
-                      >
-                        {service === s.value && <Check className="h-3 w-3" />}
-                        {s.label}
-                      </button>
-                    ))}
+                    {serviceOptions.map((s) => {
+                      const selected = services.includes(s.value);
+                      return (
+                        <button
+                          key={s.value}
+                          type="button"
+                          aria-pressed={selected}
+                          data-testid={`service-chip-${s.value.toLowerCase().replace(/\s+/g, "-")}`}
+                          onClick={() => toggleService(s.value)}
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,color,transform] duration-300 hover:scale-105 active:scale-95 ${
+                            selected
+                              ? "bg-ink text-white border-ink"
+                              : "bg-white text-ink/70 border-ink/10 hover:border-baby-dark"
+                          }`}
+                        >
+                          {selected && <Check className="h-3 w-3" />}
+                          {s.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
