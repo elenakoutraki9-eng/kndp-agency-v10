@@ -62,10 +62,13 @@ function StackCard({ p, i, total, progress, isMobile }) {
   // The last card only needs just enough room (its own top offset + a small
   // buffer) to finish its short sticky travel — almost no gap after it.
   const marginBottom = isLast ? `${top + 40}px` : undefined;
+  // Mobile gets a noticeably shorter scroll distance between cards so the
+  // stack advances faster as the user scrolls; desktop pacing stays the same.
+  const marginClass = isLast ? "" : isMobile ? "mb-[16vh]" : "mb-[54vh]";
 
   return (
     <div
-      className={isLast ? "sticky" : "sticky mb-[34vh] md:mb-[54vh]"}
+      className={`sticky ${marginClass}`.trim()}
       style={{ top: `${top}px`, marginBottom }}
     >
       <motion.article
