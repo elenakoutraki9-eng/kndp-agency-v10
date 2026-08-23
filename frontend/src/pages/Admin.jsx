@@ -499,7 +499,10 @@ function LeadFinder({ token }) {
         headers: { "X-Admin-Token": token },
         params: { q: combinedQuery },
       });
-      setResults(res.data.results || []);
+      const fetched = res.data.results || [];
+      setResults(fetched);
+      // Pre-select every result so the user only deselects the ones they don't want.
+      setSelectedIds(new Set(fetched.map((p) => p.place_id)));
       setLastMeta({ query: combinedQuery, category: type, location: locationLabel });
       setSearched(true);
     } catch (err) {
