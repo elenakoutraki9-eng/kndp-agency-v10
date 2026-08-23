@@ -22,6 +22,7 @@ import {
   Plus,
   Trash2,
   Calendar,
+  ArrowRightLeft,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -463,7 +464,7 @@ const LOCATIONS = {
 };
 const GREEK_CITIES = Object.keys(LOCATIONS);
 
-function LeadFinder({ token }) {
+function LeadFinder({ token, onLeadsChanged }) {
   const [subTab, setSubTab] = useState("search");
   const [businessType, setBusinessType] = useState("");
   const [city, setCity] = useState(GREEK_CITIES[0]);
@@ -616,7 +617,7 @@ function LeadFinder({ token }) {
 
       {subTab === "prospects" ? (
         <div className="mt-6">
-          <ProspectsList token={token} />
+          <ProspectsList token={token} onLeadsChanged={onLeadsChanged} />
         </div>
       ) : (
       <>
@@ -835,12 +836,14 @@ function LeadFinder({ token }) {
   );
 }
 
-function ProspectsList({ token }) {
+function ProspectsList({ token, onLeadsChanged }) {
   const [prospects, setProspects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [transferring, setTransferring] = useState(false);
+  const [transferMsg, setTransferMsg] = useState("");
   const [websiteFilter, setWebsiteFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -957,6 +960,46 @@ function ProspectsList({ token }) {
     }
   };
 
+  const transfer = async (ids) => {
+    if (!ids.length) return;
+    setError("");
+    await axios.post(`${API}/admin/prospects/transfer`, { ids }, { headers: { "X-Admin-Token": token } });
+    setProspects((prev) => prev.filter((p) => !ids.includes(p.id)));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+    setTransferMsg(
+      ids.length === 1
+        ? "1 επιχείρηση μεταφέρθηκε στα Μηνύματα."
+        : `${ids.length} επιχειρήσεις μεταφέρθηκαν στα Μηνύματα.`
+    );
+    setTimeout(() => setTransferMsg(""), 3500);
+    if (onLeadsChanged) onLeadsChanged();
+  };
+
+  const transferOne = async (id) => {
+    try {
+      await transfer([id]);
+    } catch {
+      setError("Η μεταφορά απέτυχε. Δοκίμασε ξανά.");
+    }
+  };
+
+  const transferSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0 || transferring) return;
+    setTransferring(true);
+    try {
+      await transfer(ids);
+    } catch {
+      setError("Η μαζική μεταφορά απέτυχε. Δοκίμασε ξανά.");
+    } finally {
+      setTransferring(false);
+    }
+  };
+
   const exportCSV = () => {
     const headers = ["Επιχείρηση", "Κατηγορία", "Τοποθεσία", "Διεύθυνση", "Τηλέφωνο", "Email", "Ιστοσελίδα", "Βαθμολογία", "Αναζήτηση", "Google Maps", "Ημερομηνία"];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -1024,6 +1067,16 @@ function ProspectsList({ token }) {
           <span className="text-sm font-bold text-ink">{selectedIds.size} επιλεγμένα</span>
           <button
             type="button"
+            onClick={transferSelected}
+            disabled={transferring}
+            data-testid="prospects-bulk-transfer"
+            className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
+          >
+            {transferring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
+            Μεταφορά στα Μηνύματα
+          </button>
+          <button
+            type="button"
             onClick={deleteSelected}
             disabled={deleting}
             data-testid="prospects-bulk-delete"
@@ -1041,6 +1094,10 @@ function ProspectsList({ token }) {
             <X className="h-3.5 w-3.5" />Άκυρο
           </button>
         </div>
+      )}
+
+      {transferMsg && (
+        <div data-testid="prospects-transfer-msg" className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3.5 text-sm font-semibold text-emerald-700">{transferMsg}</div>
       )}
 
       {error && (
@@ -1152,15 +1209,26 @@ function ProspectsList({ token }) {
                     </td>
                     <td className="px-4 py-3 text-ink/60">{formatDate(p.created_at)}</td>
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => deleteOne(p.id)}
-                        data-testid={`prospects-delete-${p.id}`}
-                        title="Διαγραφή"
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink/35 transition-colors hover:bg-red-50 hover:text-red-500"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => transferOne(p.id)}
+                          data-testid={`prospects-transfer-${p.id}`}
+                          title="Μεταφορά στα Μηνύματα"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink/35 transition-colors hover:bg-baby-light hover:text-baby-dark"
+                        >
+                          <ArrowRightLeft className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteOne(p.id)}
+                          data-testid={`prospects-delete-${p.id}`}
+                          title="Διαγραφή"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink/35 transition-colors hover:bg-red-50 hover:text-red-500"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -1465,7 +1533,7 @@ function Dashboard({ token, onLogout }) {
 
         {activeTab === "finder" ? (
           <div>
-            <LeadFinder token={token} />
+            <LeadFinder token={token} onLeadsChanged={load} />
           </div>
         ) : (
         <>

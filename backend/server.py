@@ -124,6 +124,10 @@ class ProspectBulkDelete(BaseModel):
     ids: List[str]
 
 
+class ProspectTransfer(BaseModel):
+    ids: List[str]
+
+
 class Prospect(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     place_id: str
@@ -493,6 +497,50 @@ async def bulk_delete_prospects(body: ProspectBulkDelete, _: bool = Depends(veri
         raise HTTPException(status_code=400, detail="Δεν στάλθηκαν αναγνωριστικά")
     result = await db.prospects.delete_many({"id": {"$in": body.ids}})
     return {"deleted": result.deleted_count}
+
+
+@api_router.post("/admin/prospects/transfer")
+async def transfer_prospects_to_leads(body: ProspectTransfer, _: bool = Depends(verify_admin)):
+    """Move selected prospects into the Messages/Leads board (contact_messages)
+    and remove them from the prospects list."""
+    if not body.ids:
+        raise HTTPException(status_code=400, detail="Δεν στάλθηκαν αναγνωριστικά")
+    transferred = 0
+    for pid in body.ids:
+        prospect = await db.prospects.find_one({"id": pid}, {"_id": 0})
+        if not prospect:
+            continue
+        detail_lines = []
+        if prospect.get("category"):
+            detail_lines.append(f"Κατηγορία: {prospect['category']}")
+        if prospect.get("location"):
+            detail_lines.append(f"Περιοχή: {prospect['location']}")
+        if prospect.get("address"):
+            detail_lines.append(f"Διεύθυνση: {prospect['address']}")
+        if prospect.get("website"):
+            detail_lines.append(f"Ιστοσελίδα: {prospect['website']}")
+        if prospect.get("rating") is not None:
+            detail_lines.append(f"Βαθμολογία Google: {prospect['rating']}")
+        if prospect.get("maps_url"):
+            detail_lines.append(f"Google Maps: {prospect['maps_url']}")
+        if prospect.get("source_query"):
+            detail_lines.append(f"Αναζήτηση: {prospect['source_query']}")
+        message = "Μεταφορά από Υποψήφιους Πελάτες (Lead Finder).\n" + "\n".join(detail_lines)
+        lead = ContactMessage(
+            name=prospect.get("name") or "Άγνωστη επιχείρηση",
+            email=prospect.get("email") or "",
+            phone=prospect.get("phone"),
+            company=prospect.get("name"),
+            service=prospect.get("category"),
+            message=message,
+            status="New",
+        )
+        doc = lead.model_dump()
+        doc["created_at"] = doc["created_at"].isoformat()
+        await db.contact_messages.insert_one(doc)
+        await db.prospects.delete_one({"id": pid})
+        transferred += 1
+    return {"transferred": transferred}
 
 
 @api_router.delete("/admin/prospects/{prospect_id}")
