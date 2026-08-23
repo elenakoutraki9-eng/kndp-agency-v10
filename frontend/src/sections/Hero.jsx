@@ -17,15 +17,13 @@ export default function Hero(props) {
     offset: ["start start", "end start"],
   });
   const phoneY = useTransform(scrollYProgress, [0, 1], [0, 70]);
-  const imgMX = useTransform(mx, [-1, 1], [-10, 10]);
-  const imgMY = useTransform(my, [-1, 1], [-8, 8]);
 
-  // macOS "genie" minimize toward the bottom (like sucking into the dock):
-  // as the user scrolls, the window is pulled downward while pinching into a
-  // thin point at its bottom edge, then fades out near the end. Driven
-  // gradually and continuously by scroll progress.
+  // macOS "genie" minimize into the BOTTOM-RIGHT corner (like into a dock in
+  // that corner): as the user scrolls, the window is pulled toward the bottom
+  // right while pinching into a point at its bottom-right edge, then fades.
   const genieScaleX = useTransform(scrollYProgress, [0, 0.85], [1, 0.05]);
   const genieScaleY = useTransform(scrollYProgress, [0, 0.85], [1, 0.14]);
+  const genieX = useTransform(scrollYProgress, [0, 0.95], [0, 260]);
   const genieY = useTransform(scrollYProgress, [0, 0.95], [0, 200]);
   const genieOpacity = useTransform(scrollYProgress, [0.55, 0.92], [1, 0]);
 
@@ -100,14 +98,14 @@ export default function Hero(props) {
         <div className="lg:col-span-5 relative top-[4px] md:-top-[4px] lg:-top-[12px]">
           <motion.div
             style={{
-              x: isMobile ? 0 : imgMX,
+              x: isMobile ? 0 : genieX,
               y: isMobile ? 0 : genieY,
               scaleX: isMobile ? 1 : genieScaleX,
               scaleY: isMobile ? 1 : genieScaleY,
               opacity: isMobile ? 1 : genieOpacity,
-              transformOrigin: "bottom center",
+              transformOrigin: "bottom right",
             }}
-            className="w-full origin-bottom will-change-transform"
+            className="w-full origin-bottom-right will-change-transform"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 24 }}
