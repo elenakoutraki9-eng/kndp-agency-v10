@@ -18,14 +18,11 @@ export default function Hero(props) {
   });
   const phoneY = useTransform(scrollYProgress, [0, 1], [0, 70]);
 
-  // macOS "genie" minimize into the BOTTOM-RIGHT corner (like into a dock in
-  // that corner): as the user scrolls, the window is pulled toward the bottom
-  // right while pinching into a point at its bottom-right edge, then fades.
-  const genieScaleX = useTransform(scrollYProgress, [0, 0.85], [1, 0.05]);
-  const genieScaleY = useTransform(scrollYProgress, [0, 0.85], [1, 0.14]);
-  const genieX = useTransform(scrollYProgress, [0, 0.95], [0, 260]);
-  const genieY = useTransform(scrollYProgress, [0, 0.95], [0, 200]);
-  const genieOpacity = useTransform(scrollYProgress, [0.55, 0.92], [1, 0]);
+  // macOS window "close" (red button): the window stays in place and does a
+  // quick, subtle shrink + fade — completed early in the scroll so it feels
+  // snappy like clicking the close button.
+  const closeScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.88]);
+  const closeOpacity = useTransform(scrollYProgress, [0.02, 0.32], [1, 0]);
 
   const [demoActive, setDemoActive] = useState(false);
 
@@ -98,14 +95,11 @@ export default function Hero(props) {
         <div className="lg:col-span-5 relative top-[4px] md:-top-[4px] lg:-top-[12px]">
           <motion.div
             style={{
-              x: isMobile ? 0 : genieX,
-              y: isMobile ? 0 : genieY,
-              scaleX: isMobile ? 1 : genieScaleX,
-              scaleY: isMobile ? 1 : genieScaleY,
-              opacity: isMobile ? 1 : genieOpacity,
-              transformOrigin: "bottom right",
+              scale: isMobile ? 1 : closeScale,
+              opacity: isMobile ? 1 : closeOpacity,
+              transformOrigin: "center center",
             }}
-            className="w-full origin-bottom-right will-change-transform"
+            className="w-full will-change-transform"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 24 }}
