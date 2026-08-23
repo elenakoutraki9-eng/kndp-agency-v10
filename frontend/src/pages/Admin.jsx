@@ -1459,10 +1459,7 @@ function Dashboard({ token, onLogout }) {
         ) : (
         <>
         <div className="mt-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">Μηνύματα Επικοινωνίας</h1>
-            <p className="mt-1.5 text-sm text-ink/55">Σύρε μια κάρτα για να αλλάξεις κατάσταση · κάνε κλικ για λεπτομέρειες.</p>
-          </div>
+          <div></div>
           <div className="flex flex-wrap items-end gap-3">
             <div className="w-40">
               <FilterSelect label="Ταξινόμηση" value={sortOrder} onChange={setSortOrder} options={sortOptions} testid="admin-sort" />
