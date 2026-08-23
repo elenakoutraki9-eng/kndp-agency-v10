@@ -209,14 +209,7 @@ function KanbanCard({ lead, onOpen, onDragStart, onDragEnd, dragging }) {
               <span className="truncate">{lead.email}</span>
             </a>
           </div>
-          <div className="mt-2.5 flex items-center justify-between gap-2">
-            {lead.service ? (
-              <span className="inline-flex max-w-[65%] truncate rounded-full bg-baby-light border border-baby/40 px-2.5 py-0.5 text-[11px] font-bold text-baby-dark">
-                {lead.service}
-              </span>
-            ) : (
-              <span className="text-[11px] text-ink/30">—</span>
-            )}
+          <div className="mt-2.5 flex items-center justify-end gap-2">
             <span className="inline-flex items-center gap-1 text-[11px] text-ink/40">
               <Calendar className="h-3 w-3" />
               {shortDate(lead.created_at)}
@@ -308,16 +301,6 @@ function DetailModal({ lead, onClose, onUpdate }) {
               )}
             </div>
             <div>
-              <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Υπηρεσία</span>
-              {lead.service ? (
-                <span className="mt-1 inline-flex rounded-full bg-baby-light border border-baby/40 px-3 py-1 text-xs font-bold text-baby-dark">
-                  {lead.service}
-                </span>
-              ) : (
-                <p className="mt-1 text-sm text-ink/40">—</p>
-              )}
-            </div>
-            <div>
               <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Ημερομηνία</span>
               <p className="mt-1 text-sm text-ink/70">{formatDate(lead.created_at)}</p>
             </div>
@@ -392,7 +375,6 @@ function Dashboard({ token, onLogout }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [serviceFilter, setServiceFilter] = useState("All");
   const [sortOrder, setSortOrder] = useState("newest");
   const [selectedId, setSelectedId] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
@@ -438,15 +420,7 @@ function Dashboard({ token, onLogout }) {
     [token, onLogout, messages]
   );
 
-  const services = useMemo(() => {
-    const set = new Set(messages.map((m) => m.service).filter(Boolean));
-    return Array.from(set).sort();
-  }, [messages]);
-
-  const visible = useMemo(
-    () => messages.filter((m) => serviceFilter === "All" || m.service === serviceFilter),
-    [messages, serviceFilter]
-  );
+  const visible = messages;
 
   const columns = useMemo(() => {
     const byDate = (a, b) => {
@@ -484,10 +458,10 @@ function Dashboard({ token, onLogout }) {
   };
 
   const exportCSV = () => {
-    const headers = ["Όνομα", "Email", "Τηλέφωνο", "Εταιρεία", "Υπηρεσία", "Status", "Μήνυμα", "Σημειώσεις", "Ημερομηνία"];
+    const headers = ["Όνομα", "Email", "Τηλέφωνο", "Εταιρεία", "Status", "Μήνυμα", "Σημειώσεις", "Ημερομηνία"];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const rows = visible.map((m) => [
-      m.name, m.email, m.phone || "", m.company || "", m.service || "", m.status || "New", m.message, m.notes || "", formatDate(m.created_at),
+      m.name, m.email, m.phone || "", m.company || "", m.status || "New", m.message, m.notes || "", formatDate(m.created_at),
     ]);
     const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
@@ -501,10 +475,6 @@ function Dashboard({ token, onLogout }) {
     URL.revokeObjectURL(url);
   };
 
-  const serviceOptions = [
-    { value: "All", label: "Όλες οι υπηρεσίες" },
-    ...services.map((s) => ({ value: s, label: s })),
-  ];
   const sortOptions = [
     { value: "newest", label: "Νεότερα πρώτα" },
     { value: "oldest", label: "Παλαιότερα πρώτα" },
@@ -541,9 +511,6 @@ function Dashboard({ token, onLogout }) {
             <p className="mt-1.5 text-sm text-ink/55">Σύρε μια κάρτα για να αλλάξεις κατάσταση · κάνε κλικ για λεπτομέρειες.</p>
           </div>
           <div className="flex flex-wrap items-end gap-3">
-            <div className="w-44">
-              <FilterSelect label="Υπηρεσία" value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} testid="admin-service-filter" />
-            </div>
             <div className="w-40">
               <FilterSelect label="Ταξινόμηση" value={sortOrder} onChange={setSortOrder} options={sortOptions} testid="admin-sort" />
             </div>

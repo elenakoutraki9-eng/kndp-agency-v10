@@ -96,10 +96,6 @@ export default function FaqSection() {
                 <WordMask text="Ερωτήσεις," className="block" />
                 <WordMask text="απαντημένες." accent={["απαντημένες."]} delay={0.2} className="block" />
               </h2>
-              <p className="mt-3 text-sm text-ink/60 leading-relaxed max-w-sm">
-                Αυτά που ρωτούν συνήθως πριν ξεκινήσουν ένα έργο μαζί μας. Για
-                οτιδήποτε άλλο — ρώτησέ μας, απαντάμε εντός 2 ωρών.
-              </p>
             </Reveal>
           </div>
           <div className="lg:col-span-8">

@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Magnetic } from "@/components/Reveal";
 import { scrollToId } from "@/lib/scroll";
@@ -73,7 +73,9 @@ export default function Footer() {
         <div className="relative border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
           <span>© {new Date().getFullYear()} KNDP. Με επιφύλαξη παντός δικαιώματος.</span>
           <div className="flex items-center gap-4">
-            <span>Φτιαγμένο με φροντίδα, παραδομένο με σιγουριά.</span>
+            <span data-testid="footer-made-with-love" className="inline-flex items-center gap-1.5">
+              Φτιαγμένο με <Heart className="h-3 w-3 fill-baby text-baby" /> από την KNDP
+            </span>
             <Link
               to="/admin"
               data-testid="footer-admin-link"

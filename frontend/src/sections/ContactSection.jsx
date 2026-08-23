@@ -1,50 +1,28 @@
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { ArrowUpRight, Mail, CalendarClock, Send, Check } from "lucide-react";
+import { ArrowUpRight, Mail, Send } from "lucide-react";
 import { WordMask, Reveal, Kicker, Magnetic } from "@/components/Reveal";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-
-const serviceOptions = [
-  { value: "Not Sure", label: "Δεν ξέρω ακόμα" },
-  { value: "Website", label: "Website" },
-  { value: "Web Tool", label: "Web Tool" },
-  { value: "App", label: "Mobile App" },
-  { value: "Web App", label: "Web App" },
-  { value: "Program", label: "Πρόγραμμα" },
-  { value: "Custom Tool", label: "Έξυπνο Εργαλείο" },
-  { value: "Automation", label: "Automation" },
-  { value: "Something Else", label: "Κάτι Άλλο" },
-];
 
 const inputCls =
   "w-full rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/25";
 
 export default function ContactSection(props) {
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", message: "" });
-  const [services, setServices] = useState([]);
   const [sending, setSending] = useState(false);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
-
-  const toggleService = (value) =>
-    setServices((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
 
   const submit = async (e) => {
     e.preventDefault();
     if (sending) return;
     setSending(true);
     try {
-      await axios.post(`${API}/contact`, {
-        ...form,
-        service: services.length ? services.join(", ") : null,
-      });
+      await axios.post(`${API}/contact`, form);
       toast.success("Το μήνυμα εστάλη — θα επικοινωνήσουμε σύντομα μαζί σου.");
       setForm({ name: "", email: "", phone: "", company: "", message: "" });
-      setServices([]);
     } catch {
       toast.error("Κάτι πήγε στραβά. Δοκίμασε ξανά.");
     } finally {
@@ -69,14 +47,6 @@ export default function ContactSection(props) {
               <WordMask text="Ας" className="block" />
               <WordMask text="μιλήσουμε." accent={["μιλήσουμε."]} delay={0.2} className="block" />
             </h2>
-            <Reveal delay={0.3}>
-              <p className="mt-4 max-w-md text-sm md:text-base leading-relaxed text-ink/70">
-                Χρειάζονται μόνο το όνομα και το email σου — τα υπόλοιπα είναι προαιρετικά.
-                Πάρε λιγότερο από 30 δευτερόλεπτα. Δωρεάν προσφορά, χωρίς καμία δέσμευση —
-                απαντάμε εντός 2 ωρών τις εργάσιμες μέρες.
-              </p>
-            </Reveal>
-
             <Reveal delay={0.4} className="mt-6 space-y-3">
               <a
                 href="mailto:hello@kndp.studio"
@@ -96,21 +66,12 @@ export default function ContactSection(props) {
               </a>
 
               <div
-                data-testid="contact-booking-card"
-                className="flex items-center justify-between rounded-2xl border border-dashed border-ink/25 bg-white/50 backdrop-blur p-4"
+                data-testid="contact-or-divider"
+                className="flex items-center gap-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-ink/40"
               >
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-baby-dark">
-                    <CalendarClock className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">Κλείσε ένα ραντεβού</p>
-                    <p className="text-sm font-semibold">30-λεπτη γνωριμία</p>
-                  </div>
-                </div>
-                <span className="rounded-full bg-white border border-ink/10 px-3 py-1 text-[11px] font-bold text-baby-dark">
-                  Σύνδεσμος ημερολογίου έρχεται σύντομα
-                </span>
+                <span className="h-px flex-1 bg-ink/10" />
+                ή
+                <span className="h-px flex-1 bg-ink/10" />
               </div>
             </Reveal>
           </div>
@@ -181,37 +142,6 @@ export default function ContactSection(props) {
                       placeholder="Η εταιρεία σου"
                       className={inputCls}
                     />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <p className="mb-1 text-xs uppercase tracking-[0.2em] font-semibold text-ink/50">
-                    Τι χρειάζεσαι; <span className="normal-case tracking-normal font-medium text-ink/30">· προαιρετικό</span>
-                  </p>
-                  <p className="mb-2 text-xs text-ink/45">
-                    Διάλεξε ένα ή περισσότερα. Δεν είσαι σίγουρος; Διάλεξε «Δεν ξέρω ακόμα» και θα το βρούμε μαζί.
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {serviceOptions.map((s) => {
-                      const selected = services.includes(s.value);
-                      return (
-                        <button
-                          key={s.value}
-                          type="button"
-                          aria-pressed={selected}
-                          data-testid={`service-chip-${s.value.toLowerCase().replace(/\s+/g, "-")}`}
-                          onClick={() => toggleService(s.value)}
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,color,transform] duration-300 hover:scale-105 active:scale-95 ${
-                            selected
-                              ? "bg-ink text-white border-ink"
-                              : "bg-white text-ink/70 border-ink/10 hover:border-baby-dark"
-                          }`}
-                        >
-                          {selected && <Check className="h-3 w-3" />}
-                          {s.label}
-                        </button>
-                      );
-                    })}
                   </div>
                 </div>
 
