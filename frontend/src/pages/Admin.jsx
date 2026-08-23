@@ -550,6 +550,7 @@ function LeadFinder({ token }) {
             name: p.name,
             address: p.address,
             phone: p.phone,
+            email: p.email,
             website: p.website,
             rating: p.rating,
             maps_url: p.maps_url,
@@ -570,9 +571,9 @@ function LeadFinder({ token }) {
   };
 
   const exportCSV = () => {
-    const headers = ["Επιχείρηση", "Διεύθυνση", "Τηλέφωνο", "Ιστοσελίδα", "Βαθμολογία", "Google Maps"];
+    const headers = ["Επιχείρηση", "Διεύθυνση", "Τηλέφωνο", "Email", "Ιστοσελίδα", "Βαθμολογία", "Google Maps"];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const rows = results.map((p) => [p.name, p.address, p.phone, p.website, p.rating, p.maps_url]);
+    const rows = results.map((p) => [p.name, p.address, p.phone, p.email, p.website, p.rating, p.maps_url]);
     const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -706,7 +707,8 @@ function LeadFinder({ token }) {
       {loading && (
         <div className="mt-10 flex flex-col items-center justify-center text-ink/40">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <p className="mt-3 text-sm font-semibold">Αναζήτηση σε όλες τις σελίδες αποτελεσμάτων…</p>
+          <p className="mt-3 text-sm font-semibold">Αναζήτηση επιχειρήσεων & εύρεση email…</p>
+          <p className="mt-1 text-xs text-ink/40">Σαρώνουμε τις ιστοσελίδες για emails — μπορεί να πάρει λίγο.</p>
         </div>
       )}
 
@@ -737,7 +739,7 @@ function LeadFinder({ token }) {
           </div>
 
           <div className="mt-3 overflow-x-auto rounded-2xl border border-ink/8 bg-white">
-            <table data-testid="lead-finder-results-table" className="w-full min-w-[1000px] text-left text-sm">
+            <table data-testid="lead-finder-results-table" className="w-full min-w-[1140px] text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/8 text-[11px] uppercase tracking-[0.15em] font-semibold text-ink/45">
                   <th className="px-4 py-3">
@@ -756,6 +758,7 @@ function LeadFinder({ token }) {
                   <th className="px-4 py-3">Επιχείρηση</th>
                   <th className="px-4 py-3">Διεύθυνση</th>
                   <th className="px-4 py-3">Τηλέφωνο</th>
+                  <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Ιστοσελίδα</th>
                   <th className="px-4 py-3">Βαθμολογία</th>
                   <th className="px-4 py-3">Maps</th>
@@ -793,6 +796,13 @@ function LeadFinder({ token }) {
                       <td className="px-4 py-3 font-semibold text-ink">{p.name || "—"}</td>
                       <td className="px-4 py-3 text-ink/70">{p.address || "—"}</td>
                       <td className="px-4 py-3 text-ink/70">{p.phone || "—"}</td>
+                      <td className="px-4 py-3">
+                        {p.email ? (
+                          <a href={`mailto:${p.email}`} data-testid={`lead-finder-email-${p.place_id}`} className="text-baby-dark hover:underline break-all">{p.email}</a>
+                        ) : (
+                          <span className="text-ink/30">—</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         {p.website ? (
                           <a href={p.website} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Site</a>
@@ -838,6 +848,7 @@ function ProspectsList({ token }) {
   const [websiteFilter, setWebsiteFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [queryFilter, setQueryFilter] = useState("all");
   const [minRating, setMinRating] = useState("0");
   const [sortBy, setSortBy] = useState("newest");
 
@@ -868,6 +879,11 @@ function ProspectsList({ token }) {
     return [{ value: "all", label: "Όλες οι κατηγορίες" }, ...Array.from(set).sort().map((c) => ({ value: c, label: c }))];
   }, [prospects]);
 
+  const queryOptions = useMemo(() => {
+    const set = new Set(prospects.map((p) => p.source_query).filter(Boolean));
+    return [{ value: "all", label: "Όλες οι αναζητήσεις" }, ...Array.from(set).sort().map((q) => ({ value: q, label: q }))];
+  }, [prospects]);
+
   const ratingOptions = [
     { value: "0", label: "Οποιαδήποτε βαθμολογία" },
     { value: "3", label: "3+ αστέρια" },
@@ -893,6 +909,7 @@ function ProspectsList({ token }) {
       if (websiteFilter === "none" && p.website) return false;
       if (locationFilter !== "all" && p.location !== locationFilter) return false;
       if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+      if (queryFilter !== "all" && p.source_query !== queryFilter) return false;
       if (minR > 0 && (p.rating || 0) < minR) return false;
       return true;
     });
@@ -902,7 +919,7 @@ function ProspectsList({ token }) {
       if (sortBy === "location") return (a.location || "").localeCompare(b.location || "");
       return new Date(b.created_at) - new Date(a.created_at);
     });
-  }, [prospects, websiteFilter, locationFilter, categoryFilter, minRating, sortBy]);
+  }, [prospects, websiteFilter, locationFilter, categoryFilter, queryFilter, minRating, sortBy]);
 
   const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
   const toggleSelectAll = () => setSelectedIds(allSelected ? new Set() : new Set(filtered.map((p) => p.id)));
@@ -945,9 +962,9 @@ function ProspectsList({ token }) {
   };
 
   const exportCSV = () => {
-    const headers = ["Επιχείρηση", "Κατηγορία", "Τοποθεσία", "Διεύθυνση", "Τηλέφωνο", "Ιστοσελίδα", "Βαθμολογία", "Google Maps", "Ημερομηνία"];
+    const headers = ["Επιχείρηση", "Κατηγορία", "Τοποθεσία", "Διεύθυνση", "Τηλέφωνο", "Email", "Ιστοσελίδα", "Βαθμολογία", "Αναζήτηση", "Google Maps", "Ημερομηνία"];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const rows = filtered.map((p) => [p.name, p.category, p.location, p.address, p.phone, p.website, p.rating, p.maps_url, formatDate(p.created_at)]);
+    const rows = filtered.map((p) => [p.name, p.category, p.location, p.address, p.phone, p.email, p.website, p.rating, p.source_query, p.maps_url, formatDate(p.created_at)]);
     const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -993,6 +1010,9 @@ function ProspectsList({ token }) {
           </div>
           <div className="w-48">
             <FilterSelect label="Κατηγορία" value={categoryFilter} onChange={setCategoryFilter} options={categoryOptions} testid="prospects-filter-category" />
+          </div>
+          <div className="w-56">
+            <FilterSelect label="Αναζήτηση" value={queryFilter} onChange={setQueryFilter} options={queryOptions} testid="prospects-filter-query" />
           </div>
           <div className="w-44">
             <FilterSelect label="Βαθμολογία" value={minRating} onChange={setMinRating} options={ratingOptions} testid="prospects-filter-rating" />
@@ -1050,7 +1070,7 @@ function ProspectsList({ token }) {
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-2xl border border-ink/8 bg-white">
-          <table data-testid="prospects-table" className="w-full min-w-[1080px] text-left text-sm">
+          <table data-testid="prospects-table" className="w-full min-w-[1220px] text-left text-sm">
             <thead>
               <tr className="border-b border-ink/8 text-[11px] uppercase tracking-[0.15em] font-semibold text-ink/45">
                 <th className="px-4 py-3">
@@ -1069,6 +1089,7 @@ function ProspectsList({ token }) {
                 <th className="px-4 py-3">Επιχείρηση</th>
                 <th className="px-4 py-3">Τοποθεσία</th>
                 <th className="px-4 py-3">Τηλέφωνο</th>
+                <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Ιστοσελίδα</th>
                 <th className="px-4 py-3">Βαθμολογία</th>
                 <th className="px-4 py-3">Maps</th>
@@ -1116,6 +1137,13 @@ function ProspectsList({ token }) {
                     <td className="px-4 py-3 text-ink/70">{p.location || "—"}</td>
                     <td className="px-4 py-3 text-ink/70">{p.phone || "—"}</td>
                     <td className="px-4 py-3">
+                      {p.email ? (
+                        <a href={`mailto:${p.email}`} data-testid={`prospects-email-${p.id}`} className="text-baby-dark hover:underline break-all">{p.email}</a>
+                      ) : (
+                        <span className="text-ink/30">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
                       {p.website ? (
                         <a href={p.website} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Site</a>
                       ) : "—"}
@@ -1146,6 +1174,22 @@ function ProspectsList({ token }) {
         </div>
       )}
     </div>
+  );
+}
+
+function SidebarButton({ icon: Icon, label, active, onClick, testid }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-testid={testid}
+      className={`group flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-bold transition-colors ${
+        active ? "bg-ink text-white shadow-sm" : "text-ink/55 hover:bg-mist hover:text-ink"
+      }`}
+    >
+      <Icon className={`h-4 w-4 shrink-0 ${active ? "text-baby" : "text-ink/40 group-hover:text-ink/70"}`} />
+      {label}
+    </button>
   );
 }
 
@@ -1341,7 +1385,7 @@ function Dashboard({ token, onLogout }) {
   return (
     <div className="min-h-screen bg-paper text-ink font-body antialiased">
       <header className="sticky top-0 z-20 border-b border-ink/8 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-6 md:px-10 h-20 flex items-center justify-between">
+        <div className="mx-auto max-w-[1600px] px-6 md:px-10 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="font-display font-bold text-2xl tracking-tighter flex items-center gap-1">
               KNDP<span className="h-2.5 w-2.5 rounded-full bg-baby translate-y-1" />
@@ -1362,29 +1406,51 @@ function Dashboard({ token, onLogout }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 md:px-10 py-8">
-        <div data-testid="admin-tabs" className="flex items-center gap-1 border-b border-ink/8">
-          <button
-            type="button"
+      <div className="mx-auto max-w-[1600px] flex">
+        <aside
+          data-testid="admin-sidebar"
+          className="hidden md:flex w-56 shrink-0 flex-col gap-1.5 border-r border-ink/8 bg-white/50 px-4 py-8 sticky top-20 self-start h-[calc(100vh-5rem)]"
+        >
+          <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/40">Μενού</p>
+          <SidebarButton
+            icon={Inbox}
+            label="Μηνύματα"
+            active={activeTab === "messages"}
             onClick={() => setActiveTab("messages")}
-            data-testid="admin-tab-messages"
-            className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
-              activeTab === "messages" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
-            }`}
-          >
-            Μηνύματα
-          </button>
-          <button
-            type="button"
+            testid="admin-tab-messages"
+          />
+          <SidebarButton
+            icon={Search}
+            label="Εύρεση Leads"
+            active={activeTab === "finder"}
             onClick={() => setActiveTab("finder")}
-            data-testid="admin-tab-finder"
-            className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
-              activeTab === "finder" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
-            }`}
-          >
-            Εύρεση Leads
-          </button>
-        </div>
+            testid="admin-tab-finder"
+          />
+        </aside>
+
+        <main className="flex-1 min-w-0 px-6 md:px-10 py-8">
+          <div data-testid="admin-tabs-mobile" className="md:hidden mb-6 flex items-center gap-1 border-b border-ink/8">
+            <button
+              type="button"
+              onClick={() => setActiveTab("messages")}
+              data-testid="admin-tab-messages-mobile"
+              className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+                activeTab === "messages" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
+              }`}
+            >
+              Μηνύματα
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("finder")}
+              data-testid="admin-tab-finder-mobile"
+              className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+                activeTab === "finder" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
+              }`}
+            >
+              Εύρεση Leads
+            </button>
+          </div>
 
         {activeTab === "finder" ? (
           <div className="mt-8">
@@ -1564,7 +1630,8 @@ function Dashboard({ token, onLogout }) {
         )}
         </>
         )}
-      </main>
+        </main>
+      </div>
 
       {selectedLead && (
         <DetailModal lead={selectedLead} onClose={() => setSelectedId(null)} onUpdate={updateLead} />

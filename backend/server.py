@@ -91,6 +91,7 @@ class PlaceResult(BaseModel):
     name: Optional[str] = None
     address: Optional[str] = None
     phone: Optional[str] = None
+    email: Optional[str] = None
     website: Optional[str] = None
     rating: Optional[float] = None
     maps_url: Optional[str] = None
@@ -106,6 +107,7 @@ class ProspectCreate(BaseModel):
     name: Optional[str] = None
     address: Optional[str] = None
     phone: Optional[str] = None
+    email: Optional[str] = None
     website: Optional[str] = None
     rating: Optional[float] = None
     maps_url: Optional[str] = None
@@ -128,6 +130,7 @@ class Prospect(BaseModel):
     name: Optional[str] = None
     address: Optional[str] = None
     phone: Optional[str] = None
+    email: Optional[str] = None
     website: Optional[str] = None
     rating: Optional[float] = None
     maps_url: Optional[str] = None
@@ -305,6 +308,81 @@ async def update_contact(contact_id: str, body: ContactUpdate, _: bool = Depends
     return doc
 
 
+# --- Email scraping (Google Places does not expose emails, so we crawl the
+# business website best-effort to find a public contact email). ---
+EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+SCRAPE_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/122.0 Safari/537.36"
+)
+# Emails containing any of these fragments are almost always noise, not a real
+# business contact address.
+EMAIL_JUNK = (
+    "example.com", "example.org", "domain.com", "yourdomain", "email.com",
+    "sentry.", "wixpress.com", "wix.com", ".png", ".jpg", ".jpeg", ".gif",
+    ".webp", ".svg", "@2x", "godaddy", "@sentry", "u003e", "core-js",
+)
+CONTACT_PATHS = ("", "contact", "contact-us", "epikoinonia", "epikoinwnia")
+
+
+def _extract_email(html: str) -> Optional[str]:
+    if not html:
+        return None
+    candidates: List[str] = []
+    # mailto: links are the most reliable signal
+    candidates.extend(re.findall(r'mailto:([^"\'?>\s]+)', html, re.IGNORECASE))
+    candidates.extend(EMAIL_RE.findall(html))
+    for raw in candidates:
+        email = raw.strip().strip(".").lower()
+        if "@" not in email or "." not in email.split("@")[-1]:
+            continue
+        if any(junk in email for junk in EMAIL_JUNK):
+            continue
+        if email.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")):
+            continue
+        return email
+    return None
+
+
+async def _scrape_email(client: httpx.AsyncClient, website: Optional[str]) -> Optional[str]:
+    if not website:
+        return None
+    base = website.rstrip("/")
+    for path in CONTACT_PATHS:
+        url = base if not path else f"{base}/{path}"
+        try:
+            resp = await client.get(
+                url,
+                timeout=6.0,
+                follow_redirects=True,
+                headers={"User-Agent": SCRAPE_UA, "Accept-Language": "el,en;q=0.8"},
+            )
+            if resp.is_error:
+                continue
+            email = _extract_email(resp.text)
+            if email:
+                return email
+        except Exception:  # noqa: BLE001 - scraping is best-effort
+            continue
+    return None
+
+
+async def _enrich_emails(client: httpx.AsyncClient, results: List["PlaceResult"]) -> None:
+    """Fill in .email for results that have a website (concurrent, capped)."""
+    sem = asyncio.Semaphore(8)
+
+    async def worker(r: PlaceResult):
+        if not r.website:
+            return
+        async with sem:
+            try:
+                r.email = await _scrape_email(client, r.website)
+            except Exception:  # noqa: BLE001
+                r.email = None
+
+    await asyncio.gather(*(worker(r) for r in results), return_exceptions=True)
+
+
 async def _get_place_details(client: httpx.AsyncClient, place_id: str) -> PlaceResult:
     resp = await client.get(
         f"{PLACES_BASE}/places/{place_id}",
@@ -376,6 +454,9 @@ async def search_places(q: str, _: bool = Depends(verify_admin)):
                 *(_get_place_details(client, pid) for pid in batch), return_exceptions=True
             )
             results.extend(r for r in batch_results if isinstance(r, PlaceResult))
+
+        # Best-effort: crawl each business website for a public contact email.
+        await _enrich_emails(client, results)
 
     return PlaceSearchResponse(query=query, results=results)
 
