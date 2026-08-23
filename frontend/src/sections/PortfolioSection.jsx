@@ -114,6 +114,44 @@ function StackCard({ p, i, total, progress, isMobile }) {
   );
 }
 
+function StackProgress({ progress, total }) {
+  const label = useTransform(progress, (v) => {
+    const idx = Math.min(total - 1, Math.floor(v * total));
+    return `${String(idx + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+  });
+  const fillHeight = useTransform(progress, (v) => `${Math.min(100, Math.max(0, v * 100))}%`);
+  const fillWidth = fillHeight;
+  const opacity = useTransform(progress, [0, 0.03, 0.94, 1], [0, 1, 1, 0]);
+
+  return (
+    <>
+      <motion.div
+        data-testid="portfolio-progress-mobile"
+        style={{ opacity }}
+        className="pointer-events-none fixed left-0 right-0 top-16 z-30 h-[3px] bg-ink/10 lg:hidden"
+      >
+        <motion.div style={{ width: fillWidth }} className="h-full bg-baby-dark" />
+      </motion.div>
+
+      <motion.div
+        data-testid="portfolio-progress-desktop"
+        style={{ opacity }}
+        className="pointer-events-none fixed right-6 top-1/2 z-30 hidden -translate-y-1/2 flex-col items-center gap-3 lg:flex"
+      >
+        <motion.span className="font-display text-[11px] font-bold tracking-widest text-ink/40">
+          {label}
+        </motion.span>
+        <div className="relative h-52 w-[3px] overflow-hidden rounded-full bg-ink/10">
+          <motion.div
+            style={{ height: fillHeight }}
+            className="absolute left-0 top-0 w-full rounded-full bg-baby-dark"
+          />
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 export default function PortfolioSection(props) {
   const isMobile = useIsMobile();
   const containerRef = useRef(null);
@@ -162,6 +200,7 @@ export default function PortfolioSection(props) {
               leaving a thin sliver peek) and then release TOGETHER — instead of
               each card peeling off before the next arrives. */}
           <div ref={containerRef} className="relative mt-10 md:mt-14">
+            <StackProgress progress={scrollYProgress} total={projects.length} />
             {projects.map((p, i) => (
               <Fragment key={p.title}>
                 <StackCard
