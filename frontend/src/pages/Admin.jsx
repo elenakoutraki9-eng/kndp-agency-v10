@@ -1446,24 +1446,12 @@ function Dashboard({ token, onLogout }) {
           </div>
 
         {activeTab === "finder" ? (
-          <div className="mt-8">
+          <div>
             <LeadFinder token={token} />
           </div>
         ) : (
         <>
-        <div className="mt-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div></div>
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="w-40">
-              <FilterSelect label="Ταξινόμηση" value={sortOrder} onChange={setSortOrder} options={sortOptions} testid="admin-sort" />
-            </div>
-            <button type="button" onClick={exportCSV} data-testid="admin-export-csv" disabled={visible.length === 0} className="inline-flex items-center justify-center gap-2 rounded-xl bg-baby px-5 py-2.5 text-sm font-bold text-ink transition-[transform,opacity] duration-300 hover:scale-[1.03] disabled:opacity-40 disabled:hover:scale-100">
-              <Download className="h-4 w-4" />Export CSV
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatCard icon={Users} label="Σύνολο Leads" value={stats.total} testid="admin-stat-total" />
           <StatCard icon={TrendingUp} label="Νέα (7 μέρες)" value={stats.newThisWeek} testid="admin-stat-new" />
           <StatCard icon={Check} label="Ποσοστό Μετατροπής" value={stats.conversionRate} testid="admin-stat-conversion" />
@@ -1508,6 +1496,9 @@ function Dashboard({ token, onLogout }) {
               className="rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
             />
           </div>
+          <div className="w-40">
+            <FilterSelect label="Ταξινόμηση" value={sortOrder} onChange={setSortOrder} options={sortOptions} testid="admin-sort" />
+          </div>
           {(search || dateFrom || dateTo) && (
             <button
               type="button"
@@ -1518,6 +1509,9 @@ function Dashboard({ token, onLogout }) {
               <X className="h-3.5 w-3.5" />Καθαρισμός
             </button>
           )}
+          <button type="button" onClick={exportCSV} data-testid="admin-export-csv" disabled={visible.length === 0} className="ml-auto inline-flex items-center justify-center gap-2 rounded-xl bg-baby px-5 py-2.5 text-sm font-bold text-ink transition-[transform,opacity] duration-300 hover:scale-[1.03] disabled:opacity-40 disabled:hover:scale-100">
+            <Download className="h-4 w-4" />Export CSV
+          </button>
         </div>
 
         {selectedIds.size > 0 && (
