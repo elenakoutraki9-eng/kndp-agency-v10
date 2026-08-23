@@ -588,14 +588,7 @@ function LeadFinder({ token }) {
 
   return (
     <div data-testid="lead-finder-section">
-      <div>
-        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">Εύρεση Leads</h1>
-        <p className="mt-1.5 text-sm text-ink/55">
-          Αναζήτησε επιχειρήσεις μέσω Google Places και πρόσθεσέ τις στους Υποψήφιους Πελάτες.
-        </p>
-      </div>
-
-      <div data-testid="lead-finder-subtabs" className="mt-6 flex items-center gap-1 border-b border-ink/8">
+      <div data-testid="lead-finder-subtabs" className="flex items-center gap-1 border-b border-ink/8">
         <button
           type="button"
           onClick={() => setSubTab("search")}
