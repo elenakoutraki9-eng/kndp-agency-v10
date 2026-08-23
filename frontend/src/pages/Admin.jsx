@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Clock,
   Plus,
+  Trash2,
   Calendar,
 } from "lucide-react";
 
@@ -431,20 +432,42 @@ function LeadsChart({ data }) {
   );
 }
 
-const GREEK_LOCATIONS = [
-  "Αθήνα", "Θεσσαλονίκη", "Πάτρα", "Ηράκλειο", "Λάρισα", "Βόλος", "Ιωάννινα",
-  "Χανιά", "Ρόδος", "Κέρκυρα", "Καλαμάτα", "Σέρρες", "Αλεξανδρούπολη", "Κοζάνη",
-  "Καβάλα", "Χαλκίδα", "Κατερίνη", "Τρίκαλα", "Λαμία", "Αγρίνιο", "Ξάνθη",
-  "Δράμα", "Βέροια", "Κομοτηνή", "Ρέθυμνο", "Σπάρτη", "Κιλκίς", "Έδεσσα",
-  "Φλώρινα", "Πύργος", "Άργος", "Ναύπλιο", "Πτολεμαΐδα", "Γρεβενά", "Καρδίτσα",
-  "Άρτα", "Πρέβεζα", "Λευκάδα", "Ζάκυνθος", "Μύκονος", "Σαντορίνη", "Κως",
-  "Μυτιλήνη", "Χίος", "Σάμος", "Καλαμπάκα", "Θήβα", "Λιβαδειά", "Μέγαρα",
-  "Ραφήνα", "Μαραθώνας",
-];
+const LOCATIONS = {
+  "Αθήνα": [
+    "Μαρούσι", "Πεύκη", "Κηφισιά", "Χαλάνδρι", "Βριλήσσια", "Αγία Παρασκευή", "Παπάγου",
+    "Ζωγράφου", "Ηλιούπολη", "Γλυφάδα", "Βούλα", "Βουλιαγμένη", "Αργυρούπολη", "Ελληνικό",
+    "Παλαιό Φάληρο", "Νέα Σμύρνη", "Καλλιθέα", "Μοσχάτο", "Ταύρος", "Περιστέρι", "Αιγάλεω",
+    "Κορυδαλλός", "Νίκαια", "Πειραιάς", "Κερατσίνι", "Δραπετσώνα", "Άλιμος", "Άνω Λιόσια",
+    "Αχαρνές", "Ίλιον", "Πετρούπολη", "Αγ. Ανάργυροι", "Γαλάτσι", "Νέα Ιωνία", "Μεταμόρφωση",
+    "Ηράκλειο Αττικής", "Λυκόβρυση", "Πεντέλη", "Παλλήνη", "Γέρακας", "Ανθούσα", "Κρυονέρι",
+    "Διόνυσος", "Εκάλη", "Νέο Ψυχικό", "Ψυχικό", "Φιλοθέη", "Κολωνάκι", "Εξάρχεια", "Κουκάκι",
+    "Παγκράτι", "Βύρωνας", "Δάφνη", "Υμηττός",
+  ],
+  "Θεσσαλονίκη": [
+    "Καλαμαριά", "Σταυρούπολη", "Πολίχνη", "Ευόσμος", "Κορδελιό", "Άμπελοκήποι", "Νεάπολη",
+    "Τριανδρία", "Πανόραμα", "Θέρμη", "Χαριλάου", "Τούμπα", "Νικόπολη", "Συκιές", "Μενεμένη",
+  ],
+  "Πάτρα": ["Κέντρο", "Άγιος Διονύσιος", "Οβριά", "Ζαρουχλέικα", "Προάστειο"],
+  "Ηράκλειο": ["Κέντρο", "Νέα Αλικαρνασσός", "Πόρος", "Γάζι"],
+  "Λάρισα": ["Κέντρο", "Νέα Πόλη", "Αμπελόκηποι", "Γιάννουλη"],
+  "Βόλος": ["Κέντρο", "Νέα Ιωνία", "Άνω Βόλος"],
+  "Ιωάννινα": ["Κέντρο", "Ανατολή", "Κατσικάς"],
+  "Χανιά": [], "Ρόδος": [], "Κέρκυρα": [], "Καλαμάτα": [], "Σέρρες": [],
+  "Αλεξανδρούπολη": [], "Κοζάνη": [], "Καβάλα": [], "Χαλκίδα": [], "Κατερίνη": [],
+  "Τρίκαλα": [], "Λαμία": [], "Αγρίνιο": [], "Ξάνθη": [], "Δράμα": [], "Βέροια": [],
+  "Κομοτηνή": [], "Ρέθυμνο": [], "Σπάρτη": [], "Κιλκίς": [], "Έδεσσα": [], "Φλώρινα": [],
+  "Πύργος": [], "Άργος": [], "Ναύπλιο": [], "Πτολεμαΐδα": [], "Γρεβενά": [], "Καρδίτσα": [],
+  "Άρτα": [], "Πρέβεζα": [], "Λευκάδα": [], "Ζάκυνθος": [], "Μύκονος": [], "Σαντορίνη": [],
+  "Κως": [], "Μυτιλήνη": [], "Χίος": [], "Σάμος": [], "Καλαμπάκα": [], "Θήβα": [],
+  "Λιβαδειά": [], "Μέγαρα": [], "Ραφήνα": [], "Μαραθώνας": [],
+};
+const GREEK_CITIES = Object.keys(LOCATIONS);
 
-function LeadFinder({ token, onProspectsAdded }) {
+function LeadFinder({ token }) {
+  const [subTab, setSubTab] = useState("search");
   const [businessType, setBusinessType] = useState("");
-  const [location, setLocation] = useState(GREEK_LOCATIONS[0]);
+  const [city, setCity] = useState(GREEK_CITIES[0]);
+  const [neighborhood, setNeighborhood] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -452,13 +475,21 @@ function LeadFinder({ token, onProspectsAdded }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [addedIds, setAddedIds] = useState(new Set());
   const [adding, setAdding] = useState(false);
-  const [lastQuery, setLastQuery] = useState("");
+  const [lastMeta, setLastMeta] = useState({ query: "", category: "", location: "" });
+
+  const neighborhoods = LOCATIONS[city] || [];
+
+  const changeCity = (value) => {
+    setCity(value);
+    setNeighborhood("");
+  };
 
   const search = async (e) => {
     e.preventDefault();
     const type = businessType.trim();
     if (type.length < 2 || loading) return;
-    const combinedQuery = `${type} ${location}`;
+    const locationLabel = neighborhood ? `${neighborhood}, ${city}` : city;
+    const combinedQuery = `${type} ${locationLabel}`;
     setLoading(true);
     setError("");
     setSelectedIds(new Set());
@@ -469,7 +500,7 @@ function LeadFinder({ token, onProspectsAdded }) {
         params: { q: combinedQuery },
       });
       setResults(res.data.results || []);
-      setLastQuery(combinedQuery);
+      setLastMeta({ query: combinedQuery, category: type, location: locationLabel });
       setSearched(true);
     } catch (err) {
       setError(err?.response?.data?.detail || "Η αναζήτηση απέτυχε. Δοκίμασε ξανά.");
@@ -485,6 +516,15 @@ function LeadFinder({ token, onProspectsAdded }) {
       const next = new Set(prev);
       if (next.has(placeId)) next.delete(placeId);
       else next.add(placeId);
+      return next;
+    });
+  };
+
+  const removeResult = (placeId) => {
+    setResults((prev) => prev.filter((p) => p.place_id !== placeId));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(placeId);
       return next;
     });
   };
@@ -512,15 +552,16 @@ function LeadFinder({ token, onProspectsAdded }) {
             phone: p.phone,
             website: p.website,
             rating: p.rating,
-            source_query: lastQuery,
             maps_url: p.maps_url,
+            source_query: lastMeta.query,
+            category: lastMeta.category,
+            location: lastMeta.location,
           })),
         },
         { headers: { "X-Admin-Token": token } }
       );
       setAddedIds((prev) => new Set([...prev, ...chosen.map((p) => p.place_id)]));
       setSelectedIds(new Set());
-      onProspectsAdded?.();
     } catch {
       setError("Δεν ήταν δυνατή η προσθήκη των υποψηφίων πελατών. Δοκίμασε ξανά.");
     } finally {
@@ -553,6 +594,35 @@ function LeadFinder({ token, onProspectsAdded }) {
         </p>
       </div>
 
+      <div data-testid="lead-finder-subtabs" className="mt-6 flex items-center gap-1 border-b border-ink/8">
+        <button
+          type="button"
+          onClick={() => setSubTab("search")}
+          data-testid="lead-finder-subtab-search"
+          className={`px-4 py-2.5 text-sm font-bold border-b-2 -mb-px transition-colors ${
+            subTab === "search" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
+          }`}
+        >
+          Αναζήτηση
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubTab("prospects")}
+          data-testid="lead-finder-subtab-prospects"
+          className={`px-4 py-2.5 text-sm font-bold border-b-2 -mb-px transition-colors ${
+            subTab === "prospects" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
+          }`}
+        >
+          Υποψήφιοι Πελάτες
+        </button>
+      </div>
+
+      {subTab === "prospects" ? (
+        <div className="mt-6">
+          <ProspectsList token={token} />
+        </div>
+      ) : (
+      <>
       <form onSubmit={search} className="mt-6 flex flex-wrap items-end gap-3">
         <div className="min-w-[200px] flex-1 max-w-xs">
           <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">Είδος επιχείρησης</label>
@@ -564,17 +634,35 @@ function LeadFinder({ token, onProspectsAdded }) {
             className="w-full rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
           />
         </div>
+        <div className="min-w-[160px]">
+          <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">Πόλη</label>
+          <div className="relative">
+            <select
+              data-testid="lead-finder-city-select"
+              value={city}
+              onChange={(e) => changeCity(e.target.value)}
+              className="appearance-none w-full rounded-xl border border-ink/10 bg-white pl-3.5 pr-9 py-2.5 text-sm font-medium text-ink outline-none cursor-pointer transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
+            >
+              {GREEK_CITIES.map((loc) => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40" />
+          </div>
+        </div>
         <div className="min-w-[180px]">
           <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">Περιοχή</label>
           <div className="relative">
             <select
-              data-testid="lead-finder-location-select"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="appearance-none w-full rounded-xl border border-ink/10 bg-white pl-3.5 pr-9 py-2.5 text-sm font-medium text-ink outline-none cursor-pointer transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
+              data-testid="lead-finder-neighborhood-select"
+              value={neighborhood}
+              onChange={(e) => setNeighborhood(e.target.value)}
+              disabled={neighborhoods.length === 0}
+              className="appearance-none w-full rounded-xl border border-ink/10 bg-white pl-3.5 pr-9 py-2.5 text-sm font-medium text-ink outline-none cursor-pointer transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {GREEK_LOCATIONS.map((loc) => (
-                <option key={loc} value={loc}>{loc}</option>
+              <option value="">Όλη η πόλη</option>
+              {neighborhoods.map((n) => (
+                <option key={n} value={n}>{n}</option>
               ))}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40" />
@@ -649,7 +737,7 @@ function LeadFinder({ token, onProspectsAdded }) {
           </div>
 
           <div className="mt-3 overflow-x-auto rounded-2xl border border-ink/8 bg-white">
-            <table data-testid="lead-finder-results-table" className="w-full min-w-[960px] text-left text-sm">
+            <table data-testid="lead-finder-results-table" className="w-full min-w-[1000px] text-left text-sm">
               <thead>
                 <tr className="border-b border-ink/8 text-[11px] uppercase tracking-[0.15em] font-semibold text-ink/45">
                   <th className="px-4 py-3">
@@ -671,6 +759,7 @@ function LeadFinder({ token, onProspectsAdded }) {
                   <th className="px-4 py-3">Ιστοσελίδα</th>
                   <th className="px-4 py-3">Βαθμολογία</th>
                   <th className="px-4 py-3">Maps</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
@@ -715,6 +804,17 @@ function LeadFinder({ token, onProspectsAdded }) {
                           <a href={p.maps_url} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Maps</a>
                         ) : "—"}
                       </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => removeResult(p.place_id)}
+                          data-testid={`lead-finder-remove-${p.place_id}`}
+                          title="Αφαίρεση από τη λίστα"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink/35 transition-colors hover:bg-red-50 hover:text-red-500"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -723,14 +823,23 @@ function LeadFinder({ token, onProspectsAdded }) {
           </div>
         </>
       )}
+      </>
+      )}
     </div>
   );
 }
 
-function Prospects({ token }) {
+function ProspectsList({ token }) {
   const [prospects, setProspects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [websiteFilter, setWebsiteFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [minRating, setMinRating] = useState("0");
+  const [sortBy, setSortBy] = useState("newest");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -749,10 +858,96 @@ function Prospects({ token }) {
     load();
   }, [load]);
 
+  const locationOptions = useMemo(() => {
+    const set = new Set(prospects.map((p) => p.location).filter(Boolean));
+    return [{ value: "all", label: "Όλες οι περιοχές" }, ...Array.from(set).sort().map((l) => ({ value: l, label: l }))];
+  }, [prospects]);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set(prospects.map((p) => p.category).filter(Boolean));
+    return [{ value: "all", label: "Όλες οι κατηγορίες" }, ...Array.from(set).sort().map((c) => ({ value: c, label: c }))];
+  }, [prospects]);
+
+  const ratingOptions = [
+    { value: "0", label: "Οποιαδήποτε βαθμολογία" },
+    { value: "3", label: "3+ αστέρια" },
+    { value: "4", label: "4+ αστέρια" },
+    { value: "4.5", label: "4.5+ αστέρια" },
+  ];
+  const websiteOptions = [
+    { value: "all", label: "Όλες" },
+    { value: "has", label: "Με ιστοσελίδα" },
+    { value: "none", label: "Χωρίς ιστοσελίδα" },
+  ];
+  const sortOptions = [
+    { value: "newest", label: "Νεότερα πρώτα" },
+    { value: "rating", label: "Βαθμολογία" },
+    { value: "name", label: "Όνομα" },
+    { value: "location", label: "Τοποθεσία" },
+  ];
+
+  const filtered = useMemo(() => {
+    const minR = parseFloat(minRating) || 0;
+    const list = prospects.filter((p) => {
+      if (websiteFilter === "has" && !p.website) return false;
+      if (websiteFilter === "none" && p.website) return false;
+      if (locationFilter !== "all" && p.location !== locationFilter) return false;
+      if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+      if (minR > 0 && (p.rating || 0) < minR) return false;
+      return true;
+    });
+    return [...list].sort((a, b) => {
+      if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
+      if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
+      if (sortBy === "location") return (a.location || "").localeCompare(b.location || "");
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+  }, [prospects, websiteFilter, locationFilter, categoryFilter, minRating, sortBy]);
+
+  const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
+  const toggleSelectAll = () => setSelectedIds(allSelected ? new Set() : new Set(filtered.map((p) => p.id)));
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const deleteOne = async (id) => {
+    try {
+      await axios.delete(`${API}/admin/prospects/${id}`, { headers: { "X-Admin-Token": token } });
+      setProspects((prev) => prev.filter((p) => p.id !== id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } catch {
+      setError("Η διαγραφή απέτυχε. Δοκίμασε ξανά.");
+    }
+  };
+
+  const deleteSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0 || deleting) return;
+    setDeleting(true);
+    try {
+      await axios.post(`${API}/admin/prospects/bulk-delete`, { ids }, { headers: { "X-Admin-Token": token } });
+      setProspects((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+      setSelectedIds(new Set());
+    } catch {
+      setError("Η μαζική διαγραφή απέτυχε. Δοκίμασε ξανά.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const exportCSV = () => {
-    const headers = ["Επιχείρηση", "Διεύθυνση", "Τηλέφωνο", "Ιστοσελίδα", "Βαθμολογία", "Google Maps", "Αναζήτηση", "Ημερομηνία"];
+    const headers = ["Επιχείρηση", "Κατηγορία", "Τοποθεσία", "Διεύθυνση", "Τηλέφωνο", "Ιστοσελίδα", "Βαθμολογία", "Google Maps", "Ημερομηνία"];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const rows = prospects.map((p) => [p.name, p.address, p.phone, p.website, p.rating, p.maps_url, p.source_query, formatDate(p.created_at)]);
+    const rows = filtered.map((p) => [p.name, p.category, p.location, p.address, p.phone, p.website, p.rating, p.maps_url, formatDate(p.created_at)]);
     const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -769,7 +964,7 @@ function Prospects({ token }) {
     <div data-testid="prospects-section">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">Υποψήφιοι Πελάτες</h1>
+          <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight">Υποψήφιοι Πελάτες</h2>
           <p className="mt-1.5 text-sm text-ink/55">Επιχειρήσεις που βρέθηκαν μέσω Lead Finder — δεν έχουν επικοινωνήσει ακόμα.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -779,7 +974,7 @@ function Prospects({ token }) {
           <button
             type="button"
             onClick={exportCSV}
-            disabled={prospects.length === 0}
+            disabled={filtered.length === 0}
             data-testid="prospects-export-csv"
             className="inline-flex items-center gap-2 rounded-xl bg-baby px-5 py-2.5 text-sm font-bold text-ink transition-[transform,opacity] duration-300 hover:scale-[1.02] disabled:opacity-40"
           >
@@ -788,8 +983,52 @@ function Prospects({ token }) {
         </div>
       </div>
 
+      {prospects.length > 0 && (
+        <div className="mt-5 flex flex-wrap items-end gap-3">
+          <div className="w-44">
+            <FilterSelect label="Ιστοσελίδα" value={websiteFilter} onChange={setWebsiteFilter} options={websiteOptions} testid="prospects-filter-website" />
+          </div>
+          <div className="w-48">
+            <FilterSelect label="Περιοχή" value={locationFilter} onChange={setLocationFilter} options={locationOptions} testid="prospects-filter-location" />
+          </div>
+          <div className="w-48">
+            <FilterSelect label="Κατηγορία" value={categoryFilter} onChange={setCategoryFilter} options={categoryOptions} testid="prospects-filter-category" />
+          </div>
+          <div className="w-44">
+            <FilterSelect label="Βαθμολογία" value={minRating} onChange={setMinRating} options={ratingOptions} testid="prospects-filter-rating" />
+          </div>
+          <div className="w-40">
+            <FilterSelect label="Ταξινόμηση" value={sortBy} onChange={setSortBy} options={sortOptions} testid="prospects-sort" />
+          </div>
+        </div>
+      )}
+
+      {selectedIds.size > 0 && (
+        <div data-testid="prospects-bulk-bar" className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-baby/40 bg-baby-light px-5 py-3.5">
+          <span className="text-sm font-bold text-ink">{selectedIds.size} επιλεγμένα</span>
+          <button
+            type="button"
+            onClick={deleteSelected}
+            disabled={deleting}
+            data-testid="prospects-bulk-delete"
+            className="inline-flex items-center gap-1.5 rounded-full bg-red-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-red-600 disabled:opacity-60"
+          >
+            {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+            Διαγραφή Επιλεγμένων
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedIds(new Set())}
+            data-testid="prospects-bulk-clear"
+            className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold text-ink/50 hover:text-ink"
+          >
+            <X className="h-3.5 w-3.5" />Άκυρο
+          </button>
+        </div>
+      )}
+
       {error && (
-        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-600">{error}</div>
+        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-600">{error}</div>
       )}
 
       {loading ? (
@@ -801,42 +1040,107 @@ function Prospects({ token }) {
         <div data-testid="prospects-empty" className="mt-10 rounded-[1.75rem] border border-dashed border-ink/15 bg-white/60 px-8 py-16 text-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-ink/40"><Inbox className="h-6 w-6" /></span>
           <p className="mt-4 font-display text-lg font-medium">Κανένας υποψήφιος πελάτης ακόμη</p>
-          <p className="mt-1 text-sm text-ink/50">Πρόσθεσε επιχειρήσεις από την «Εύρεση Leads».</p>
+          <p className="mt-1 text-sm text-ink/50">Πρόσθεσε επιχειρήσεις από την «Αναζήτηση».</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div data-testid="prospects-no-results" className="mt-10 rounded-[1.75rem] border border-dashed border-ink/15 bg-white/60 px-8 py-16 text-center">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-ink/40"><Search className="h-6 w-6" /></span>
+          <p className="mt-4 font-display text-lg font-medium">Δεν βρέθηκαν αποτελέσματα</p>
+          <p className="mt-1 text-sm text-ink/50">Δοκίμασε διαφορετικά φίλτρα.</p>
         </div>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-2xl border border-ink/8 bg-white">
-          <table data-testid="prospects-table" className="w-full min-w-[960px] text-left text-sm">
+          <table data-testid="prospects-table" className="w-full min-w-[1080px] text-left text-sm">
             <thead>
               <tr className="border-b border-ink/8 text-[11px] uppercase tracking-[0.15em] font-semibold text-ink/45">
+                <th className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    data-testid="prospects-select-all"
+                    aria-pressed={allSelected}
+                    className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${
+                      allSelected ? "bg-ink border-ink text-white" : "border-ink/25 text-transparent hover:border-ink/50"
+                    }`}
+                  >
+                    <Check className="h-3 w-3" />
+                  </button>
+                </th>
                 <th className="px-4 py-3">Επιχείρηση</th>
-                <th className="px-4 py-3">Διεύθυνση</th>
+                <th className="px-4 py-3">Τοποθεσία</th>
                 <th className="px-4 py-3">Τηλέφωνο</th>
                 <th className="px-4 py-3">Ιστοσελίδα</th>
                 <th className="px-4 py-3">Βαθμολογία</th>
                 <th className="px-4 py-3">Maps</th>
                 <th className="px-4 py-3">Προστέθηκε</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
-              {prospects.map((p) => (
-                <tr key={p.id} data-testid={`prospects-row-${p.id}`} className="border-b border-ink/6 last:border-b-0 hover:bg-mist/40">
-                  <td className="px-4 py-3 font-semibold text-ink">{p.name || "—"}</td>
-                  <td className="px-4 py-3 text-ink/70">{p.address || "—"}</td>
-                  <td className="px-4 py-3 text-ink/70">{p.phone || "—"}</td>
-                  <td className="px-4 py-3">
-                    {p.website ? (
-                      <a href={p.website} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Site</a>
-                    ) : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-ink/70">{p.rating ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    {p.maps_url ? (
-                      <a href={p.maps_url} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Maps</a>
-                    ) : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-ink/60">{formatDate(p.created_at)}</td>
-                </tr>
-              ))}
+              {filtered.map((p) => {
+                const selected = selectedIds.has(p.id);
+                return (
+                  <tr key={p.id} data-testid={`prospects-row-${p.id}`} className="border-b border-ink/6 last:border-b-0 hover:bg-mist/40">
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleSelect(p.id)}
+                        data-testid={`prospects-select-${p.id}`}
+                        aria-pressed={selected}
+                        className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${
+                          selected ? "bg-ink border-ink text-white" : "border-ink/25 text-transparent hover:border-ink/50"
+                        }`}
+                      >
+                        <Check className="h-3 w-3" />
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-ink">{p.name || "—"}</p>
+                      <p className="mt-0.5 text-xs text-ink/50">{p.address || "—"}</p>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {p.category && (
+                          <span data-testid={`prospects-category-${p.id}`} className="inline-flex rounded-full bg-baby-light border border-baby/40 px-2 py-0.5 text-[10px] font-bold text-baby-dark">
+                            {p.category}
+                          </span>
+                        )}
+                        <span
+                          data-testid={`prospects-website-badge-${p.id}`}
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            p.website ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-600"
+                          }`}
+                        >
+                          {p.website ? "Έχει ιστοσελίδα" : "Χωρίς ιστοσελίδα"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-ink/70">{p.location || "—"}</td>
+                    <td className="px-4 py-3 text-ink/70">{p.phone || "—"}</td>
+                    <td className="px-4 py-3">
+                      {p.website ? (
+                        <a href={p.website} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Site</a>
+                      ) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-ink/70">{p.rating ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {p.maps_url ? (
+                        <a href={p.maps_url} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Maps</a>
+                      ) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-ink/60">{formatDate(p.created_at)}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => deleteOne(p.id)}
+                        data-testid={`prospects-delete-${p.id}`}
+                        title="Διαγραφή"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink/35 transition-colors hover:bg-red-50 hover:text-red-500"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -1080,25 +1384,11 @@ function Dashboard({ token, onLogout }) {
           >
             Εύρεση Leads
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("prospects")}
-            data-testid="admin-tab-prospects"
-            className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
-              activeTab === "prospects" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
-            }`}
-          >
-            Υποψήφιοι Πελάτες
-          </button>
         </div>
 
         {activeTab === "finder" ? (
           <div className="mt-8">
             <LeadFinder token={token} />
-          </div>
-        ) : activeTab === "prospects" ? (
-          <div className="mt-8">
-            <Prospects token={token} />
           </div>
         ) : (
         <>

@@ -110,10 +110,16 @@ class ProspectCreate(BaseModel):
     rating: Optional[float] = None
     maps_url: Optional[str] = None
     source_query: Optional[str] = None
+    category: Optional[str] = None
+    location: Optional[str] = None
 
 
 class ProspectBulkCreate(BaseModel):
     prospects: List[ProspectCreate]
+
+
+class ProspectBulkDelete(BaseModel):
+    ids: List[str]
 
 
 class Prospect(BaseModel):
@@ -126,6 +132,8 @@ class Prospect(BaseModel):
     rating: Optional[float] = None
     maps_url: Optional[str] = None
     source_query: Optional[str] = None
+    category: Optional[str] = None
+    location: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -396,6 +404,22 @@ async def get_prospects(_: bool = Depends(verify_admin)):
         if isinstance(d.get('created_at'), str):
             d['created_at'] = datetime.fromisoformat(d['created_at'])
     return docs
+
+
+@api_router.post("/admin/prospects/bulk-delete")
+async def bulk_delete_prospects(body: ProspectBulkDelete, _: bool = Depends(verify_admin)):
+    if not body.ids:
+        raise HTTPException(status_code=400, detail="Δεν στάλθηκαν αναγνωριστικά")
+    result = await db.prospects.delete_many({"id": {"$in": body.ids}})
+    return {"deleted": result.deleted_count}
+
+
+@api_router.delete("/admin/prospects/{prospect_id}")
+async def delete_prospect(prospect_id: str, _: bool = Depends(verify_admin)):
+    result = await db.prospects.delete_one({"id": prospect_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Prospect not found")
+    return {"deleted": True}
 
 
 app.include_router(api_router)
