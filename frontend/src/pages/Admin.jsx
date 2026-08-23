@@ -1377,72 +1377,87 @@ function Dashboard({ token, onLogout }) {
 
   return (
     <div className="min-h-screen bg-paper text-ink font-body antialiased">
-      <header className="sticky top-0 z-20 border-b border-ink/8 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-[1600px] px-6 md:px-10 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="font-display font-bold text-2xl tracking-tighter flex items-center gap-1">
-              KNDP<span className="h-2.5 w-2.5 rounded-full bg-baby translate-y-1" />
-            </span>
-            <span className="hidden sm:inline text-sm font-semibold text-ink/45">/ Admin</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={load} data-testid="admin-refresh-button" className="inline-flex items-center gap-2 rounded-full border border-ink/12 px-4 py-2 text-xs font-bold text-ink transition-colors hover:bg-mist">
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />Ανανέωση
-            </button>
-            <Link to="/" className="hidden sm:inline-flex items-center gap-2 rounded-full border border-ink/12 px-4 py-2 text-xs font-bold text-ink transition-colors hover:bg-mist">
-              <ArrowLeft className="h-3.5 w-3.5" />Site
-            </Link>
-            <button onClick={onLogout} data-testid="admin-logout-button" className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs font-bold text-white transition-transform hover:scale-105">
-              <LogOut className="h-3.5 w-3.5" />Έξοδος
-            </button>
-          </div>
-        </div>
-      </header>
-
       <div className="mx-auto max-w-[1600px] flex">
         <aside
           data-testid="admin-sidebar"
-          className="hidden md:flex w-56 shrink-0 flex-col gap-1.5 border-r border-ink/8 bg-white/50 px-4 py-8 sticky top-20 self-start h-[calc(100vh-5rem)]"
+          className="hidden md:flex w-56 shrink-0 flex-col border-r border-ink/8 bg-white/60 px-4 py-6 sticky top-0 self-start h-screen"
         >
+          <div className="px-2 mb-8 flex items-center gap-2">
+            <span className="font-display font-bold text-2xl tracking-tighter flex items-center gap-1">
+              KNDP<span className="h-2.5 w-2.5 rounded-full bg-baby translate-y-1" />
+            </span>
+            <span className="text-xs font-semibold text-ink/40">Admin</span>
+          </div>
           <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/40">Μενού</p>
-          <SidebarButton
-            icon={Inbox}
-            label="Μηνύματα"
-            active={activeTab === "messages"}
-            onClick={() => setActiveTab("messages")}
-            testid="admin-tab-messages"
-          />
-          <SidebarButton
-            icon={Search}
-            label="Εύρεση Leads"
-            active={activeTab === "finder"}
-            onClick={() => setActiveTab("finder")}
-            testid="admin-tab-finder"
-          />
+          <div className="flex flex-col gap-1.5">
+            <SidebarButton
+              icon={Inbox}
+              label="Μηνύματα"
+              active={activeTab === "messages"}
+              onClick={() => setActiveTab("messages")}
+              testid="admin-tab-messages"
+            />
+            <SidebarButton
+              icon={Search}
+              label="Εύρεση Leads"
+              active={activeTab === "finder"}
+              onClick={() => setActiveTab("finder")}
+              testid="admin-tab-finder"
+            />
+          </div>
+          <div className="mt-auto flex flex-col gap-1.5 pt-4 border-t border-ink/8">
+            <button onClick={load} data-testid="admin-refresh-button" className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-bold text-ink/55 transition-colors hover:bg-mist hover:text-ink">
+              <RefreshCw className={`h-4 w-4 shrink-0 text-ink/40 ${loading ? "animate-spin" : ""}`} />Ανανέωση
+            </button>
+            <Link to="/" className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-bold text-ink/55 transition-colors hover:bg-mist hover:text-ink">
+              <ArrowLeft className="h-4 w-4 shrink-0 text-ink/40" />Πίσω στο site
+            </Link>
+            <button onClick={onLogout} data-testid="admin-logout-button" className="flex w-full items-center gap-3 rounded-xl bg-ink px-3.5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-[1.02]">
+              <LogOut className="h-4 w-4 shrink-0 text-baby" />Έξοδος
+            </button>
+          </div>
         </aside>
 
         <main className="flex-1 min-w-0 px-6 md:px-10 py-8">
-          <div data-testid="admin-tabs-mobile" className="md:hidden mb-6 flex items-center gap-1 border-b border-ink/8">
-            <button
-              type="button"
-              onClick={() => setActiveTab("messages")}
-              data-testid="admin-tab-messages-mobile"
-              className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
-                activeTab === "messages" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
-              }`}
-            >
-              Μηνύματα
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("finder")}
-              data-testid="admin-tab-finder-mobile"
-              className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
-                activeTab === "finder" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
-              }`}
-            >
-              Εύρεση Leads
-            </button>
+          <div className="md:hidden mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-display font-bold text-2xl tracking-tighter flex items-center gap-1">
+                KNDP<span className="h-2.5 w-2.5 rounded-full bg-baby translate-y-1" />
+              </span>
+              <div className="flex items-center gap-2">
+                <button onClick={load} data-testid="admin-refresh-button-mobile" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-ink/12 text-ink transition-colors hover:bg-mist">
+                  <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                </button>
+                <Link to="/" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-ink/12 text-ink transition-colors hover:bg-mist">
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+                <button onClick={onLogout} data-testid="admin-logout-button-mobile" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-ink text-white">
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div data-testid="admin-tabs-mobile" className="flex items-center gap-1 border-b border-ink/8">
+              <button
+                type="button"
+                onClick={() => setActiveTab("messages")}
+                data-testid="admin-tab-messages-mobile"
+                className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+                  activeTab === "messages" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
+                }`}
+              >
+                Μηνύματα
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("finder")}
+                data-testid="admin-tab-finder-mobile"
+                className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+                  activeTab === "finder" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
+                }`}
+              >
+                Εύρεση Leads
+              </button>
+            </div>
           </div>
 
         {activeTab === "finder" ? (
