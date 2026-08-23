@@ -551,6 +551,403 @@ async def delete_prospect(prospect_id: str, _: bool = Depends(verify_admin)):
     return {"deleted": True}
 
 
+# ============================================================
+# AGENCY MANAGEMENT: Clients, Projects, Tasks, Invoices
+# ============================================================
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+class Client(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    contact_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    address: Optional[str] = None
+    status: str = "Active"  # Active | Past | Prospect
+    notes: str = ""
+    created_at: str = Field(default_factory=_now_iso)
+
+
+class ClientCreate(BaseModel):
+    name: str
+    contact_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    address: Optional[str] = None
+    status: str = "Active"
+    notes: str = ""
+
+
+class ClientUpdate(BaseModel):
+    name: Optional[str] = None
+    contact_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    address: Optional[str] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class Project(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: Optional[str] = None
+    name: str
+    type: Optional[str] = None
+    status: str = "Νέο"
+    description: str = ""
+    budget: float = 0
+    deadline: Optional[str] = None
+    start_date: Optional[str] = None
+    staging_url: Optional[str] = None
+    live_url: Optional[str] = None
+    login_notes: str = ""
+    created_at: str = Field(default_factory=_now_iso)
+
+
+class ProjectCreate(BaseModel):
+    client_id: Optional[str] = None
+    name: str
+    type: Optional[str] = None
+    status: str = "Νέο"
+    description: str = ""
+    budget: float = 0
+    deadline: Optional[str] = None
+    start_date: Optional[str] = None
+    staging_url: Optional[str] = None
+    live_url: Optional[str] = None
+    login_notes: str = ""
+
+
+class ProjectUpdate(BaseModel):
+    client_id: Optional[str] = None
+    name: Optional[str] = None
+    type: Optional[str] = None
+    status: Optional[str] = None
+    description: Optional[str] = None
+    budget: Optional[float] = None
+    deadline: Optional[str] = None
+    start_date: Optional[str] = None
+    staging_url: Optional[str] = None
+    live_url: Optional[str] = None
+    login_notes: Optional[str] = None
+
+
+class Task(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    title: str
+    done: bool = False
+    created_at: str = Field(default_factory=_now_iso)
+
+
+class TaskCreate(BaseModel):
+    project_id: str
+    title: str
+
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    done: Optional[bool] = None
+
+
+class Invoice(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: Optional[str] = None
+    project_id: Optional[str] = None
+    number: Optional[str] = None
+    amount: float = 0
+    amount_paid: float = 0
+    status: str = "Unpaid"  # Unpaid | Partial | Paid
+    issued_date: Optional[str] = None
+    due_date: Optional[str] = None
+    notes: str = ""
+    created_at: str = Field(default_factory=_now_iso)
+
+
+class InvoiceCreate(BaseModel):
+    client_id: Optional[str] = None
+    project_id: Optional[str] = None
+    number: Optional[str] = None
+    amount: float = 0
+    amount_paid: float = 0
+    status: str = "Unpaid"
+    issued_date: Optional[str] = None
+    due_date: Optional[str] = None
+    notes: str = ""
+
+
+class InvoiceUpdate(BaseModel):
+    client_id: Optional[str] = None
+    project_id: Optional[str] = None
+    number: Optional[str] = None
+    amount: Optional[float] = None
+    amount_paid: Optional[float] = None
+    status: Optional[str] = None
+    issued_date: Optional[str] = None
+    due_date: Optional[str] = None
+    notes: Optional[str] = None
+
+
+# ---------- Clients ----------
+@api_router.post("/admin/clients", response_model=Client)
+async def create_client(body: ClientCreate, _: bool = Depends(verify_admin)):
+    client_obj = Client(**body.model_dump())
+    await db.clients.insert_one(client_obj.model_dump())
+    return client_obj
+
+
+@api_router.get("/admin/clients", response_model=List[Client])
+async def list_clients(_: bool = Depends(verify_admin)):
+    docs = await db.clients.find({}, {"_id": 0}).sort("created_at", -1).to_list(5000)
+    return docs
+
+
+@api_router.patch("/admin/clients/{client_id}", response_model=Client)
+async def update_client(client_id: str, body: ClientUpdate, _: bool = Depends(verify_admin)):
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    if patch:
+        await db.clients.update_one({"id": client_id}, {"$set": patch})
+    doc = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return doc
+
+
+@api_router.delete("/admin/clients/{client_id}")
+async def delete_client(client_id: str, _: bool = Depends(verify_admin)):
+    result = await db.clients.delete_one({"id": client_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return {"deleted": True}
+
+
+@api_router.post("/admin/clients/from-lead/{contact_id}", response_model=Client)
+async def client_from_lead(contact_id: str, _: bool = Depends(verify_admin)):
+    lead = await db.contact_messages.find_one({"id": contact_id}, {"_id": 0})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    client_obj = Client(
+        name=lead.get("company") or lead.get("name") or "Νέος Πελάτης",
+        contact_name=lead.get("name"),
+        email=lead.get("email") or None,
+        phone=lead.get("phone"),
+        status="Active",
+        notes=(lead.get("message") or ""),
+    )
+    await db.clients.insert_one(client_obj.model_dump())
+    await db.contact_messages.update_one({"id": contact_id}, {"$set": {"status": "Converted"}})
+    return client_obj
+
+
+@api_router.post("/admin/clients/from-prospect/{prospect_id}", response_model=Client)
+async def client_from_prospect(prospect_id: str, _: bool = Depends(verify_admin)):
+    p = await db.prospects.find_one({"id": prospect_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Prospect not found")
+    client_obj = Client(
+        name=p.get("name") or "Νέος Πελάτης",
+        email=p.get("email") or None,
+        phone=p.get("phone"),
+        website=p.get("website"),
+        address=p.get("address"),
+        status="Active",
+        notes=f"Από Υποψήφιους Πελάτες · {p.get('category') or ''} · {p.get('location') or ''}",
+    )
+    await db.clients.insert_one(client_obj.model_dump())
+    await db.prospects.delete_one({"id": prospect_id})
+    return client_obj
+
+
+# ---------- Projects ----------
+@api_router.post("/admin/projects", response_model=Project)
+async def create_project(body: ProjectCreate, _: bool = Depends(verify_admin)):
+    project = Project(**body.model_dump())
+    await db.projects.insert_one(project.model_dump())
+    return project
+
+
+@api_router.get("/admin/projects", response_model=List[Project])
+async def list_projects(_: bool = Depends(verify_admin)):
+    docs = await db.projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(5000)
+    return docs
+
+
+@api_router.patch("/admin/projects/{project_id}", response_model=Project)
+async def update_project(project_id: str, body: ProjectUpdate, _: bool = Depends(verify_admin)):
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    if patch:
+        await db.projects.update_one({"id": project_id}, {"$set": patch})
+    doc = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return doc
+
+
+@api_router.delete("/admin/projects/{project_id}")
+async def delete_project(project_id: str, _: bool = Depends(verify_admin)):
+    result = await db.projects.delete_one({"id": project_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Project not found")
+    await db.tasks.delete_many({"project_id": project_id})
+    return {"deleted": True}
+
+
+# ---------- Tasks ----------
+@api_router.post("/admin/tasks", response_model=Task)
+async def create_task(body: TaskCreate, _: bool = Depends(verify_admin)):
+    task = Task(**body.model_dump())
+    await db.tasks.insert_one(task.model_dump())
+    return task
+
+
+@api_router.get("/admin/tasks", response_model=List[Task])
+async def list_tasks(project_id: Optional[str] = None, _: bool = Depends(verify_admin)):
+    query = {"project_id": project_id} if project_id else {}
+    docs = await db.tasks.find(query, {"_id": 0}).sort("created_at", 1).to_list(5000)
+    return docs
+
+
+@api_router.patch("/admin/tasks/{task_id}", response_model=Task)
+async def update_task(task_id: str, body: TaskUpdate, _: bool = Depends(verify_admin)):
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    if patch:
+        await db.tasks.update_one({"id": task_id}, {"$set": patch})
+    doc = await db.tasks.find_one({"id": task_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return doc
+
+
+@api_router.delete("/admin/tasks/{task_id}")
+async def delete_task(task_id: str, _: bool = Depends(verify_admin)):
+    result = await db.tasks.delete_one({"id": task_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"deleted": True}
+
+
+# ---------- Invoices ----------
+def _normalize_invoice_status(inv: dict) -> dict:
+    amount = inv.get("amount", 0) or 0
+    paid = inv.get("amount_paid", 0) or 0
+    if inv.get("status") != "Paid":
+        if paid <= 0:
+            inv["status"] = "Unpaid"
+        elif paid < amount:
+            inv["status"] = "Partial"
+        else:
+            inv["status"] = "Paid"
+    return inv
+
+
+@api_router.post("/admin/invoices", response_model=Invoice)
+async def create_invoice(body: InvoiceCreate, _: bool = Depends(verify_admin)):
+    invoice = Invoice(**body.model_dump())
+    doc = _normalize_invoice_status(invoice.model_dump())
+    invoice = Invoice(**doc)
+    await db.invoices.insert_one(invoice.model_dump())
+    return invoice
+
+
+@api_router.get("/admin/invoices", response_model=List[Invoice])
+async def list_invoices(_: bool = Depends(verify_admin)):
+    docs = await db.invoices.find({}, {"_id": 0}).sort("created_at", -1).to_list(5000)
+    return docs
+
+
+@api_router.patch("/admin/invoices/{invoice_id}", response_model=Invoice)
+async def update_invoice(invoice_id: str, body: InvoiceUpdate, _: bool = Depends(verify_admin)):
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    if patch:
+        await db.invoices.update_one({"id": invoice_id}, {"$set": patch})
+    doc = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    # Re-normalize status based on amounts unless explicitly marked Paid
+    doc = _normalize_invoice_status(doc)
+    await db.invoices.update_one({"id": invoice_id}, {"$set": {"status": doc["status"]}})
+    return doc
+
+
+@api_router.delete("/admin/invoices/{invoice_id}")
+async def delete_invoice(invoice_id: str, _: bool = Depends(verify_admin)):
+    result = await db.invoices.delete_one({"id": invoice_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return {"deleted": True}
+
+
+# ---------- Overview ----------
+@api_router.get("/admin/overview")
+async def admin_overview(_: bool = Depends(verify_admin)):
+    clients = await db.clients.find({}, {"_id": 0}).to_list(5000)
+    projects = await db.projects.find({}, {"_id": 0}).to_list(5000)
+    invoices = await db.invoices.find({}, {"_id": 0}).to_list(5000)
+
+    active_projects = [p for p in projects if p.get("status") != "Ολοκληρωμένο"]
+    total_collected = sum((i.get("amount_paid", 0) or 0) for i in invoices)
+    outstanding = sum(
+        max((i.get("amount", 0) or 0) - (i.get("amount_paid", 0) or 0), 0)
+        for i in invoices if i.get("status") != "Paid"
+    )
+
+    now = datetime.now(timezone.utc)
+    month_prefix = now.strftime("%Y-%m")
+    revenue_this_month = sum(
+        (i.get("amount_paid", 0) or 0)
+        for i in invoices
+        if (i.get("created_at") or "").startswith(month_prefix)
+    )
+
+    # Upcoming deadlines (projects with a deadline, not completed), soonest first
+    upcoming = [
+        {
+            "id": p["id"],
+            "name": p.get("name"),
+            "deadline": p.get("deadline"),
+            "status": p.get("status"),
+            "client_id": p.get("client_id"),
+        }
+        for p in active_projects if p.get("deadline")
+    ]
+    upcoming.sort(key=lambda x: x["deadline"])
+
+    unpaid_invoices = [
+        {
+            "id": i["id"],
+            "number": i.get("number"),
+            "amount": i.get("amount", 0),
+            "amount_paid": i.get("amount_paid", 0),
+            "status": i.get("status"),
+            "due_date": i.get("due_date"),
+            "client_id": i.get("client_id"),
+        }
+        for i in invoices if i.get("status") != "Paid"
+    ]
+
+    return {
+        "clients_total": len(clients),
+        "active_projects": len(active_projects),
+        "projects_total": len(projects),
+        "revenue_this_month": revenue_this_month,
+        "total_collected": total_collected,
+        "outstanding": outstanding,
+        "invoices_total": len(invoices),
+        "upcoming_deadlines": upcoming[:8],
+        "unpaid_invoices": unpaid_invoices[:8],
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(

@@ -162,6 +162,90 @@ backend:
           agent: "testing"
           comment: "✅ ALL 11 BACKEND TESTS PASSED! Comprehensive testing of POST /api/admin/prospects/transfer endpoint completed successfully. ✅ ADMIN AUTH: Test 1 - POST /api/admin/login with correct password '180406kon' returns 200 with token ✓. Test 2 - POST /api/admin/login with wrong password returns 401 ✓. ✅ SINGLE PROSPECT TRANSFER: Test 3 - Created test prospect via POST /api/admin/prospects/bulk with place_id='XFER_TEST_1', name='Transfer Test Biz', email='xfer@testbiz.gr', phone='+30 210 1234567', category='οδοντίατροι', location='Μαρούσι, Αθήνα', source_query='οδοντίατροι Μαρούσι' ✓. Test 4 - POST /api/admin/prospects/transfer with {ids:[prospect_id]} returns 200 with {transferred:1} ✓. Test 5 - GET /api/admin/prospects confirms prospect (place_id XFER_TEST_1) is NO LONGER present in prospects list ✓. Test 6 - GET /api/admin/contacts confirms NEW lead exists with company='Transfer Test Biz', name='Transfer Test Biz', status='New', phone='+30 210 1234567', email='xfer@testbiz.gr', service='οδοντίατροι', and message containing category 'οδοντίατροι', location 'Μαρούσι, Αθήνα', and source_query 'οδοντίατροι Μαρούσι' ✓. ✅ EDGE CASES: Test 7 - POST /api/admin/prospects/transfer with {ids:[]} returns 400 ✓. Test 8 - POST /api/admin/prospects/transfer with {ids:['does-not-exist-123']} returns 200 with {transferred:0} (skips missing gracefully) ✓. Test 9 - POST /api/admin/prospects/transfer WITHOUT X-Admin-Token header returns 401 ✓. ✅ BULK TRANSFER: Test 10 - Created two prospects (place_ids XFER_TEST_2 and XFER_TEST_3) via bulk endpoint, then transferred both ids in one call -> returns 200 with {transferred:2} ✓. Both prospects removed from prospects list ✓. Two new leads found in /api/admin/contacts with companies 'Bulk Transfer Test 2' and 'Bulk Transfer Test 3' ✓. ✅ REGRESSION: Test 11 - GET /api/admin/places/search?q=καφε Μαρουσι WITH token returns 200 with 60 results in 41 seconds, all results have 'email' key ✓. The transfer prospect to lead endpoint is production-ready and meets ALL requirements from the review request."
 
+  - task: "Agency Management - CLIENTS endpoints (POST, GET, PATCH, DELETE /api/admin/clients)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ALL 5 CLIENTS TESTS PASSED! Comprehensive testing of CLIENTS CRUD endpoints completed successfully. ✅ POST /api/admin/clients: Created client with name='Test Client A', email='a@test.gr', phone='+30210', status='Active' -> returns 200/201 with client object containing id ✓. ✅ GET /api/admin/clients: List includes the created client ✓. ✅ PATCH /api/admin/clients/{id}: Updated client with status='Past', notes='hello' -> returns 200 with updated client showing status='Past' and notes='hello' ✓. ✅ DELETE /api/admin/clients/{id}: Deleted client -> returns 200 with {deleted:true} ✓. ✅ GET /api/admin/clients (verify deletion): Client no longer appears in list after deletion ✓. All CLIENTS endpoints require admin auth (X-Admin-Token header with password '180406kon'). The CLIENTS endpoints are production-ready and meet all requirements from the review request."
+
+  - task: "Agency Management - PROJECTS endpoints (POST, GET, PATCH, DELETE /api/admin/projects)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ALL 5 PROJECTS TESTS PASSED! Comprehensive testing of PROJECTS CRUD endpoints completed successfully. ✅ POST /api/admin/projects: Created project with name='Website X', type='Ιστοσελίδα', status='Νέο', budget=2000, deadline='2026-12-31' -> returns 200/201 with project object containing id ✓. ✅ GET /api/admin/projects: List includes the created project ✓. ✅ PATCH /api/admin/projects/{id}: Updated project with status='Ανάπτυξη' -> returns 200 with updated project showing status='Ανάπτυξη' ✓. ✅ DELETE /api/admin/projects/{id}: Deleted project -> returns 200 with {deleted:true} ✓. ✅ CASCADE DELETE: When project is deleted, all associated tasks are automatically cascade-deleted. Verified by querying GET /api/admin/tasks?project_id={id} which returns empty array after project deletion ✓. All PROJECTS endpoints require admin auth (X-Admin-Token header). The PROJECTS endpoints are production-ready and meet all requirements from the review request."
+
+  - task: "Agency Management - TASKS endpoints (POST, GET, PATCH, DELETE /api/admin/tasks)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ALL 3 TASKS TESTS PASSED! Comprehensive testing of TASKS CRUD endpoints completed successfully. ✅ POST /api/admin/tasks: Created task with project_id={project_id}, title='Task 1' -> returns 200/201 with task object containing id and done=false (default) ✓. ✅ GET /api/admin/tasks?project_id={id}: List includes the created task when filtered by project_id ✓. ✅ PATCH /api/admin/tasks/{task_id}: Updated task with done=true -> returns 200 with updated task showing done=true ✓. ✅ CASCADE DELETE VERIFICATION: Tasks are automatically deleted when their parent project is deleted (tested in PROJECTS section) ✓. All TASKS endpoints require admin auth (X-Admin-Token header). The TASKS endpoints are production-ready and meet all requirements from the review request."
+
+  - task: "Agency Management - INVOICES endpoints with status auto-normalization (POST, GET, PATCH, DELETE /api/admin/invoices)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ALL 7 INVOICES TESTS PASSED! Comprehensive testing of INVOICES CRUD endpoints with status auto-normalization completed successfully. ✅ STATUS AUTO-NORMALIZATION ON CREATE: (1) POST invoice with amount=1000, amount_paid=0 -> status auto-normalized to 'Unpaid' ✓. (2) POST invoice with amount=1000, amount_paid=400 -> status auto-normalized to 'Partial' ✓. (3) POST invoice with amount=1000, amount_paid=1000 -> status auto-normalized to 'Paid' ✓. (4) POST invoice with amount=1000, amount_paid=0, status='Paid' (explicit) -> status REMAINS 'Paid' (explicit Paid status is respected and not overridden) ✓. ✅ GET /api/admin/invoices: List includes all 4 created invoices ✓. ✅ STATUS RECOMPUTATION ON UPDATE: PATCH invoice (the Partial one) with amount_paid=1000 -> status automatically recomputes to 'Paid' ✓. ✅ DELETE /api/admin/invoices/{id}: Deleted invoice -> returns 200 with {deleted:true} ✓. All INVOICES endpoints require admin auth (X-Admin-Token header). The status normalization logic (_normalize_invoice_status function) correctly handles: paid<=0 -> 'Unpaid', 0<paid<amount -> 'Partial', paid>=amount -> 'Paid', but respects explicit status='Paid' even if amount_paid=0. The INVOICES endpoints are production-ready and meet all requirements from the review request."
+
+  - task: "Agency Management - OVERVIEW endpoint (GET /api/admin/overview)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ALL 11 OVERVIEW TESTS PASSED! Comprehensive testing of GET /api/admin/overview endpoint completed successfully. ✅ SETUP: Created test data: 1 client (status='Active'), 1 project (status='Ανάπτυξη', deadline='2026-12-31'), 1 partial invoice (amount=1000, amount_paid=300) ✓. ✅ RESPONSE STRUCTURE: GET /api/admin/overview returns 200 with all required keys: clients_total, active_projects, projects_total, revenue_this_month, total_collected, outstanding, invoices_total, upcoming_deadlines, unpaid_invoices ✓. ✅ COUNTS VERIFICATION: clients_total >= 1 ✓, active_projects >= 1 (projects with status != 'Ολοκληρωμένο') ✓, projects_total >= 1 ✓, invoices_total >= 1 ✓. ✅ OUTSTANDING CALCULATION: outstanding field correctly calculates unpaid amounts. For the partial invoice (amount=1000, paid=300), outstanding includes the 700 unpaid amount ✓. ✅ UPCOMING_DEADLINES: Array contains the test project with deadline='2026-12-31' and status='Ανάπτυξη' (not completed). Each item has keys: id, name, deadline, status, client_id ✓. ✅ UNPAID_INVOICES: Array contains the partial invoice (status='Partial'). Each item has keys: id, number, amount, amount_paid, status, due_date, client_id ✓. The OVERVIEW endpoint requires admin auth (X-Admin-Token header). The endpoint is production-ready and provides comprehensive dashboard metrics for the agency management system."
+
+  - task: "Agency Management - CONVERT endpoints (POST /api/admin/clients/from-lead/{id}, POST /api/admin/clients/from-prospect/{id})"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ALL 6 CONVERT TESTS PASSED! Comprehensive testing of CONVERT endpoints completed successfully. ✅ CONVERT LEAD TO CLIENT: (1) Created contact/lead via POST /api/contact with name='John', email='j@x.gr', company='Acme LTD', message='hi' ✓. (2) POST /api/admin/clients/from-lead/{contact_id} -> returns 200/201 with new client object. Client name='Acme LTD' (uses company field from lead) ✓. (3) GET /api/admin/contacts confirms the original contact now has status='Converted' ✓. ✅ CONVERT PROSPECT TO CLIENT: (4) Created prospect via POST /api/admin/prospects/bulk with place_id='CV_TEST_1', name='Prospect Biz', email='p@biz.gr', phone='+30211', category='καφε', location='Αθήνα' ✓. (5) POST /api/admin/clients/from-prospect/{prospect_id} -> returns 200/201 with new client object. Client name='Prospect Biz' ✓. (6) GET /api/admin/prospects confirms the prospect is REMOVED (deleted) from prospects collection after conversion ✓. Both CONVERT endpoints require admin auth (X-Admin-Token header). The conversion logic correctly: (a) creates a new client from lead/prospect data, (b) marks the lead as 'Converted' (status update), (c) DELETES the prospect (not just marks it). The CONVERT endpoints are production-ready and meet all requirements from the review request."
+
+  - task: "Agency Management - AUTH verification (admin endpoints return 401 without token)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ALL 3 AUTH TESTS PASSED! Comprehensive testing of admin authentication completed successfully. ✅ POST /api/admin/login with correct password '180406kon' -> returns 200 with {token: '180406kon'} ✓. ✅ GET /api/admin/clients WITHOUT X-Admin-Token header -> returns 401 Unauthorized ✓. ✅ GET /api/admin/overview WITHOUT X-Admin-Token header -> returns 401 Unauthorized ✓. All admin endpoints (clients, projects, tasks, invoices, overview, convert, prospects, contacts, places/search) correctly enforce authentication by checking the X-Admin-Token header via the verify_admin dependency. The admin password is stored in backend/.env as ADMIN_PASSWORD='180406kon'. The authentication system is production-ready and secure."
+
 
 frontend:
   - task: "Portfolio (Our Work) last card sticky stacking fix"
@@ -785,14 +869,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Transfer prospects to leads (POST /api/admin/prospects/transfer)"
+    - "Agency management: Clients, Projects, Tasks, Invoices, Overview, convert endpoints"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
-      message: "NEW ENDPOINT to test (BACKEND ONLY). POST /api/admin/prospects/transfer with body {\"ids\": [prospect_id, ...]} and header X-Admin-Token: 180406kon (admin password is now '180406kon'; get token via POST /api/admin/login {password}). It MOVES each prospect into the Messages/Leads board: for each id it creates a contact_messages doc (name=business name, company=business name, email=prospect.email or '', phone=prospect.phone, service=category, message=a Greek summary incl. category/location/address/website/rating/maps/source_query, status='New') and DELETES the prospect. Returns {\"transferred\": <count>}. Please test end-to-end: (1) create a prospect via POST /api/admin/prospects/bulk (with place_id, name, email, phone, category, location); (2) POST /api/admin/prospects/transfer with that prospect's id -> expect {transferred:1}; (3) GET /api/admin/prospects no longer contains it; (4) GET /api/admin/contacts now contains a new lead with company/name = the business name, status 'New', and phone/email carried over; (5) transfer with empty ids -> 400; (6) transfer with a non-existent id -> {transferred:0} (skips gracefully); (7) auth enforced (401 without token). Also do a quick regression that GET /api/admin/places/search still returns results with 'email' key. Do NOT test frontend."
+      message: "NEW BACKEND (agency management) to test. Admin password '180406kon' (POST /api/admin/login -> token, header X-Admin-Token). All new routes require admin auth. Test CRUD + relations: (A) CLIENTS: POST /api/admin/clients {name,...} creates; GET /api/admin/clients lists; PATCH /api/admin/clients/{id} updates; DELETE /api/admin/clients/{id}. (B) PROJECTS: POST /api/admin/projects {name, client_id?, type, status, budget, deadline, staging_url, live_url, login_notes,...}; GET list; PATCH {status} moves pipeline; DELETE (should also delete its tasks). (C) TASKS: POST /api/admin/tasks {project_id,title}; GET /api/admin/tasks?project_id=...; PATCH {done:true}; DELETE. Verify deleting a project cascades and removes its tasks. (D) INVOICES: POST /api/admin/invoices {client_id?,project_id?,amount,amount_paid,status,due_date,...}; verify status auto-normalizes (amount_paid=0->Unpaid, 0<paid<amount->Partial, paid>=amount->Paid) unless status explicitly 'Paid'; GET list; PATCH; DELETE. (E) OVERVIEW: GET /api/admin/overview returns {clients_total, active_projects, projects_total, revenue_this_month, total_collected, outstanding, invoices_total, upcoming_deadlines[], unpaid_invoices[]}; create a client+project(with deadline)+invoice(partial) and confirm counts/aggregates reflect them (active_projects counts non-'Ολοκληρωμένο'; outstanding = sum(amount-amount_paid) for non-Paid). (F) CONVERT: create a contact via POST /api/contact then POST /api/admin/clients/from-lead/{contact_id} -> creates client (name=company or name), and the contact status becomes 'Converted'. Create a prospect via POST /api/admin/prospects/bulk then POST /api/admin/clients/from-prospect/{prospect_id} -> creates client and REMOVES the prospect. (G) auth: any admin route without token -> 401. Clean up test data at the end. Do NOT test frontend."
     - agent: "main"
       message: "BUG FIX to verify (MOBILE 390x844 primary; also sanity-check desktop 1440x900). User reported a scroll LAG right below the Hero on mobile — they had to wait / felt a sticky pause before scrolling into the next section. Cause: the Portfolio section (data-testid='portfolio-section', which now sits below Hero + the partners marquee) uses a sticky STACKING cards effect; on mobile the first card stuck at top and a large mb-[42vh] gap forced a long empty scroll before the next card appeared. FIX: on mobile the Portfolio cards are NO LONGER sticky and the large spacing is removed — they now render as a normal, immediate vertical stack (small mb-6). Sticky stacking is kept on DESKTOP only. Please verify on MOBILE emulation: (1) load site, wait for the intro overlay (data-testid='intro-overlay') to disappear (~1.25s mobile). (2) Scroll down from the Hero (data-testid='hero-section') through the marquee into the Portfolio (data-testid='portfolio-section', cards data-testid='case-study-0'..'case-study-5') and CONFIRM scrolling is IMMEDIATE/fluid with NO sticky pause or 'stuck' feeling — you should NOT have to scroll a long empty distance while a card stays pinned; the page should move continuously and you can reach the sections below (services/problems/etc). (3) Confirm the 6 case-study cards render stacked normally (not overlapping/pinned) on mobile, NO console errors, NO horizontal overflow. (4) DESKTOP sanity: the sticky stacking (cards pin & the next slides over) should STILL work on desktop 1440x900 with no errors. This is the ONLY thing to test."
     - agent: "main"

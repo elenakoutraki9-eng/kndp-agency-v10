@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import Overview from "./admin/Overview";
+import Clients from "./admin/Clients";
+import Projects from "./admin/Projects";
+import Invoices from "./admin/Invoices";
 import {
   Lock,
   ArrowLeft,
@@ -23,6 +27,11 @@ import {
   Trash2,
   Calendar,
   ArrowRightLeft,
+  LayoutDashboard,
+  Users as UsersIcon,
+  FolderKanban,
+  Receipt,
+  UserPlus,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -241,11 +250,12 @@ function KanbanCard({ lead, onOpen, onDragStart, onDragEnd, dragging, selected, 
   );
 }
 
-function DetailModal({ lead, onClose, onUpdate }) {
+function DetailModal({ lead, onClose, onUpdate, onConvert }) {
   const [notes, setNotes] = useState(lead.notes || "");
   const [savingNotes, setSavingNotes] = useState(false);
   const [savedNotes, setSavedNotes] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => {
     setNotes(lead.notes || "");
@@ -257,6 +267,15 @@ function DetailModal({ lead, onClose, onUpdate }) {
     setSavingStatus(true);
     await onUpdate(lead.id, { status });
     setSavingStatus(false);
+  };
+  const convert = async () => {
+    if (converting) return;
+    setConverting(true);
+    try {
+      await onConvert(lead.id);
+    } finally {
+      setConverting(false);
+    }
   };
   const saveNotes = async () => {
     setSavingNotes(true);
@@ -283,13 +302,25 @@ function DetailModal({ lead, onClose, onUpdate }) {
               <p className="mt-0.5 text-xs text-ink/50">{lead.name}</p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            data-testid="admin-detail-close"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ink/10 text-ink/60 transition-colors hover:bg-mist"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={convert}
+              disabled={converting}
+              data-testid="admin-detail-convert-client"
+              title="Μετατροπή σε Πελάτη"
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-emerald-600 disabled:opacity-60"
+            >
+              {converting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+              Σε Πελάτη
+            </button>
+            <button
+              onClick={onClose}
+              data-testid="admin-detail-close"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ink/10 text-ink/60 transition-colors hover:bg-mist"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <div className="px-6 py-5 space-y-5">
@@ -1000,6 +1031,22 @@ function ProspectsList({ token, onLeadsChanged }) {
     }
   };
 
+  const convertToClient = async (id) => {
+    try {
+      await axios.post(`${API}/admin/clients/from-prospect/${id}`, {}, { headers: { "X-Admin-Token": token } });
+      setProspects((prev) => prev.filter((p) => p.id !== id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      setTransferMsg("1 επιχείρηση προστέθηκε στους Πελάτες.");
+      setTimeout(() => setTransferMsg(""), 3500);
+    } catch {
+      setError("Η μετατροπή σε πελάτη απέτυχε. Δοκίμασε ξανά.");
+    }
+  };
+
   const exportCSV = () => {
     const headers = ["Επιχείρηση", "Κατηγορία", "Τοποθεσία", "Διεύθυνση", "Τηλέφωνο", "Email", "Ιστοσελίδα", "Βαθμολογία", "Αναζήτηση", "Google Maps", "Ημερομηνία"];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -1212,6 +1259,15 @@ function ProspectsList({ token, onLeadsChanged }) {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           type="button"
+                          onClick={() => convertToClient(p.id)}
+                          data-testid={`prospects-to-client-${p.id}`}
+                          title="Μετατροπή σε Πελάτη"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-ink/35 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
+                        >
+                          <UserPlus className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => transferOne(p.id)}
                           data-testid={`prospects-transfer-${p.id}`}
                           title="Μεταφορά στα Μηνύματα"
@@ -1258,7 +1314,7 @@ function SidebarButton({ icon: Icon, label, active, onClick, testid }) {
 }
 
 function Dashboard({ token, onLogout }) {
-  const [activeTab, setActiveTab] = useState("messages");
+  const [activeTab, setActiveTab] = useState("overview");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -1309,6 +1365,20 @@ function Dashboard({ token, onLogout }) {
       }
     },
     [token, onLogout, messages]
+  );
+
+  const convertLeadToClient = useCallback(
+    async (id) => {
+      try {
+        await axios.post(`${API}/admin/clients/from-lead/${id}`, {}, { headers: { "X-Admin-Token": token } });
+        setSelectedId(null);
+        await load(); // refresh so lead now shows as "Converted"
+      } catch (err) {
+        if (err?.response?.status === 401) onLogout();
+        else setError("Η μετατροπή σε πελάτη απέτυχε. Δοκίμασε ξανά.");
+      }
+    },
+    [token, onLogout, load]
   );
 
   const toggleSelect = useCallback((id) => {
@@ -1462,6 +1532,13 @@ function Dashboard({ token, onLogout }) {
           <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/40">Μενού</p>
           <div className="flex flex-col gap-1.5">
             <SidebarButton
+              icon={LayoutDashboard}
+              label="Επισκόπηση"
+              active={activeTab === "overview"}
+              onClick={() => setActiveTab("overview")}
+              testid="admin-tab-overview"
+            />
+            <SidebarButton
               icon={Inbox}
               label="Μηνύματα"
               active={activeTab === "messages"}
@@ -1474,6 +1551,27 @@ function Dashboard({ token, onLogout }) {
               active={activeTab === "finder"}
               onClick={() => setActiveTab("finder")}
               testid="admin-tab-finder"
+            />
+            <SidebarButton
+              icon={UsersIcon}
+              label="Πελάτες"
+              active={activeTab === "clients"}
+              onClick={() => setActiveTab("clients")}
+              testid="admin-tab-clients"
+            />
+            <SidebarButton
+              icon={FolderKanban}
+              label="Έργα"
+              active={activeTab === "projects"}
+              onClick={() => setActiveTab("projects")}
+              testid="admin-tab-projects"
+            />
+            <SidebarButton
+              icon={Receipt}
+              label="Τιμολόγια"
+              active={activeTab === "invoices"}
+              onClick={() => setActiveTab("invoices")}
+              testid="admin-tab-invoices"
             />
           </div>
           <div className="mt-auto flex flex-col gap-1.5 pt-4 border-t border-ink/8">
@@ -1507,31 +1605,39 @@ function Dashboard({ token, onLogout }) {
                 </button>
               </div>
             </div>
-            <div data-testid="admin-tabs-mobile" className="flex items-center gap-1 border-b border-ink/8">
-              <button
-                type="button"
-                onClick={() => setActiveTab("messages")}
-                data-testid="admin-tab-messages-mobile"
-                className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
-                  activeTab === "messages" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
-                }`}
-              >
-                Μηνύματα
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("finder")}
-                data-testid="admin-tab-finder-mobile"
-                className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
-                  activeTab === "finder" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
-                }`}
-              >
-                Εύρεση Leads
-              </button>
+            <div data-testid="admin-tabs-mobile" className="flex items-center gap-1 overflow-x-auto border-b border-ink/8">
+              {[
+                ["overview", "Επισκόπηση"],
+                ["messages", "Μηνύματα"],
+                ["finder", "Εύρεση Leads"],
+                ["clients", "Πελάτες"],
+                ["projects", "Έργα"],
+                ["invoices", "Τιμολόγια"],
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setActiveTab(key)}
+                  data-testid={`admin-tab-${key}-mobile`}
+                  className={`whitespace-nowrap px-3.5 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+                    activeTab === key ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
-        {activeTab === "finder" ? (
+        {activeTab === "overview" ? (
+          <Overview token={token} />
+        ) : activeTab === "clients" ? (
+          <Clients token={token} />
+        ) : activeTab === "projects" ? (
+          <Projects token={token} />
+        ) : activeTab === "invoices" ? (
+          <Invoices token={token} />
+        ) : activeTab === "finder" ? (
           <div>
             <LeadFinder token={token} onLeadsChanged={load} />
           </div>
@@ -1704,7 +1810,7 @@ function Dashboard({ token, onLogout }) {
       </div>
 
       {selectedLead && (
-        <DetailModal lead={selectedLead} onClose={() => setSelectedId(null)} onUpdate={updateLead} />
+        <DetailModal lead={selectedLead} onClose={() => setSelectedId(null)} onUpdate={updateLead} onConvert={convertLeadToClient} />
       )}
     </div>
   );

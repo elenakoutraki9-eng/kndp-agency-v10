@@ -1,692 +1,871 @@
 #!/usr/bin/env python3
 """
-Backend API Test Suite for KNDP Admin - Transfer Prospect to Lead Endpoint
-Tests the NEW POST /api/admin/prospects/transfer endpoint
+Comprehensive backend test for KNDP agency-management endpoints.
+Tests: CLIENTS, PROJECTS, TASKS, INVOICES, OVERVIEW, CONVERT, AUTH
 """
+
 import requests
 import json
-import time
-from typing import Dict, Any, List, Optional
+import sys
+from typing import Dict, Any, Optional
 
-# Load backend URL from frontend .env
-FRONTEND_ENV_PATH = "/app/frontend/.env"
-with open(FRONTEND_ENV_PATH, 'r') as f:
-    for line in f:
-        if line.startswith('REACT_APP_BACKEND_URL='):
-            BACKEND_BASE_URL = line.split('=', 1)[1].strip()
-            break
-
-API_BASE_URL = f"{BACKEND_BASE_URL}/api"
+# Base URL from frontend/.env
+BASE_URL = "https://dbb41e46-3f82-4afd-9ab6-07ca11343de8.preview.emergentagent.com/api"
 ADMIN_PASSWORD = "180406kon"
 
 # Test results tracking
 test_results = []
-created_prospect_ids = []
-test_prospect_id = None
+created_resources = {
+    "clients": [],
+    "projects": [],
+    "tasks": [],
+    "invoices": [],
+    "contacts": [],
+    "prospects": []
+}
 
 
-def log_test(test_name: str, passed: bool, details: str = ""):
-    """Log test result."""
-    status = "✅ PASSED" if passed else "❌ FAILED"
-    print(f"\n{status}: {test_name}")
+def log_test(section: str, test_name: str, passed: bool, details: str = ""):
+    """Log test result"""
+    status = "✅ PASS" if passed else "❌ FAIL"
+    result = f"{status} | {section} | {test_name}"
     if details:
-        print(f"  Details: {details}")
-    test_results.append((test_name, passed, details))
-    return passed
+        result += f" | {details}"
+    test_results.append((passed, result))
+    print(result)
 
 
-def test_1_admin_login_correct_password():
-    """Test 1: POST /api/admin/login with correct password '180406kon' - should return 200 with token."""
-    print("\n" + "="*80)
-    print("TEST 1: Admin login with CORRECT password (180406kon)")
-    print("="*80)
-    
-    url = f"{API_BASE_URL}/admin/login"
-    payload = {"password": ADMIN_PASSWORD}
-    
+def get_admin_token() -> Optional[str]:
+    """Get admin token by logging in"""
     try:
-        response = requests.post(url, json=payload, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
-        
-        if response.status_code != 200:
-            return log_test("Admin login (correct password)", False, 
-                          f"Expected 200, got {response.status_code}")
-        
-        data = response.json()
-        if "token" not in data:
-            return log_test("Admin login (correct password)", False, 
-                          "Response missing 'token' field")
-        
-        token = data["token"]
-        if not token:
-            return log_test("Admin login (correct password)", False, 
-                          "Token is empty")
-        
-        return log_test("Admin login (correct password)", True, 
-                       f"Token received: {token}")
-        
+        response = requests.post(
+            f"{BASE_URL}/admin/login",
+            json={"password": ADMIN_PASSWORD},
+            timeout=10
+        )
+        if response.status_code == 200:
+            data = response.json()
+            token = data.get("token")
+            log_test("AUTH", "POST /api/admin/login with correct password", True, f"Got token: {token[:20]}...")
+            return token
+        else:
+            log_test("AUTH", "POST /api/admin/login with correct password", False, f"Status: {response.status_code}")
+            return None
     except Exception as e:
-        return log_test("Admin login (correct password)", False, f"Exception: {e}")
+        log_test("AUTH", "POST /api/admin/login with correct password", False, f"Error: {str(e)}")
+        return None
 
 
-def test_2_admin_login_wrong_password():
-    """Test 2: POST /api/admin/login with wrong password - should return 401."""
-    print("\n" + "="*80)
-    print("TEST 2: Admin login with WRONG password")
-    print("="*80)
-    
-    url = f"{API_BASE_URL}/admin/login"
-    payload = {"password": "wrong_password_123"}
-    
+def test_auth_without_token():
+    """Test that endpoints return 401 without token"""
     try:
-        response = requests.post(url, json=payload, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
+        # Test GET /api/admin/clients without token
+        response = requests.get(f"{BASE_URL}/admin/clients", timeout=10)
+        passed = response.status_code == 401
+        log_test("AUTH", "GET /api/admin/clients WITHOUT X-Admin-Token", passed, f"Status: {response.status_code}")
         
-        if response.status_code != 401:
-            return log_test("Admin login (wrong password)", False, 
-                          f"Expected 401, got {response.status_code}")
-        
-        return log_test("Admin login (wrong password)", True, 
-                       "Correctly rejected with 401")
-        
+        # Test GET /api/admin/overview without token
+        response = requests.get(f"{BASE_URL}/admin/overview", timeout=10)
+        passed = response.status_code == 401
+        log_test("AUTH", "GET /api/admin/overview WITHOUT X-Admin-Token", passed, f"Status: {response.status_code}")
     except Exception as e:
-        return log_test("Admin login (wrong password)", False, f"Exception: {e}")
+        log_test("AUTH", "Auth without token tests", False, f"Error: {str(e)}")
 
 
-def test_3_create_test_prospect():
-    """Test 3: Create a test prospect via POST /api/admin/prospects/bulk."""
-    global test_prospect_id
+def test_clients(token: str):
+    """Test CLIENTS endpoints (A)"""
+    headers = {"X-Admin-Token": token}
     
-    print("\n" + "="*80)
-    print("TEST 3: Create test prospect via bulk endpoint")
-    print("="*80)
-    
-    url = f"{API_BASE_URL}/admin/prospects/bulk"
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    payload = {
-        "prospects": [
-            {
-                "place_id": "XFER_TEST_1",
-                "name": "Transfer Test Biz",
-                "address": "Test Str 1, Athens",
-                "phone": "+30 210 1234567",
-                "email": "xfer@testbiz.gr",
-                "website": "https://testbiz.gr",
-                "rating": 4.6,
-                "maps_url": "https://maps.google.com/xfer",
-                "source_query": "οδοντίατροι Μαρούσι",
-                "category": "οδοντίατροι",
-                "location": "Μαρούσι, Αθήνα"
-            }
-        ]
-    }
-    
+    # A1: POST /api/admin/clients - Create client
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
-        
-        if response.status_code != 200:
-            return log_test("Create test prospect", False, 
-                          f"Expected 200, got {response.status_code}")
-        
-        data = response.json()
-        if not isinstance(data, list):
-            return log_test("Create test prospect", False, 
-                          "Response is not a list")
-        
-        if len(data) == 0:
-            return log_test("Create test prospect", False, 
-                          "No prospects created (might already exist - delete XFER_TEST_1 first)")
-        
-        prospect = data[0]
-        test_prospect_id = prospect.get('id')
-        
-        print(f"\nCreated prospect:")
-        print(f"  id: {test_prospect_id}")
-        print(f"  place_id: {prospect.get('place_id')}")
-        print(f"  name: {prospect.get('name')}")
-        print(f"  email: {prospect.get('email')}")
-        
-        if not test_prospect_id:
-            return log_test("Create test prospect", False, 
-                          "Prospect created but no ID returned")
-        
-        return log_test("Create test prospect", True, 
-                       f"Prospect created with ID: {test_prospect_id}")
-        
+        client_data = {
+            "name": "Test Client A",
+            "email": "a@test.gr",
+            "phone": "+30210",
+            "status": "Active"
+        }
+        response = requests.post(
+            f"{BASE_URL}/admin/clients",
+            json=client_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            client = response.json()
+            client_id = client.get("id")
+            if client_id:
+                created_resources["clients"].append(client_id)
+                log_test("CLIENTS", "POST /api/admin/clients", True, f"Created client with id: {client_id}")
+            else:
+                log_test("CLIENTS", "POST /api/admin/clients", False, "No id in response")
+                return
+        else:
+            log_test("CLIENTS", "POST /api/admin/clients", False, f"Status: {response.status_code}, Body: {response.text}")
+            return
     except Exception as e:
-        return log_test("Create test prospect", False, f"Exception: {e}")
-
-
-def test_4_transfer_single_prospect():
-    """Test 4: POST /api/admin/prospects/transfer with single prospect ID."""
-    global test_prospect_id
+        log_test("CLIENTS", "POST /api/admin/clients", False, f"Error: {str(e)}")
+        return
     
-    print("\n" + "="*80)
-    print("TEST 4: Transfer single prospect to leads")
-    print("="*80)
-    
-    if not test_prospect_id:
-        return log_test("Transfer single prospect", False, 
-                       "No test prospect ID available")
-    
-    url = f"{API_BASE_URL}/admin/prospects/transfer"
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    payload = {"ids": [test_prospect_id]}
-    
+    # A2: GET /api/admin/clients - List includes it
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
-        
-        if response.status_code != 200:
-            return log_test("Transfer single prospect", False, 
-                          f"Expected 200, got {response.status_code}")
-        
-        data = response.json()
-        if "transferred" not in data:
-            return log_test("Transfer single prospect", False, 
-                          "Response missing 'transferred' field")
-        
-        transferred_count = data["transferred"]
-        if transferred_count != 1:
-            return log_test("Transfer single prospect", False, 
-                          f"Expected transferred=1, got {transferred_count}")
-        
-        return log_test("Transfer single prospect", True, 
-                       f"Successfully transferred 1 prospect")
-        
+        response = requests.get(f"{BASE_URL}/admin/clients", headers=headers, timeout=10)
+        if response.status_code == 200:
+            clients = response.json()
+            found = any(c.get("id") == client_id for c in clients)
+            log_test("CLIENTS", "GET /api/admin/clients includes created client", found, f"Found: {found}")
+        else:
+            log_test("CLIENTS", "GET /api/admin/clients", False, f"Status: {response.status_code}")
     except Exception as e:
-        return log_test("Transfer single prospect", False, f"Exception: {e}")
-
-
-def test_5_verify_prospect_removed():
-    """Test 5: GET /api/admin/prospects - verify prospect is NO LONGER present."""
-    global test_prospect_id
+        log_test("CLIENTS", "GET /api/admin/clients", False, f"Error: {str(e)}")
     
-    print("\n" + "="*80)
-    print("TEST 5: Verify prospect removed from prospects list")
-    print("="*80)
-    
-    if not test_prospect_id:
-        return log_test("Verify prospect removed", False, 
-                       "No test prospect ID available")
-    
-    url = f"{API_BASE_URL}/admin/prospects"
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    
+    # A3: PATCH /api/admin/clients/{id} - Update client
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        
-        if response.status_code != 200:
-            return log_test("Verify prospect removed", False, 
-                          f"Expected 200, got {response.status_code}")
-        
-        data = response.json()
-        if not isinstance(data, list):
-            return log_test("Verify prospect removed", False, 
-                          "Response is not a list")
-        
-        print(f"Total prospects: {len(data)}")
-        
-        # Check if our test prospect is still there
-        for prospect in data:
-            if prospect.get('id') == test_prospect_id or prospect.get('place_id') == 'XFER_TEST_1':
-                return log_test("Verify prospect removed", False, 
-                              f"Prospect {test_prospect_id} still exists in prospects list!")
-        
-        print(f"✓ Prospect {test_prospect_id} (place_id XFER_TEST_1) is NO LONGER in prospects list")
-        
-        return log_test("Verify prospect removed", True, 
-                       "Prospect successfully removed from prospects list")
-        
+        update_data = {
+            "status": "Past",
+            "notes": "hello"
+        }
+        response = requests.patch(
+            f"{BASE_URL}/admin/clients/{client_id}",
+            json=update_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code == 200:
+            updated_client = response.json()
+            status_ok = updated_client.get("status") == "Past"
+            notes_ok = updated_client.get("notes") == "hello"
+            passed = status_ok and notes_ok
+            log_test("CLIENTS", "PATCH /api/admin/clients/{id}", passed, f"Status: {updated_client.get('status')}, Notes: {updated_client.get('notes')}")
+        else:
+            log_test("CLIENTS", "PATCH /api/admin/clients/{id}", False, f"Status: {response.status_code}")
     except Exception as e:
-        return log_test("Verify prospect removed", False, f"Exception: {e}")
-
-
-def test_6_verify_lead_created():
-    """Test 6: GET /api/admin/contacts - verify NEW lead exists with correct data."""
-    print("\n" + "="*80)
-    print("TEST 6: Verify new lead created in contacts")
-    print("="*80)
+        log_test("CLIENTS", "PATCH /api/admin/clients/{id}", False, f"Error: {str(e)}")
     
-    url = f"{API_BASE_URL}/admin/contacts"
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    
+    # A4: DELETE /api/admin/clients/{id} - Delete client
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        
-        if response.status_code != 200:
-            return log_test("Verify lead created", False, 
-                          f"Expected 200, got {response.status_code}")
-        
-        data = response.json()
-        if not isinstance(data, list):
-            return log_test("Verify lead created", False, 
-                          "Response is not a list")
-        
-        print(f"Total contacts: {len(data)}")
-        
-        # Find the lead with company="Transfer Test Biz"
-        test_lead = None
-        for contact in data:
-            if contact.get('company') == 'Transfer Test Biz' and contact.get('name') == 'Transfer Test Biz':
-                test_lead = contact
-                break
-        
-        if not test_lead:
-            return log_test("Verify lead created", False, 
-                          "Lead with company='Transfer Test Biz' and name='Transfer Test Biz' not found in contacts")
-        
-        print(f"\nFound transferred lead:")
-        print(f"  id: {test_lead.get('id')}")
-        print(f"  name: {test_lead.get('name')}")
-        print(f"  company: {test_lead.get('company')}")
-        print(f"  status: {test_lead.get('status')}")
-        print(f"  phone: {test_lead.get('phone')}")
-        print(f"  email: {test_lead.get('email')}")
-        print(f"  service: {test_lead.get('service')}")
-        print(f"  message: {test_lead.get('message')[:100]}...")
-        
-        # Verify required fields
-        errors = []
-        
-        if test_lead.get('name') != 'Transfer Test Biz':
-            errors.append(f"name mismatch: expected 'Transfer Test Biz', got '{test_lead.get('name')}'")
-        
-        if test_lead.get('company') != 'Transfer Test Biz':
-            errors.append(f"company mismatch: expected 'Transfer Test Biz', got '{test_lead.get('company')}'")
-        
-        if test_lead.get('status') != 'New':
-            errors.append(f"status mismatch: expected 'New', got '{test_lead.get('status')}'")
-        
-        if test_lead.get('phone') != '+30 210 1234567':
-            errors.append(f"phone mismatch: expected '+30 210 1234567', got '{test_lead.get('phone')}'")
-        
-        if test_lead.get('email') != 'xfer@testbiz.gr':
-            errors.append(f"email mismatch: expected 'xfer@testbiz.gr', got '{test_lead.get('email')}'")
-        
-        # Check message contains category/location/source_query
-        message = test_lead.get('message', '')
-        if 'οδοντίατροι' not in message:
-            errors.append("message does not contain category 'οδοντίατροι'")
-        
-        if 'Μαρούσι' not in message or 'Αθήνα' not in message:
-            errors.append("message does not contain location 'Μαρούσι, Αθήνα'")
-        
-        if 'οδοντίατροι Μαρούσι' not in message:
-            errors.append("message does not contain source_query 'οδοντίατροι Μαρούσι'")
-        
-        if errors:
-            return log_test("Verify lead created", False, 
-                          f"Lead data validation failed: {'; '.join(errors)}")
-        
-        return log_test("Verify lead created", True, 
-                       "Lead created with correct data (name, company, status, phone, email, message with category/location/source_query)")
-        
+        response = requests.delete(
+            f"{BASE_URL}/admin/clients/{client_id}",
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code == 200:
+            result = response.json()
+            deleted = result.get("deleted") == True
+            log_test("CLIENTS", "DELETE /api/admin/clients/{id}", deleted, f"Deleted: {deleted}")
+            if deleted:
+                created_resources["clients"].remove(client_id)
+        else:
+            log_test("CLIENTS", "DELETE /api/admin/clients/{id}", False, f"Status: {response.status_code}")
     except Exception as e:
-        return log_test("Verify lead created", False, f"Exception: {e}")
-
-
-def test_7_transfer_empty_ids():
-    """Test 7: POST /api/admin/prospects/transfer with empty ids array - should return 400."""
-    print("\n" + "="*80)
-    print("TEST 7: Transfer with empty ids array")
-    print("="*80)
+        log_test("CLIENTS", "DELETE /api/admin/clients/{id}", False, f"Error: {str(e)}")
     
-    url = f"{API_BASE_URL}/admin/prospects/transfer"
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    payload = {"ids": []}
-    
+    # A5: Verify client no longer in list
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
-        
-        if response.status_code != 400:
-            return log_test("Transfer empty ids", False, 
-                          f"Expected 400, got {response.status_code}")
-        
-        return log_test("Transfer empty ids", True, 
-                       "Correctly rejected with 400")
-        
+        response = requests.get(f"{BASE_URL}/admin/clients", headers=headers, timeout=10)
+        if response.status_code == 200:
+            clients = response.json()
+            not_found = not any(c.get("id") == client_id for c in clients)
+            log_test("CLIENTS", "GET /api/admin/clients no longer lists deleted client", not_found, f"Not found: {not_found}")
+        else:
+            log_test("CLIENTS", "GET /api/admin/clients (verify deletion)", False, f"Status: {response.status_code}")
     except Exception as e:
-        return log_test("Transfer empty ids", False, f"Exception: {e}")
+        log_test("CLIENTS", "GET /api/admin/clients (verify deletion)", False, f"Error: {str(e)}")
 
 
-def test_8_transfer_nonexistent_id():
-    """Test 8: POST /api/admin/prospects/transfer with non-existent ID - should return 200 with transferred=0."""
-    print("\n" + "="*80)
-    print("TEST 8: Transfer with non-existent prospect ID")
-    print("="*80)
+def test_projects_and_tasks(token: str):
+    """Test PROJECTS and TASKS endpoints (B, C) including cascade delete"""
+    headers = {"X-Admin-Token": token}
     
-    url = f"{API_BASE_URL}/admin/prospects/transfer"
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    payload = {"ids": ["does-not-exist-123"]}
-    
+    # B1: POST /api/admin/projects - Create project
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
-        
-        if response.status_code != 200:
-            return log_test("Transfer non-existent ID", False, 
-                          f"Expected 200, got {response.status_code}")
-        
-        data = response.json()
-        if "transferred" not in data:
-            return log_test("Transfer non-existent ID", False, 
-                          "Response missing 'transferred' field")
-        
-        transferred_count = data["transferred"]
-        if transferred_count != 0:
-            return log_test("Transfer non-existent ID", False, 
-                          f"Expected transferred=0, got {transferred_count}")
-        
-        return log_test("Transfer non-existent ID", True, 
-                       "Correctly returned transferred=0 (skips missing gracefully)")
-        
+        project_data = {
+            "name": "Website X",
+            "type": "Ιστοσελίδα",
+            "status": "Νέο",
+            "budget": 2000,
+            "deadline": "2026-12-31"
+        }
+        response = requests.post(
+            f"{BASE_URL}/admin/projects",
+            json=project_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            project = response.json()
+            project_id = project.get("id")
+            if project_id:
+                created_resources["projects"].append(project_id)
+                log_test("PROJECTS", "POST /api/admin/projects", True, f"Created project with id: {project_id}")
+            else:
+                log_test("PROJECTS", "POST /api/admin/projects", False, "No id in response")
+                return
+        else:
+            log_test("PROJECTS", "POST /api/admin/projects", False, f"Status: {response.status_code}, Body: {response.text}")
+            return
     except Exception as e:
-        return log_test("Transfer non-existent ID", False, f"Exception: {e}")
-
-
-def test_9_transfer_without_auth():
-    """Test 9: POST /api/admin/prospects/transfer WITHOUT X-Admin-Token header - should return 401."""
-    print("\n" + "="*80)
-    print("TEST 9: Transfer without auth token")
-    print("="*80)
+        log_test("PROJECTS", "POST /api/admin/projects", False, f"Error: {str(e)}")
+        return
     
-    url = f"{API_BASE_URL}/admin/prospects/transfer"
-    payload = {"ids": ["some-id"]}
-    
+    # B2: GET /api/admin/projects - List includes it
     try:
-        response = requests.post(url, json=payload, timeout=10)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
-        
-        if response.status_code != 401:
-            return log_test("Transfer without auth", False, 
-                          f"Expected 401, got {response.status_code}")
-        
-        return log_test("Transfer without auth", True, 
-                       "Correctly rejected with 401")
-        
+        response = requests.get(f"{BASE_URL}/admin/projects", headers=headers, timeout=10)
+        if response.status_code == 200:
+            projects = response.json()
+            found = any(p.get("id") == project_id for p in projects)
+            log_test("PROJECTS", "GET /api/admin/projects includes created project", found, f"Found: {found}")
+        else:
+            log_test("PROJECTS", "GET /api/admin/projects", False, f"Status: {response.status_code}")
     except Exception as e:
-        return log_test("Transfer without auth", False, f"Exception: {e}")
-
-
-def test_10_bulk_transfer_two_prospects():
-    """Test 10: Bulk transfer - create two prospects and transfer both in one call."""
-    print("\n" + "="*80)
-    print("TEST 10: Bulk transfer two prospects")
-    print("="*80)
+        log_test("PROJECTS", "GET /api/admin/projects", False, f"Error: {str(e)}")
     
-    # Create two test prospects
-    create_url = f"{API_BASE_URL}/admin/prospects/bulk"
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    create_payload = {
-        "prospects": [
-            {
-                "place_id": "XFER_TEST_2",
-                "name": "Bulk Transfer Test 2",
-                "address": "Test Str 2, Athens",
-                "phone": "+30 210 2222222",
-                "email": "xfer2@testbiz.gr",
-                "website": "https://testbiz2.gr",
-                "rating": 4.7,
-                "maps_url": "https://maps.google.com/xfer2",
-                "source_query": "καφετέριες Αθήνα",
-                "category": "καφετέριες",
-                "location": "Αθήνα"
-            },
-            {
-                "place_id": "XFER_TEST_3",
-                "name": "Bulk Transfer Test 3",
-                "address": "Test Str 3, Athens",
-                "phone": "+30 210 3333333",
-                "email": "xfer3@testbiz.gr",
-                "website": "https://testbiz3.gr",
-                "rating": 4.8,
-                "maps_url": "https://maps.google.com/xfer3",
-                "source_query": "γυμναστήρια Αθήνα",
-                "category": "γυμναστήρια",
-                "location": "Αθήνα"
-            }
-        ]
-    }
-    
+    # B3: PATCH /api/admin/projects/{id} - Update project
     try:
-        # Create prospects
-        create_response = requests.post(create_url, headers=headers, json=create_payload, timeout=10)
-        print(f"Create Status Code: {create_response.status_code}")
-        
-        if create_response.status_code != 200:
-            return log_test("Bulk transfer two prospects", False, 
-                          f"Failed to create test prospects: {create_response.status_code}")
-        
-        created = create_response.json()
-        if len(created) < 2:
-            return log_test("Bulk transfer two prospects", False, 
-                          f"Expected 2 prospects created, got {len(created)} (might already exist - delete XFER_TEST_2 and XFER_TEST_3 first)")
-        
-        prospect_ids = [p['id'] for p in created]
-        print(f"Created 2 prospects: {prospect_ids}")
-        
-        # Transfer both prospects
-        transfer_url = f"{API_BASE_URL}/admin/prospects/transfer"
-        transfer_payload = {"ids": prospect_ids}
-        
-        transfer_response = requests.post(transfer_url, headers=headers, json=transfer_payload, timeout=10)
-        print(f"Transfer Status Code: {transfer_response.status_code}")
-        print(f"Transfer Response: {transfer_response.text}")
-        
-        if transfer_response.status_code != 200:
-            return log_test("Bulk transfer two prospects", False, 
-                          f"Expected 200, got {transfer_response.status_code}")
-        
-        data = transfer_response.json()
-        transferred_count = data.get("transferred", 0)
-        
-        if transferred_count != 2:
-            return log_test("Bulk transfer two prospects", False, 
-                          f"Expected transferred=2, got {transferred_count}")
-        
-        # Verify both removed from prospects
-        prospects_url = f"{API_BASE_URL}/admin/prospects"
-        prospects_response = requests.get(prospects_url, headers=headers, timeout=10)
-        prospects = prospects_response.json()
-        
-        for prospect in prospects:
-            if prospect.get('place_id') in ['XFER_TEST_2', 'XFER_TEST_3']:
-                return log_test("Bulk transfer two prospects", False, 
-                              f"Prospect {prospect.get('place_id')} still in prospects list after transfer")
-        
-        print("✓ Both prospects removed from prospects list")
-        
-        # Verify both added to contacts
-        contacts_url = f"{API_BASE_URL}/admin/contacts"
-        contacts_response = requests.get(contacts_url, headers=headers, timeout=10)
-        contacts = contacts_response.json()
-        
-        found_count = 0
-        for contact in contacts:
-            if contact.get('company') in ['Bulk Transfer Test 2', 'Bulk Transfer Test 3']:
-                found_count += 1
-                print(f"✓ Found lead: {contact.get('company')}")
-        
-        if found_count != 2:
-            return log_test("Bulk transfer two prospects", False, 
-                          f"Expected 2 new leads in contacts, found {found_count}")
-        
-        return log_test("Bulk transfer two prospects", True, 
-                       "Successfully transferred 2 prospects, both removed from prospects, both added to contacts")
-        
+        update_data = {"status": "Ανάπτυξη"}
+        response = requests.patch(
+            f"{BASE_URL}/admin/projects/{project_id}",
+            json=update_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code == 200:
+            updated_project = response.json()
+            status_ok = updated_project.get("status") == "Ανάπτυξη"
+            log_test("PROJECTS", "PATCH /api/admin/projects/{id}", status_ok, f"Status: {updated_project.get('status')}")
+        else:
+            log_test("PROJECTS", "PATCH /api/admin/projects/{id}", False, f"Status: {response.status_code}")
     except Exception as e:
-        return log_test("Bulk transfer two prospects", False, f"Exception: {e}")
-
-
-def test_11_regression_places_search():
-    """Test 11: Regression - GET /api/admin/places/search still works with email scraping."""
-    print("\n" + "="*80)
-    print("TEST 11: Regression - Places search with email scraping")
-    print("="*80)
-    print("⚠️  NOTE: This endpoint scrapes websites for emails and is SLOW (can take 30-120 seconds)")
+        log_test("PROJECTS", "PATCH /api/admin/projects/{id}", False, f"Error: {str(e)}")
     
-    url = f"{API_BASE_URL}/admin/places/search"
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    params = {"q": "καφε Μαρουσι"}
-    
+    # C1: POST /api/admin/tasks - Create task for this project
     try:
-        print("Sending request with 120s timeout...")
-        start_time = time.time()
-        response = requests.get(url, headers=headers, params=params, timeout=120)
-        elapsed = time.time() - start_time
-        
-        print(f"Status Code: {response.status_code}")
-        print(f"Request took {elapsed:.1f} seconds")
-        
-        if response.status_code != 200:
-            return log_test("Regression - Places search", False, 
-                          f"Expected 200, got {response.status_code}. Response: {response.text[:500]}")
-        
-        data = response.json()
-        
-        if "results" not in data:
-            return log_test("Regression - Places search", False, "Missing 'results' field")
-        
-        results = data["results"]
-        print(f"Number of results: {len(results)}")
-        
-        if len(results) == 0:
-            return log_test("Regression - Places search", False, "No results returned")
-        
-        # Check each result has 'email' key
-        for i, result in enumerate(results):
-            if "email" not in result:
-                return log_test("Regression - Places search", False, 
-                              f"Result {i} missing 'email' key")
-        
-        print(f"✓ All {len(results)} results have 'email' key")
-        
-        return log_test("Regression - Places search", True, 
-                       f"Places search working correctly with {len(results)} results, all have 'email' key")
-        
-    except requests.exceptions.Timeout:
-        return log_test("Regression - Places search", False, 
-                       "Request timed out after 120 seconds")
+        task_data = {
+            "project_id": project_id,
+            "title": "Task 1"
+        }
+        response = requests.post(
+            f"{BASE_URL}/admin/tasks",
+            json=task_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            task = response.json()
+            task_id = task.get("id")
+            done = task.get("done")
+            if task_id:
+                created_resources["tasks"].append(task_id)
+                passed = done == False
+                log_test("TASKS", "POST /api/admin/tasks", passed, f"Created task with id: {task_id}, done: {done}")
+            else:
+                log_test("TASKS", "POST /api/admin/tasks", False, "No id in response")
+                return
+        else:
+            log_test("TASKS", "POST /api/admin/tasks", False, f"Status: {response.status_code}, Body: {response.text}")
+            return
     except Exception as e:
-        return log_test("Regression - Places search", False, f"Exception: {e}")
-
-
-def cleanup_test_data():
-    """Clean up any test leads/prospects created during testing."""
-    print("\n" + "="*80)
-    print("CLEANUP: Removing test data")
-    print("="*80)
+        log_test("TASKS", "POST /api/admin/tasks", False, f"Error: {str(e)}")
+        return
     
-    headers = {"X-Admin-Token": ADMIN_PASSWORD}
-    
+    # C2: GET /api/admin/tasks?project_id={id} - List includes it
     try:
-        # Get all contacts and delete test leads
-        contacts_url = f"{API_BASE_URL}/admin/contacts"
-        contacts_response = requests.get(contacts_url, headers=headers, timeout=10)
-        
-        if contacts_response.status_code == 200:
-            contacts = contacts_response.json()
-            test_companies = ['Transfer Test Biz', 'Bulk Transfer Test 2', 'Bulk Transfer Test 3']
+        response = requests.get(
+            f"{BASE_URL}/admin/tasks",
+            params={"project_id": project_id},
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code == 200:
+            tasks = response.json()
+            found = any(t.get("id") == task_id for t in tasks)
+            log_test("TASKS", "GET /api/admin/tasks?project_id={id} includes created task", found, f"Found: {found}")
+        else:
+            log_test("TASKS", "GET /api/admin/tasks", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("TASKS", "GET /api/admin/tasks", False, f"Error: {str(e)}")
+    
+    # C3: PATCH /api/admin/tasks/{task_id} - Update task
+    try:
+        update_data = {"done": True}
+        response = requests.patch(
+            f"{BASE_URL}/admin/tasks/{task_id}",
+            json=update_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code == 200:
+            updated_task = response.json()
+            done_ok = updated_task.get("done") == True
+            log_test("TASKS", "PATCH /api/admin/tasks/{task_id}", done_ok, f"Done: {updated_task.get('done')}")
+        else:
+            log_test("TASKS", "PATCH /api/admin/tasks/{task_id}", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("TASKS", "PATCH /api/admin/tasks/{task_id}", False, f"Error: {str(e)}")
+    
+    # B4: DELETE /api/admin/projects/{id} - Delete project (should cascade delete tasks)
+    try:
+        response = requests.delete(
+            f"{BASE_URL}/admin/projects/{project_id}",
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code == 200:
+            result = response.json()
+            deleted = result.get("deleted") == True
+            log_test("PROJECTS", "DELETE /api/admin/projects/{id}", deleted, f"Deleted: {deleted}")
+            if deleted:
+                created_resources["projects"].remove(project_id)
+        else:
+            log_test("PROJECTS", "DELETE /api/admin/projects/{id}", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("PROJECTS", "DELETE /api/admin/projects/{id}", False, f"Error: {str(e)}")
+    
+    # B5: Verify tasks cascade-deleted
+    try:
+        response = requests.get(
+            f"{BASE_URL}/admin/tasks",
+            params={"project_id": project_id},
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code == 200:
+            tasks = response.json()
+            empty = len(tasks) == 0
+            log_test("PROJECTS", "CASCADE DELETE: GET /api/admin/tasks?project_id={id} returns empty", empty, f"Tasks count: {len(tasks)}")
+            if empty and task_id in created_resources["tasks"]:
+                created_resources["tasks"].remove(task_id)
+        else:
+            log_test("PROJECTS", "CASCADE DELETE verification", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("PROJECTS", "CASCADE DELETE verification", False, f"Error: {str(e)}")
+
+
+def test_invoices(token: str):
+    """Test INVOICES endpoints with status auto-normalization (D)"""
+    headers = {"X-Admin-Token": token}
+    invoice_ids = []
+    
+    # D1: POST invoice with amount=1000, amount_paid=0 -> status should be "Unpaid"
+    try:
+        invoice_data = {"amount": 1000, "amount_paid": 0}
+        response = requests.post(
+            f"{BASE_URL}/admin/invoices",
+            json=invoice_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            invoice = response.json()
+            invoice_id = invoice.get("id")
+            status = invoice.get("status")
+            if invoice_id:
+                invoice_ids.append(invoice_id)
+                created_resources["invoices"].append(invoice_id)
+            passed = status == "Unpaid"
+            log_test("INVOICES", "POST invoice (amount=1000, paid=0) -> status='Unpaid'", passed, f"Status: {status}")
+        else:
+            log_test("INVOICES", "POST invoice (Unpaid)", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("INVOICES", "POST invoice (Unpaid)", False, f"Error: {str(e)}")
+    
+    # D2: POST invoice with amount=1000, amount_paid=400 -> status should be "Partial"
+    try:
+        invoice_data = {"amount": 1000, "amount_paid": 400}
+        response = requests.post(
+            f"{BASE_URL}/admin/invoices",
+            json=invoice_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            invoice = response.json()
+            invoice_id = invoice.get("id")
+            status = invoice.get("status")
+            if invoice_id:
+                invoice_ids.append(invoice_id)
+                created_resources["invoices"].append(invoice_id)
+            passed = status == "Partial"
+            log_test("INVOICES", "POST invoice (amount=1000, paid=400) -> status='Partial'", passed, f"Status: {status}")
+        else:
+            log_test("INVOICES", "POST invoice (Partial)", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("INVOICES", "POST invoice (Partial)", False, f"Error: {str(e)}")
+    
+    # D3: POST invoice with amount=1000, amount_paid=1000 -> status should be "Paid"
+    try:
+        invoice_data = {"amount": 1000, "amount_paid": 1000}
+        response = requests.post(
+            f"{BASE_URL}/admin/invoices",
+            json=invoice_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            invoice = response.json()
+            invoice_id = invoice.get("id")
+            status = invoice.get("status")
+            if invoice_id:
+                invoice_ids.append(invoice_id)
+                created_resources["invoices"].append(invoice_id)
+            passed = status == "Paid"
+            log_test("INVOICES", "POST invoice (amount=1000, paid=1000) -> status='Paid'", passed, f"Status: {status}")
+        else:
+            log_test("INVOICES", "POST invoice (Paid)", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("INVOICES", "POST invoice (Paid)", False, f"Error: {str(e)}")
+    
+    # D4: POST invoice with amount=1000, amount_paid=0, status="Paid" -> should REMAIN "Paid"
+    try:
+        invoice_data = {"amount": 1000, "amount_paid": 0, "status": "Paid"}
+        response = requests.post(
+            f"{BASE_URL}/admin/invoices",
+            json=invoice_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            invoice = response.json()
+            invoice_id = invoice.get("id")
+            status = invoice.get("status")
+            if invoice_id:
+                invoice_ids.append(invoice_id)
+                created_resources["invoices"].append(invoice_id)
+            passed = status == "Paid"
+            log_test("INVOICES", "POST invoice (amount=1000, paid=0, status='Paid') -> REMAINS 'Paid'", passed, f"Status: {status}")
+        else:
+            log_test("INVOICES", "POST invoice (explicit Paid)", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("INVOICES", "POST invoice (explicit Paid)", False, f"Error: {str(e)}")
+    
+    # D5: GET /api/admin/invoices - List them
+    try:
+        response = requests.get(f"{BASE_URL}/admin/invoices", headers=headers, timeout=10)
+        if response.status_code == 200:
+            invoices = response.json()
+            found_count = sum(1 for inv in invoices if inv.get("id") in invoice_ids)
+            passed = found_count == len(invoice_ids)
+            log_test("INVOICES", "GET /api/admin/invoices lists all created invoices", passed, f"Found: {found_count}/{len(invoice_ids)}")
+        else:
+            log_test("INVOICES", "GET /api/admin/invoices", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("INVOICES", "GET /api/admin/invoices", False, f"Error: {str(e)}")
+    
+    # D6: PATCH one invoice to change amount_paid to full and confirm status recomputes
+    if len(invoice_ids) >= 2:
+        try:
+            # Use the second invoice (Partial one)
+            invoice_id = invoice_ids[1]
+            update_data = {"amount_paid": 1000}
+            response = requests.patch(
+                f"{BASE_URL}/admin/invoices/{invoice_id}",
+                json=update_data,
+                headers=headers,
+                timeout=10
+            )
+            if response.status_code == 200:
+                updated_invoice = response.json()
+                status = updated_invoice.get("status")
+                passed = status == "Paid"
+                log_test("INVOICES", "PATCH invoice (amount_paid=1000) -> status recomputes to 'Paid'", passed, f"Status: {status}")
+            else:
+                log_test("INVOICES", "PATCH invoice", False, f"Status: {response.status_code}")
+        except Exception as e:
+            log_test("INVOICES", "PATCH invoice", False, f"Error: {str(e)}")
+    
+    # D7: DELETE one invoice
+    if len(invoice_ids) >= 1:
+        try:
+            invoice_id = invoice_ids[0]
+            response = requests.delete(
+                f"{BASE_URL}/admin/invoices/{invoice_id}",
+                headers=headers,
+                timeout=10
+            )
+            if response.status_code == 200:
+                result = response.json()
+                deleted = result.get("deleted") == True
+                log_test("INVOICES", "DELETE /api/admin/invoices/{id}", deleted, f"Deleted: {deleted}")
+                if deleted:
+                    created_resources["invoices"].remove(invoice_id)
+            else:
+                log_test("INVOICES", "DELETE /api/admin/invoices/{id}", False, f"Status: {response.status_code}")
+        except Exception as e:
+            log_test("INVOICES", "DELETE /api/admin/invoices/{id}", False, f"Error: {str(e)}")
+
+
+def test_overview(token: str):
+    """Test OVERVIEW endpoint (E)"""
+    headers = {"X-Admin-Token": token}
+    
+    # E1: Create a client
+    client_id = None
+    try:
+        client_data = {"name": "Overview Test Client", "status": "Active"}
+        response = requests.post(
+            f"{BASE_URL}/admin/clients",
+            json=client_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            client = response.json()
+            client_id = client.get("id")
+            if client_id:
+                created_resources["clients"].append(client_id)
+                log_test("OVERVIEW", "Setup: Created test client", True, f"Client ID: {client_id}")
+        else:
+            log_test("OVERVIEW", "Setup: Create client", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("OVERVIEW", "Setup: Create client", False, f"Error: {str(e)}")
+    
+    # E2: Create a project with deadline (status not "Ολοκληρωμένο")
+    project_id = None
+    try:
+        project_data = {
+            "name": "Overview Test Project",
+            "status": "Ανάπτυξη",
+            "deadline": "2026-12-31"
+        }
+        response = requests.post(
+            f"{BASE_URL}/admin/projects",
+            json=project_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            project = response.json()
+            project_id = project.get("id")
+            if project_id:
+                created_resources["projects"].append(project_id)
+                log_test("OVERVIEW", "Setup: Created test project with deadline", True, f"Project ID: {project_id}")
+        else:
+            log_test("OVERVIEW", "Setup: Create project", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("OVERVIEW", "Setup: Create project", False, f"Error: {str(e)}")
+    
+    # E3: Create a partial invoice (amount 1000 paid 300)
+    invoice_id = None
+    try:
+        invoice_data = {"amount": 1000, "amount_paid": 300}
+        response = requests.post(
+            f"{BASE_URL}/admin/invoices",
+            json=invoice_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            invoice = response.json()
+            invoice_id = invoice.get("id")
+            if invoice_id:
+                created_resources["invoices"].append(invoice_id)
+                log_test("OVERVIEW", "Setup: Created partial invoice", True, f"Invoice ID: {invoice_id}")
+        else:
+            log_test("OVERVIEW", "Setup: Create invoice", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("OVERVIEW", "Setup: Create invoice", False, f"Error: {str(e)}")
+    
+    # E4: GET /api/admin/overview and verify
+    try:
+        response = requests.get(f"{BASE_URL}/admin/overview", headers=headers, timeout=10)
+        if response.status_code == 200:
+            overview = response.json()
             
-            for contact in contacts:
-                if contact.get('company') in test_companies:
-                    contact_id = contact.get('id')
-                    delete_url = f"{API_BASE_URL}/admin/contacts/{contact_id}"
-                    delete_response = requests.delete(delete_url, headers=headers, timeout=10)
-                    if delete_response.status_code in [200, 204]:
-                        print(f"✓ Deleted test lead: {contact.get('company')}")
-        
-        # Get all prospects and delete test prospects
-        prospects_url = f"{API_BASE_URL}/admin/prospects"
-        prospects_response = requests.get(prospects_url, headers=headers, timeout=10)
-        
-        if prospects_response.status_code == 200:
-            prospects = prospects_response.json()
-            test_place_ids = ['XFER_TEST_1', 'XFER_TEST_2', 'XFER_TEST_3']
+            # Check required keys
+            required_keys = [
+                "clients_total", "active_projects", "projects_total", 
+                "revenue_this_month", "total_collected", "outstanding",
+                "invoices_total", "upcoming_deadlines", "unpaid_invoices"
+            ]
+            has_all_keys = all(key in overview for key in required_keys)
+            log_test("OVERVIEW", "GET /api/admin/overview has all required keys", has_all_keys, f"Keys: {list(overview.keys())}")
             
-            for prospect in prospects:
-                if prospect.get('place_id') in test_place_ids:
-                    prospect_id = prospect.get('id')
-                    delete_url = f"{API_BASE_URL}/admin/prospects/{prospect_id}"
-                    delete_response = requests.delete(delete_url, headers=headers, timeout=10)
-                    if delete_response.status_code in [200, 204]:
-                        print(f"✓ Deleted test prospect: {prospect.get('place_id')}")
-        
-        print("Cleanup complete")
-        
+            # Verify counts
+            clients_total = overview.get("clients_total", 0)
+            active_projects = overview.get("active_projects", 0)
+            projects_total = overview.get("projects_total", 0)
+            invoices_total = overview.get("invoices_total", 0)
+            
+            log_test("OVERVIEW", "clients_total >= 1", clients_total >= 1, f"clients_total: {clients_total}")
+            log_test("OVERVIEW", "active_projects >= 1", active_projects >= 1, f"active_projects: {active_projects}")
+            log_test("OVERVIEW", "projects_total >= 1", projects_total >= 1, f"projects_total: {projects_total}")
+            log_test("OVERVIEW", "invoices_total >= 1", invoices_total >= 1, f"invoices_total: {invoices_total}")
+            
+            # Verify outstanding includes the 700 from partial invoice
+            outstanding = overview.get("outstanding", 0)
+            log_test("OVERVIEW", "outstanding includes 700 from partial invoice", outstanding >= 700, f"outstanding: {outstanding}")
+            
+            # Verify upcoming_deadlines contains the project
+            upcoming_deadlines = overview.get("upcoming_deadlines", [])
+            has_project = any(p.get("id") == project_id for p in upcoming_deadlines) if project_id else False
+            log_test("OVERVIEW", "upcoming_deadlines contains test project", has_project, f"Found: {has_project}")
+            
+            # Verify unpaid_invoices contains the partial invoice
+            unpaid_invoices = overview.get("unpaid_invoices", [])
+            has_invoice = any(i.get("id") == invoice_id for i in unpaid_invoices) if invoice_id else False
+            log_test("OVERVIEW", "unpaid_invoices contains partial invoice", has_invoice, f"Found: {has_invoice}")
+            
+        else:
+            log_test("OVERVIEW", "GET /api/admin/overview", False, f"Status: {response.status_code}")
     except Exception as e:
-        print(f"⚠️  Cleanup failed: {e}")
+        log_test("OVERVIEW", "GET /api/admin/overview", False, f"Error: {str(e)}")
+
+
+def test_convert(token: str):
+    """Test CONVERT endpoints (F)"""
+    headers = {"X-Admin-Token": token}
+    
+    # F1: Create a contact (lead)
+    contact_id = None
+    try:
+        contact_data = {
+            "name": "John",
+            "email": "j@x.gr",
+            "company": "Acme LTD",
+            "message": "hi"
+        }
+        response = requests.post(
+            f"{BASE_URL}/contact",
+            json=contact_data,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            contact = response.json()
+            contact_id = contact.get("id")
+            if contact_id:
+                created_resources["contacts"].append(contact_id)
+                log_test("CONVERT", "Setup: Created contact/lead", True, f"Contact ID: {contact_id}")
+        else:
+            log_test("CONVERT", "Setup: Create contact", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("CONVERT", "Setup: Create contact", False, f"Error: {str(e)}")
+    
+    # F2: Convert contact to client
+    client_from_lead_id = None
+    if contact_id:
+        try:
+            response = requests.post(
+                f"{BASE_URL}/admin/clients/from-lead/{contact_id}",
+                headers=headers,
+                timeout=10
+            )
+            if response.status_code in [200, 201]:
+                client = response.json()
+                client_from_lead_id = client.get("id")
+                client_name = client.get("name")
+                if client_from_lead_id:
+                    created_resources["clients"].append(client_from_lead_id)
+                passed = client_name == "Acme LTD"
+                log_test("CONVERT", "POST /api/admin/clients/from-lead/{id} -> client with name 'Acme LTD'", passed, f"Client name: {client_name}")
+            else:
+                log_test("CONVERT", "POST /api/admin/clients/from-lead/{id}", False, f"Status: {response.status_code}")
+        except Exception as e:
+            log_test("CONVERT", "POST /api/admin/clients/from-lead/{id}", False, f"Error: {str(e)}")
+    
+    # F3: Verify contact status is now "Converted"
+    if contact_id:
+        try:
+            response = requests.get(f"{BASE_URL}/admin/contacts", headers=headers, timeout=10)
+            if response.status_code == 200:
+                contacts = response.json()
+                contact = next((c for c in contacts if c.get("id") == contact_id), None)
+                if contact:
+                    status = contact.get("status")
+                    passed = status == "Converted"
+                    log_test("CONVERT", "GET /api/admin/contacts shows contact status='Converted'", passed, f"Status: {status}")
+                else:
+                    log_test("CONVERT", "GET /api/admin/contacts (find converted contact)", False, "Contact not found")
+            else:
+                log_test("CONVERT", "GET /api/admin/contacts", False, f"Status: {response.status_code}")
+        except Exception as e:
+            log_test("CONVERT", "GET /api/admin/contacts", False, f"Error: {str(e)}")
+    
+    # F4: Create a prospect
+    prospect_id = None
+    try:
+        prospect_data = {
+            "prospects": [{
+                "place_id": "CV_TEST_1",
+                "name": "Prospect Biz",
+                "email": "p@biz.gr",
+                "phone": "+30211",
+                "category": "καφε",
+                "location": "Αθήνα"
+            }]
+        }
+        response = requests.post(
+            f"{BASE_URL}/admin/prospects/bulk",
+            json=prospect_data,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201]:
+            prospects = response.json()
+            if len(prospects) > 0:
+                prospect = prospects[0]
+                prospect_id = prospect.get("id")
+                if prospect_id:
+                    created_resources["prospects"].append(prospect_id)
+                    log_test("CONVERT", "Setup: Created prospect", True, f"Prospect ID: {prospect_id}")
+            else:
+                log_test("CONVERT", "Setup: Create prospect", False, "No prospects returned")
+        else:
+            log_test("CONVERT", "Setup: Create prospect", False, f"Status: {response.status_code}")
+    except Exception as e:
+        log_test("CONVERT", "Setup: Create prospect", False, f"Error: {str(e)}")
+    
+    # F5: Convert prospect to client
+    client_from_prospect_id = None
+    if prospect_id:
+        try:
+            response = requests.post(
+                f"{BASE_URL}/admin/clients/from-prospect/{prospect_id}",
+                headers=headers,
+                timeout=10
+            )
+            if response.status_code in [200, 201]:
+                client = response.json()
+                client_from_prospect_id = client.get("id")
+                client_name = client.get("name")
+                if client_from_prospect_id:
+                    created_resources["clients"].append(client_from_prospect_id)
+                passed = client_name == "Prospect Biz"
+                log_test("CONVERT", "POST /api/admin/clients/from-prospect/{id} -> client with name 'Prospect Biz'", passed, f"Client name: {client_name}")
+            else:
+                log_test("CONVERT", "POST /api/admin/clients/from-prospect/{id}", False, f"Status: {response.status_code}")
+        except Exception as e:
+            log_test("CONVERT", "POST /api/admin/clients/from-prospect/{id}", False, f"Error: {str(e)}")
+    
+    # F6: Verify prospect is REMOVED
+    if prospect_id:
+        try:
+            response = requests.get(f"{BASE_URL}/admin/prospects", headers=headers, timeout=10)
+            if response.status_code == 200:
+                prospects = response.json()
+                not_found = not any(p.get("id") == prospect_id for p in prospects)
+                log_test("CONVERT", "GET /api/admin/prospects confirms prospect is REMOVED", not_found, f"Not found: {not_found}")
+            else:
+                log_test("CONVERT", "GET /api/admin/prospects", False, f"Status: {response.status_code}")
+        except Exception as e:
+            log_test("CONVERT", "GET /api/admin/prospects", False, f"Error: {str(e)}")
+
+
+def cleanup(token: str):
+    """Clean up created test data"""
+    headers = {"X-Admin-Token": token}
+    print("\n" + "="*80)
+    print("CLEANUP: Removing test data...")
+    print("="*80)
+    
+    # Delete clients
+    for client_id in created_resources["clients"]:
+        try:
+            requests.delete(f"{BASE_URL}/admin/clients/{client_id}", headers=headers, timeout=10)
+            print(f"✓ Deleted client: {client_id}")
+        except Exception:
+            pass
+    
+    # Delete projects (will cascade delete tasks)
+    for project_id in created_resources["projects"]:
+        try:
+            requests.delete(f"{BASE_URL}/admin/projects/{project_id}", headers=headers, timeout=10)
+            print(f"✓ Deleted project: {project_id}")
+        except Exception:
+            pass
+    
+    # Delete invoices
+    for invoice_id in created_resources["invoices"]:
+        try:
+            requests.delete(f"{BASE_URL}/admin/invoices/{invoice_id}", headers=headers, timeout=10)
+            print(f"✓ Deleted invoice: {invoice_id}")
+        except Exception:
+            pass
+    
+    # Delete prospects
+    for prospect_id in created_resources["prospects"]:
+        try:
+            requests.delete(f"{BASE_URL}/admin/prospects/{prospect_id}", headers=headers, timeout=10)
+            print(f"✓ Deleted prospect: {prospect_id}")
+        except Exception:
+            pass
 
 
 def main():
-    """Run all tests."""
-    print("\n" + "="*80)
-    print("KNDP ADMIN - TRANSFER PROSPECT TO LEAD ENDPOINT TEST SUITE")
-    print("Testing POST /api/admin/prospects/transfer")
     print("="*80)
-    print(f"Backend URL: {BACKEND_BASE_URL}")
-    print(f"API Base URL: {API_BASE_URL}")
+    print("KNDP AGENCY-MANAGEMENT BACKEND API TEST")
+    print("="*80)
+    print(f"Base URL: {BASE_URL}")
     print(f"Admin Password: {ADMIN_PASSWORD}")
+    print("="*80 + "\n")
     
-    tests = [
-        test_1_admin_login_correct_password,
-        test_2_admin_login_wrong_password,
-        test_3_create_test_prospect,
-        test_4_transfer_single_prospect,
-        test_5_verify_prospect_removed,
-        test_6_verify_lead_created,
-        test_7_transfer_empty_ids,
-        test_8_transfer_nonexistent_id,
-        test_9_transfer_without_auth,
-        test_10_bulk_transfer_two_prospects,
-        test_11_regression_places_search,
-    ]
+    # Test auth without token first
+    print("G) AUTH TESTS")
+    print("-" * 80)
+    test_auth_without_token()
+    print()
     
-    for test_func in tests:
-        try:
-            test_func()
-        except Exception as e:
-            print(f"\n❌ EXCEPTION in {test_func.__name__}: {e}")
-            test_results.append((test_func.__name__, False, f"Exception: {e}"))
+    # Get admin token
+    print("AUTH: Getting admin token...")
+    print("-" * 80)
+    token = get_admin_token()
+    if not token:
+        print("\n❌ CRITICAL: Failed to get admin token. Cannot proceed with tests.")
+        sys.exit(1)
+    print()
+    
+    # Run all tests
+    print("A) CLIENTS TESTS")
+    print("-" * 80)
+    test_clients(token)
+    print()
+    
+    print("B) PROJECTS TESTS & C) TASKS TESTS (with cascade delete)")
+    print("-" * 80)
+    test_projects_and_tasks(token)
+    print()
+    
+    print("D) INVOICES TESTS (status auto-normalization)")
+    print("-" * 80)
+    test_invoices(token)
+    print()
+    
+    print("E) OVERVIEW TESTS")
+    print("-" * 80)
+    test_overview(token)
+    print()
+    
+    print("F) CONVERT TESTS")
+    print("-" * 80)
+    test_convert(token)
+    print()
     
     # Cleanup
-    cleanup_test_data()
+    cleanup(token)
     
     # Summary
     print("\n" + "="*80)
     print("TEST SUMMARY")
     print("="*80)
     
-    passed_count = sum(1 for _, passed, _ in test_results if passed)
+    passed_count = sum(1 for passed, _ in test_results if passed)
+    failed_count = sum(1 for passed, _ in test_results if not passed)
     total_count = len(test_results)
     
-    for test_name, passed, details in test_results:
-        status = "✅ PASSED" if passed else "❌ FAILED"
-        print(f"{status}: {test_name}")
-        if not passed and details:
-            print(f"  → {details}")
+    print(f"\nTotal Tests: {total_count}")
+    print(f"✅ Passed: {passed_count}")
+    print(f"❌ Failed: {failed_count}")
+    print()
     
-    print(f"\nTotal: {passed_count}/{total_count} tests passed")
+    if failed_count > 0:
+        print("FAILED TESTS:")
+        print("-" * 80)
+        for passed, result in test_results:
+            if not passed:
+                print(result)
+        print()
     
-    if passed_count == total_count:
-        print("\n🎉 ALL TESTS PASSED!")
-        return 0
-    else:
-        print(f"\n⚠️  {total_count - passed_count} test(s) failed")
-        return 1
+    # Exit with appropriate code
+    sys.exit(0 if failed_count == 0 else 1)
 
 
 if __name__ == "__main__":
-    exit(main())
+    main()
