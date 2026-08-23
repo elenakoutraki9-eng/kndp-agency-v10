@@ -64,6 +64,7 @@ class ContactMessage(BaseModel):
     status: str = "New"
     notes: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    contacted_at: Optional[datetime] = None
 
 
 class ContactMessageCreate(BaseModel):
@@ -223,6 +224,8 @@ async def admin_contacts(_: bool = Depends(verify_admin)):
     for m in messages:
         if isinstance(m.get('created_at'), str):
             m['created_at'] = datetime.fromisoformat(m['created_at'])
+        if isinstance(m.get('contacted_at'), str):
+            m['contacted_at'] = datetime.fromisoformat(m['contacted_at'])
     return messages
 
 
@@ -231,12 +234,18 @@ async def update_contact(contact_id: str, body: ContactUpdate, _: bool = Depends
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
+    if updates.get("status") == "Contacted":
+        existing = await db.contact_messages.find_one({"id": contact_id}, {"_id": 0, "contacted_at": 1})
+        if existing is not None and not existing.get("contacted_at"):
+            updates["contacted_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.contact_messages.update_one({"id": contact_id}, {"$set": updates})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Lead not found")
     doc = await db.contact_messages.find_one({"id": contact_id}, {"_id": 0})
     if isinstance(doc.get('created_at'), str):
         doc['created_at'] = datetime.fromisoformat(doc['created_at'])
+    if isinstance(doc.get('contacted_at'), str):
+        doc['contacted_at'] = datetime.fromisoformat(doc['contacted_at'])
     return doc
 
 

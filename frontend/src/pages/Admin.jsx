@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import {
   Lock,
   ArrowLeft,
@@ -14,7 +15,10 @@ import {
   Check,
   ChevronDown,
   X,
-  GripVertical,
+  Search,
+  Users,
+  TrendingUp,
+  Clock,
   Calendar,
 } from "lucide-react";
 
@@ -165,7 +169,7 @@ function StatusSelect({ value, onChange, disabled, testid }) {
   );
 }
 
-function KanbanCard({ lead, onOpen, onDragStart, onDragEnd, dragging }) {
+function KanbanCard({ lead, onOpen, onDragStart, onDragEnd, dragging, selected, onToggleSelect }) {
   return (
     <div
       data-testid={`admin-kanban-card-${lead.id}`}
@@ -173,12 +177,25 @@ function KanbanCard({ lead, onOpen, onDragStart, onDragEnd, dragging }) {
       onDragStart={(e) => onDragStart(e, lead.id)}
       onDragEnd={onDragEnd}
       onClick={() => onOpen(lead.id)}
-      className={`group cursor-pointer rounded-xl border border-ink/8 bg-white p-3.5 shadow-sm transition-[box-shadow,transform,opacity] hover:shadow-md hover:-translate-y-0.5 ${
+      className={`group cursor-pointer rounded-xl border bg-white p-3.5 shadow-sm transition-[box-shadow,transform,opacity] hover:shadow-md hover:-translate-y-0.5 ${
         dragging ? "opacity-40" : ""
-      }`}
+      } ${selected ? "border-baby-dark ring-2 ring-baby/40" : "border-ink/8"}`}
     >
       <div className="flex items-start gap-2">
-        <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-ink/20 group-hover:text-ink/40" />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect(lead.id);
+          }}
+          data-testid={`admin-select-${lead.id}`}
+          aria-pressed={selected}
+          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+            selected ? "bg-ink border-ink text-white" : "border-ink/25 text-transparent hover:border-ink/50"
+          }`}
+        >
+          <Check className="h-3 w-3" />
+        </button>
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-sm text-ink">{lead.company || lead.name}</p>
           {lead.company && (
@@ -304,6 +321,10 @@ function DetailModal({ lead, onClose, onUpdate }) {
               <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Ημερομηνία</span>
               <p className="mt-1 text-sm text-ink/70">{formatDate(lead.created_at)}</p>
             </div>
+            <div>
+              <span className="block text-[11px] uppercase tracking-[0.2em] font-semibold text-ink/45">Επικοινωνία</span>
+              <p className="mt-1 text-sm text-ink/70">{lead.contacted_at ? formatDate(lead.contacted_at) : "—"}</p>
+            </div>
           </div>
 
           <div>
@@ -371,6 +392,44 @@ function FilterSelect({ label, value, onChange, options, testid }) {
   );
 }
 
+function StatCard({ icon: Icon, label, value, testid }) {
+  return (
+    <div data-testid={testid} className="flex items-center gap-3 rounded-2xl border border-ink/8 bg-white px-4 py-3.5">
+      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-baby-light text-baby-dark">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-[11px] uppercase tracking-[0.15em] font-semibold text-ink/45">{label}</p>
+        <p className="text-lg font-bold text-ink">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function LeadsChart({ data }) {
+  return (
+    <div data-testid="admin-leads-chart" className="rounded-2xl border border-ink/8 bg-white p-4">
+      <p className="mb-2 text-[11px] uppercase tracking-[0.15em] font-semibold text-ink/45">
+        Μηνύματα · τελευταίες 14 μέρες
+      </p>
+      <ResponsiveContainer width="100%" height={120}>
+        <AreaChart data={data} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+          <defs>
+            <linearGradient id="leadsFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#4FB3E3" stopOpacity={0.55} />
+              <stop offset="100%" stopColor="#4FB3E3" stopOpacity={0.03} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#9199a6" }} axisLine={false} tickLine={false} interval={1} />
+          <YAxis hide allowDecimals={false} />
+          <Tooltip formatter={(v) => [v, "Μηνύματα"]} labelStyle={{ fontSize: 12 }} contentStyle={{ fontSize: 12, borderRadius: 10 }} />
+          <Area type="monotone" dataKey="count" stroke="#4FB3E3" strokeWidth={2} fill="url(#leadsFill)" />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function Dashboard({ token, onLogout }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -379,6 +438,10 @@ function Dashboard({ token, onLogout }) {
   const [selectedId, setSelectedId] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -420,7 +483,82 @@ function Dashboard({ token, onLogout }) {
     [token, onLogout, messages]
   );
 
-  const visible = messages;
+  const toggleSelect = useCallback((id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const bulkSetStatus = useCallback(
+    async (status) => {
+      const ids = Array.from(selectedIds);
+      await Promise.all(ids.map((id) => updateLead(id, { status })));
+      clearSelection();
+    },
+    [selectedIds, updateLead, clearSelection]
+  );
+
+  const visible = useMemo(() => {
+    return messages.filter((m) => {
+      if (search) {
+        const q = search.trim().toLowerCase();
+        const haystack = `${m.name} ${m.email} ${m.company || ""}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      if (dateFrom && new Date(m.created_at) < new Date(dateFrom)) return false;
+      if (dateTo) {
+        const to = new Date(dateTo);
+        to.setHours(23, 59, 59, 999);
+        if (new Date(m.created_at) > to) return false;
+      }
+      return true;
+    });
+  }, [messages, search, dateFrom, dateTo]);
+
+  const stats = useMemo(() => {
+    const total = messages.length;
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const newThisWeek = messages.filter((m) => new Date(m.created_at).getTime() >= weekAgo).length;
+    const converted = messages.filter((m) => m.status === "Converted").length;
+    const conversionRate = total ? Math.round((converted / total) * 100) : 0;
+    const responded = messages.filter((m) => m.contacted_at);
+    let avgResponse = "—";
+    if (responded.length) {
+      const totalMinutes = responded.reduce(
+        (sum, m) => sum + (new Date(m.contacted_at).getTime() - new Date(m.created_at).getTime()) / 60000,
+        0
+      );
+      const avgMinutes = totalMinutes / responded.length;
+      avgResponse = avgMinutes < 60 ? `${Math.round(avgMinutes)} λεπτά` : `${(avgMinutes / 60).toFixed(1)} ώρες`;
+    }
+    return { total, newThisWeek, conversionRate: `${conversionRate}%`, avgResponse };
+  }, [messages]);
+
+  const chartData = useMemo(() => {
+    const days = 14;
+    const buckets = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(start);
+      d.setDate(d.getDate() - i);
+      buckets.push({
+        key: d.toISOString().slice(0, 10),
+        label: d.toLocaleDateString("el-GR", { day: "2-digit", month: "2-digit" }),
+        count: 0,
+      });
+    }
+    const byKey = new Map(buckets.map((b) => [b.key, b]));
+    messages.forEach((m) => {
+      const key = new Date(m.created_at).toISOString().slice(0, 10);
+      const bucket = byKey.get(key);
+      if (bucket) bucket.count += 1;
+    });
+    return buckets;
+  }, [messages]);
 
   const columns = useMemo(() => {
     const byDate = (a, b) => {
@@ -458,10 +596,10 @@ function Dashboard({ token, onLogout }) {
   };
 
   const exportCSV = () => {
-    const headers = ["Όνομα", "Email", "Τηλέφωνο", "Εταιρεία", "Status", "Μήνυμα", "Σημειώσεις", "Ημερομηνία"];
+    const headers = ["Όνομα", "Email", "Τηλέφωνο", "Εταιρεία", "Status", "Μήνυμα", "Σημειώσεις", "Ημερομηνία", "Επικοινωνία"];
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const rows = visible.map((m) => [
-      m.name, m.email, m.phone || "", m.company || "", m.status || "New", m.message, m.notes || "", formatDate(m.created_at),
+      m.name, m.email, m.phone || "", m.company || "", m.status || "New", m.message, m.notes || "", formatDate(m.created_at), m.contacted_at ? formatDate(m.contacted_at) : "",
     ]);
     const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
@@ -520,6 +658,90 @@ function Dashboard({ token, onLogout }) {
           </div>
         </div>
 
+        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard icon={Users} label="Σύνολο Leads" value={stats.total} testid="admin-stat-total" />
+          <StatCard icon={TrendingUp} label="Νέα (7 μέρες)" value={stats.newThisWeek} testid="admin-stat-new" />
+          <StatCard icon={Check} label="Ποσοστό Μετατροπής" value={stats.conversionRate} testid="admin-stat-conversion" />
+          <StatCard icon={Clock} label="Μέσος Χρόνος Απάντησης" value={stats.avgResponse} testid="admin-stat-response" />
+        </div>
+
+        <div className="mt-4">
+          <LeadsChart data={chartData} />
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-end gap-3">
+          <div className="relative w-full max-w-xs">
+            <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">Αναζήτηση</label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/35" />
+              <input
+                data-testid="admin-search-input"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Όνομα, email ή εταιρεία…"
+                className="w-full rounded-xl border border-ink/10 bg-white pl-9 pr-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">Από</label>
+            <input
+              type="date"
+              data-testid="admin-date-from"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">Έως</label>
+            <input
+              type="date"
+              data-testid="admin-date-to"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
+            />
+          </div>
+          {(search || dateFrom || dateTo) && (
+            <button
+              type="button"
+              data-testid="admin-clear-filters"
+              onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-ink/12 px-4 py-2.5 text-xs font-bold text-ink/60 transition-colors hover:bg-mist"
+            >
+              <X className="h-3.5 w-3.5" />Καθαρισμός
+            </button>
+          )}
+        </div>
+
+        {selectedIds.size > 0 && (
+          <div data-testid="admin-bulk-bar" className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-baby/40 bg-baby-light px-5 py-3.5">
+            <span className="text-sm font-bold text-ink">{selectedIds.size} επιλεγμένα</span>
+            <div className="flex flex-wrap items-center gap-2">
+              {STATUS_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  data-testid={`admin-bulk-${safeId(s)}`}
+                  onClick={() => bulkSetStatus(s)}
+                  className="rounded-full bg-white border border-ink/10 px-3.5 py-1.5 text-xs font-bold text-ink transition-colors hover:border-baby-dark"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              data-testid="admin-bulk-clear"
+              onClick={clearSelection}
+              className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold text-ink/50 hover:text-ink"
+            >
+              <X className="h-3.5 w-3.5" />Άκυρο
+            </button>
+          </div>
+        )}
+
         {error && (
           <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-600">{error}</div>
         )}
@@ -534,6 +756,12 @@ function Dashboard({ token, onLogout }) {
             <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-ink/40"><Inbox className="h-6 w-6" /></span>
             <p className="mt-4 font-display text-lg font-medium">Κανένα μήνυμα ακόμη</p>
             <p className="mt-1 text-sm text-ink/50">Τα νέα μηνύματα από τη φόρμα θα εμφανίζονται εδώ.</p>
+          </div>
+        ) : visible.length === 0 ? (
+          <div data-testid="admin-no-results" className="mt-10 rounded-[1.75rem] border border-dashed border-ink/15 bg-white/60 px-8 py-16 text-center">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-ink/40"><Search className="h-6 w-6" /></span>
+            <p className="mt-4 font-display text-lg font-medium">Δεν βρέθηκαν αποτελέσματα</p>
+            <p className="mt-1 text-sm text-ink/50">Δοκίμασε διαφορετική αναζήτηση ή εύρος ημερομηνιών.</p>
           </div>
         ) : (
           <div data-testid="admin-kanban" className="mt-8 flex gap-4 overflow-x-auto pb-4 scrollbar-none">
@@ -574,6 +802,8 @@ function Dashboard({ token, onLogout }) {
                           onDragStart={onDragStart}
                           onDragEnd={onDragEnd}
                           dragging={draggingId === lead.id}
+                          selected={selectedIds.has(lead.id)}
+                          onToggleSelect={toggleSelect}
                         />
                       ))
                     )}
