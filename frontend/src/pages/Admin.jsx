@@ -431,26 +431,45 @@ function LeadsChart({ data }) {
   );
 }
 
-function LeadFinder({ token, onLeadAdded }) {
-  const [query, setQuery] = useState("");
+const GREEK_LOCATIONS = [
+  "Αθήνα", "Θεσσαλονίκη", "Πάτρα", "Ηράκλειο", "Λάρισα", "Βόλος", "Ιωάννινα",
+  "Χανιά", "Ρόδος", "Κέρκυρα", "Καλαμάτα", "Σέρρες", "Αλεξανδρούπολη", "Κοζάνη",
+  "Καβάλα", "Χαλκίδα", "Κατερίνη", "Τρίκαλα", "Λαμία", "Αγρίνιο", "Ξάνθη",
+  "Δράμα", "Βέροια", "Κομοτηνή", "Ρέθυμνο", "Σπάρτη", "Κιλκίς", "Έδεσσα",
+  "Φλώρινα", "Πύργος", "Άργος", "Ναύπλιο", "Πτολεμαΐδα", "Γρεβενά", "Καρδίτσα",
+  "Άρτα", "Πρέβεζα", "Λευκάδα", "Ζάκυνθος", "Μύκονος", "Σαντορίνη", "Κως",
+  "Μυτιλήνη", "Χίος", "Σάμος", "Καλαμπάκα", "Θήβα", "Λιβαδειά", "Μέγαρα",
+  "Ραφήνα", "Μαραθώνας",
+];
+
+function LeadFinder({ token, onProspectsAdded }) {
+  const [businessType, setBusinessType] = useState("");
+  const [location, setLocation] = useState(GREEK_LOCATIONS[0]);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [addedIds, setAddedIds] = useState(new Set());
-  const [addingId, setAddingId] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [lastQuery, setLastQuery] = useState("");
 
   const search = async (e) => {
     e.preventDefault();
-    if (query.trim().length < 2 || loading) return;
+    const type = businessType.trim();
+    if (type.length < 2 || loading) return;
+    const combinedQuery = `${type} ${location}`;
     setLoading(true);
     setError("");
+    setSelectedIds(new Set());
+    setAddedIds(new Set());
     try {
       const res = await axios.get(`${API}/admin/places/search`, {
         headers: { "X-Admin-Token": token },
-        params: { q: query.trim() },
+        params: { q: combinedQuery },
       });
       setResults(res.data.results || []);
+      setLastQuery(combinedQuery);
       setSearched(true);
     } catch (err) {
       setError(err?.response?.data?.detail || "Η αναζήτηση απέτυχε. Δοκίμασε ξανά.");
@@ -461,22 +480,51 @@ function LeadFinder({ token, onLeadAdded }) {
     }
   };
 
-  const addLead = async (place) => {
-    setAddingId(place.place_id);
+  const toggleSelect = (placeId) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(placeId)) next.delete(placeId);
+      else next.add(placeId);
+      return next;
+    });
+  };
+
+  const selectableIds = results.filter((p) => !addedIds.has(p.place_id)).map((p) => p.place_id);
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? new Set() : new Set(selectableIds));
+  };
+
+  const addSelected = async () => {
+    const chosen = results.filter((p) => selectedIds.has(p.place_id));
+    if (chosen.length === 0 || adding) return;
+    setAdding(true);
+    setError("");
     try {
-      await axios.post(`${API}/contact`, {
-        name: place.name || "Άγνωστη επιχείρηση",
-        email: "",
-        phone: place.phone || null,
-        company: place.name || null,
-        message: `Βρέθηκε μέσω Lead Finder${place.address ? ` — ${place.address}` : ""}.`,
-      });
-      setAddedIds((prev) => new Set(prev).add(place.place_id));
-      onLeadAdded?.();
+      await axios.post(
+        `${API}/admin/prospects/bulk`,
+        {
+          prospects: chosen.map((p) => ({
+            place_id: p.place_id,
+            name: p.name,
+            address: p.address,
+            phone: p.phone,
+            website: p.website,
+            rating: p.rating,
+            source_query: lastQuery,
+            maps_url: p.maps_url,
+          })),
+        },
+        { headers: { "X-Admin-Token": token } }
+      );
+      setAddedIds((prev) => new Set([...prev, ...chosen.map((p) => p.place_id)]));
+      setSelectedIds(new Set());
+      onProspectsAdded?.();
     } catch {
-      setError("Δεν ήταν δυνατή η προσθήκη του lead. Δοκίμασε ξανά.");
+      setError("Δεν ήταν δυνατή η προσθήκη των υποψηφίων πελατών. Δοκίμασε ξανά.");
     } finally {
-      setAddingId(null);
+      setAdding(false);
     }
   };
 
@@ -501,25 +549,41 @@ function LeadFinder({ token, onLeadAdded }) {
       <div>
         <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">Εύρεση Leads</h1>
         <p className="mt-1.5 text-sm text-ink/55">
-          Αναζήτησε επιχειρήσεις μέσω Google Places και πρόσθεσέ τις απευθείας στα μηνύματα.
+          Αναζήτησε επιχειρήσεις μέσω Google Places και πρόσθεσέ τις στους Υποψήφιους Πελάτες.
         </p>
       </div>
 
-      <form onSubmit={search} className="mt-6 flex flex-wrap gap-3">
-        <div className="relative min-w-[240px] max-w-md flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/35" />
+      <form onSubmit={search} className="mt-6 flex flex-wrap items-end gap-3">
+        <div className="min-w-[200px] flex-1 max-w-xs">
+          <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">Είδος επιχείρησης</label>
           <input
-            data-testid="lead-finder-search-input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="π.χ. εστιατόρια Αθήνα"
-            className="w-full rounded-xl border border-ink/10 bg-white pl-9 pr-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
+            data-testid="lead-finder-type-input"
+            value={businessType}
+            onChange={(e) => setBusinessType(e.target.value)}
+            placeholder="π.χ. καφετέριες, εστιατόρια"
+            className="w-full rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
           />
+        </div>
+        <div className="min-w-[180px]">
+          <label className="mb-1 block text-[10px] uppercase tracking-[0.2em] font-semibold text-ink/45">Περιοχή</label>
+          <div className="relative">
+            <select
+              data-testid="lead-finder-location-select"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="appearance-none w-full rounded-xl border border-ink/10 bg-white pl-3.5 pr-9 py-2.5 text-sm font-medium text-ink outline-none cursor-pointer transition-[border-color,box-shadow] duration-300 focus:border-baby-dark focus:ring-4 focus:ring-baby/20"
+            >
+              {GREEK_LOCATIONS.map((loc) => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40" />
+          </div>
         </div>
         <button
           type="submit"
           data-testid="lead-finder-search-button"
-          disabled={loading || query.trim().length < 2}
+          disabled={loading || businessType.trim().length < 2}
           className="inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-2.5 text-sm font-bold text-white transition-[transform,opacity] duration-300 hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
@@ -547,7 +611,14 @@ function LeadFinder({ token, onLeadAdded }) {
         <div data-testid="lead-finder-intro" className="mt-10 rounded-[1.75rem] border border-dashed border-ink/15 bg-white/60 px-8 py-16 text-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-ink/40"><Search className="h-6 w-6" /></span>
           <p className="mt-4 font-display text-lg font-medium">Αναζήτησε επιχειρήσεις</p>
-          <p className="mt-1 text-sm text-ink/50">Δοκίμασε π.χ. «εστιατόρια Αθήνα» ή «φροντιστήρια Θεσσαλονίκη».</p>
+          <p className="mt-1 text-sm text-ink/50">Δοκίμασε π.χ. «καφετέριες» στην «Αθήνα» ή «φροντιστήρια» στη «Θεσσαλονίκη».</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="mt-10 flex flex-col items-center justify-center text-ink/40">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <p className="mt-3 text-sm font-semibold">Αναζήτηση σε όλες τις σελίδες αποτελεσμάτων…</p>
         </div>
       )}
 
@@ -555,13 +626,186 @@ function LeadFinder({ token, onLeadAdded }) {
         <div data-testid="lead-finder-empty" className="mt-10 rounded-[1.75rem] border border-dashed border-ink/15 bg-white/60 px-8 py-16 text-center">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-ink/40"><Inbox className="h-6 w-6" /></span>
           <p className="mt-4 font-display text-lg font-medium">Δεν βρέθηκαν αποτελέσματα</p>
-          <p className="mt-1 text-sm text-ink/50">Δοκίμασε διαφορετικούς όρους αναζήτησης.</p>
+          <p className="mt-1 text-sm text-ink/50">Δοκίμασε διαφορετικό είδος επιχείρησης ή περιοχή.</p>
         </div>
       )}
 
-      {results.length > 0 && (
+      {!loading && results.length > 0 && (
+        <>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <p data-testid="lead-finder-count" className="text-sm font-semibold text-ink/60">
+              {results.length} αποτελέσματα{selectedIds.size > 0 ? ` · ${selectedIds.size} επιλεγμένα` : ""}
+            </p>
+            <button
+              type="button"
+              onClick={addSelected}
+              disabled={selectedIds.size === 0 || adding}
+              data-testid="lead-finder-add-selected"
+              className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white transition-[transform,opacity] duration-300 hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
+            >
+              {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Προσθήκη Επιλεγμένων{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+            </button>
+          </div>
+
+          <div className="mt-3 overflow-x-auto rounded-2xl border border-ink/8 bg-white">
+            <table data-testid="lead-finder-results-table" className="w-full min-w-[960px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-ink/8 text-[11px] uppercase tracking-[0.15em] font-semibold text-ink/45">
+                  <th className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={toggleSelectAll}
+                      data-testid="lead-finder-select-all"
+                      aria-pressed={allSelected}
+                      className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${
+                        allSelected ? "bg-ink border-ink text-white" : "border-ink/25 text-transparent hover:border-ink/50"
+                      }`}
+                    >
+                      <Check className="h-3 w-3" />
+                    </button>
+                  </th>
+                  <th className="px-4 py-3">Επιχείρηση</th>
+                  <th className="px-4 py-3">Διεύθυνση</th>
+                  <th className="px-4 py-3">Τηλέφωνο</th>
+                  <th className="px-4 py-3">Ιστοσελίδα</th>
+                  <th className="px-4 py-3">Βαθμολογία</th>
+                  <th className="px-4 py-3">Maps</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((p) => {
+                  const added = addedIds.has(p.place_id);
+                  const selected = selectedIds.has(p.place_id);
+                  return (
+                    <tr
+                      key={p.place_id}
+                      data-testid={`lead-finder-row-${p.place_id}`}
+                      className={`border-b border-ink/6 last:border-b-0 hover:bg-mist/40 ${added ? "opacity-50" : ""}`}
+                    >
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleSelect(p.place_id)}
+                          disabled={added}
+                          data-testid={`lead-finder-select-${p.place_id}`}
+                          aria-pressed={selected}
+                          className={`flex h-4 w-4 items-center justify-center rounded border transition-colors disabled:cursor-not-allowed ${
+                            added
+                              ? "bg-emerald-100 border-emerald-300 text-emerald-600"
+                              : selected
+                              ? "bg-ink border-ink text-white"
+                              : "border-ink/25 text-transparent hover:border-ink/50"
+                          }`}
+                        >
+                          <Check className="h-3 w-3" />
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-ink">{p.name || "—"}</td>
+                      <td className="px-4 py-3 text-ink/70">{p.address || "—"}</td>
+                      <td className="px-4 py-3 text-ink/70">{p.phone || "—"}</td>
+                      <td className="px-4 py-3">
+                        {p.website ? (
+                          <a href={p.website} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Site</a>
+                        ) : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-ink/70">{p.rating ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        {p.maps_url ? (
+                          <a href={p.maps_url} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Maps</a>
+                        ) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Prospects({ token }) {
+  const [prospects, setProspects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get(`${API}/admin/prospects`, { headers: { "X-Admin-Token": token } });
+      setProspects(res.data);
+    } catch {
+      setError("Δεν ήταν δυνατή η φόρτωση των υποψηφίων πελατών.");
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const exportCSV = () => {
+    const headers = ["Επιχείρηση", "Διεύθυνση", "Τηλέφωνο", "Ιστοσελίδα", "Βαθμολογία", "Google Maps", "Αναζήτηση", "Ημερομηνία"];
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = prospects.map((p) => [p.name, p.address, p.phone, p.website, p.rating, p.maps_url, p.source_query, formatDate(p.created_at)]);
+    const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\r\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `prospects-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div data-testid="prospects-section">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">Υποψήφιοι Πελάτες</h1>
+          <p className="mt-1.5 text-sm text-ink/55">Επιχειρήσεις που βρέθηκαν μέσω Lead Finder — δεν έχουν επικοινωνήσει ακόμα.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={load} data-testid="prospects-refresh-button" className="inline-flex items-center gap-2 rounded-full border border-ink/12 px-4 py-2 text-xs font-bold text-ink transition-colors hover:bg-mist">
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />Ανανέωση
+          </button>
+          <button
+            type="button"
+            onClick={exportCSV}
+            disabled={prospects.length === 0}
+            data-testid="prospects-export-csv"
+            className="inline-flex items-center gap-2 rounded-xl bg-baby px-5 py-2.5 text-sm font-bold text-ink transition-[transform,opacity] duration-300 hover:scale-[1.02] disabled:opacity-40"
+          >
+            <Download className="h-4 w-4" />Export CSV
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-600">{error}</div>
+      )}
+
+      {loading ? (
+        <div className="mt-20 flex flex-col items-center justify-center text-ink/40">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <p className="mt-3 text-sm font-semibold">Φόρτωση…</p>
+        </div>
+      ) : prospects.length === 0 ? (
+        <div data-testid="prospects-empty" className="mt-10 rounded-[1.75rem] border border-dashed border-ink/15 bg-white/60 px-8 py-16 text-center">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-ink/40"><Inbox className="h-6 w-6" /></span>
+          <p className="mt-4 font-display text-lg font-medium">Κανένας υποψήφιος πελάτης ακόμη</p>
+          <p className="mt-1 text-sm text-ink/50">Πρόσθεσε επιχειρήσεις από την «Εύρεση Leads».</p>
+        </div>
+      ) : (
         <div className="mt-6 overflow-x-auto rounded-2xl border border-ink/8 bg-white">
-          <table data-testid="lead-finder-results-table" className="w-full min-w-[900px] text-left text-sm">
+          <table data-testid="prospects-table" className="w-full min-w-[960px] text-left text-sm">
             <thead>
               <tr className="border-b border-ink/8 text-[11px] uppercase tracking-[0.15em] font-semibold text-ink/45">
                 <th className="px-4 py-3">Επιχείρηση</th>
@@ -570,51 +814,29 @@ function LeadFinder({ token, onLeadAdded }) {
                 <th className="px-4 py-3">Ιστοσελίδα</th>
                 <th className="px-4 py-3">Βαθμολογία</th>
                 <th className="px-4 py-3">Maps</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3">Προστέθηκε</th>
               </tr>
             </thead>
             <tbody>
-              {results.map((p) => {
-                const added = addedIds.has(p.place_id);
-                return (
-                  <tr key={p.place_id} data-testid={`lead-finder-row-${p.place_id}`} className="border-b border-ink/6 last:border-b-0 hover:bg-mist/40">
-                    <td className="px-4 py-3 font-semibold text-ink">{p.name || "—"}</td>
-                    <td className="px-4 py-3 text-ink/70">{p.address || "—"}</td>
-                    <td className="px-4 py-3 text-ink/70">{p.phone || "—"}</td>
-                    <td className="px-4 py-3">
-                      {p.website ? (
-                        <a href={p.website} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Site</a>
-                      ) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-ink/70">{p.rating ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      {p.maps_url ? (
-                        <a href={p.maps_url} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Maps</a>
-                      ) : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => addLead(p)}
-                        disabled={added || addingId === p.place_id}
-                        data-testid={`lead-finder-add-${p.place_id}`}
-                        className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors disabled:opacity-70 ${
-                          added ? "bg-emerald-100 text-emerald-700" : "bg-ink text-white hover:bg-ink/85"
-                        }`}
-                      >
-                        {addingId === p.place_id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : added ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Plus className="h-3.5 w-3.5" />
-                        )}
-                        {added ? "Προστέθηκε" : "Προσθήκη"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {prospects.map((p) => (
+                <tr key={p.id} data-testid={`prospects-row-${p.id}`} className="border-b border-ink/6 last:border-b-0 hover:bg-mist/40">
+                  <td className="px-4 py-3 font-semibold text-ink">{p.name || "—"}</td>
+                  <td className="px-4 py-3 text-ink/70">{p.address || "—"}</td>
+                  <td className="px-4 py-3 text-ink/70">{p.phone || "—"}</td>
+                  <td className="px-4 py-3">
+                    {p.website ? (
+                      <a href={p.website} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Site</a>
+                    ) : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-ink/70">{p.rating ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {p.maps_url ? (
+                      <a href={p.maps_url} target="_blank" rel="noreferrer" className="text-baby-dark hover:underline">Maps</a>
+                    ) : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-ink/60">{formatDate(p.created_at)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -858,11 +1080,25 @@ function Dashboard({ token, onLogout }) {
           >
             Εύρεση Leads
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("prospects")}
+            data-testid="admin-tab-prospects"
+            className={`px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+              activeTab === "prospects" ? "border-ink text-ink" : "border-transparent text-ink/40 hover:text-ink/70"
+            }`}
+          >
+            Υποψήφιοι Πελάτες
+          </button>
         </div>
 
         {activeTab === "finder" ? (
           <div className="mt-8">
-            <LeadFinder token={token} onLeadAdded={load} />
+            <LeadFinder token={token} />
+          </div>
+        ) : activeTab === "prospects" ? (
+          <div className="mt-8">
+            <Prospects token={token} />
           </div>
         ) : (
         <>

@@ -11,6 +11,7 @@ import uuid
 import json
 import re
 import httpx
+import asyncio
 from datetime import datetime, timezone
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
@@ -98,6 +99,34 @@ class PlaceResult(BaseModel):
 class PlaceSearchResponse(BaseModel):
     query: str
     results: List[PlaceResult]
+
+
+class ProspectCreate(BaseModel):
+    place_id: str
+    name: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    rating: Optional[float] = None
+    maps_url: Optional[str] = None
+    source_query: Optional[str] = None
+
+
+class ProspectBulkCreate(BaseModel):
+    prospects: List[ProspectCreate]
+
+
+class Prospect(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    place_id: str
+    name: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    rating: Optional[float] = None
+    maps_url: Optional[str] = None
+    source_query: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @api_router.get("/")
@@ -296,29 +325,77 @@ async def search_places(q: str, _: bool = Depends(verify_admin)):
     if not GOOGLE_PLACES_API_KEY:
         raise HTTPException(status_code=500, detail="Το Google Places API key δεν έχει ρυθμιστεί")
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        search_resp = await client.post(
-            f"{PLACES_BASE}/places:searchText",
-            headers={
-                "Content-Type": "application/json",
-                "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
-                "X-Goog-FieldMask": "places.id",
-            },
-            json={"textQuery": query, "pageSize": 15, "languageCode": "el"},
-        )
-        if search_resp.is_error:
-            detail = search_resp.json().get("error", {}).get("message", "Google Text Search error") if search_resp.text else "Google Text Search error"
-            raise HTTPException(status_code=502, detail=detail)
+    all_place_ids: List[str] = []
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        page_token = None
+        # Loop through every page Google returns (no artificial result cap);
+        # a generous page-count safety net just guards against a runaway loop.
+        for _page in range(10):
+            body = {"textQuery": query, "pageSize": 20, "languageCode": "el"}
+            if page_token:
+                body["pageToken"] = page_token
+            search_resp = await client.post(
+                f"{PLACES_BASE}/places:searchText",
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+                    "X-Goog-FieldMask": "places.id,nextPageToken",
+                },
+                json=body,
+            )
+            if search_resp.is_error:
+                if not all_place_ids:
+                    detail = search_resp.json().get("error", {}).get("message", "Google Text Search error") if search_resp.text else "Google Text Search error"
+                    raise HTTPException(status_code=502, detail=detail)
+                break
 
-        place_ids = [p["id"] for p in search_resp.json().get("places", []) if p.get("id")][:15]
+            data = search_resp.json()
+            all_place_ids.extend(p["id"] for p in data.get("places", []) if p.get("id"))
+            page_token = data.get("nextPageToken")
+            if not page_token:
+                break
+            # A freshly issued pageToken needs a moment before Google accepts it.
+            await asyncio.sleep(2)
+
+        seen = set()
+        unique_ids = [pid for pid in all_place_ids if not (pid in seen or seen.add(pid))]
+
         results: List[PlaceResult] = []
-        for place_id in place_ids:
-            try:
-                results.append(await _get_place_details(client, place_id))
-            except HTTPException:
-                continue
+        batch_size = 10
+        for i in range(0, len(unique_ids), batch_size):
+            batch = unique_ids[i:i + batch_size]
+            batch_results = await asyncio.gather(
+                *(_get_place_details(client, pid) for pid in batch), return_exceptions=True
+            )
+            results.extend(r for r in batch_results if isinstance(r, PlaceResult))
 
     return PlaceSearchResponse(query=query, results=results)
+
+
+@api_router.post("/admin/prospects/bulk", response_model=List[Prospect])
+async def add_prospects(body: ProspectBulkCreate, _: bool = Depends(verify_admin)):
+    if not body.prospects:
+        raise HTTPException(status_code=400, detail="Δεν στάλθηκαν υποψήφιοι πελάτες")
+    created: List[Prospect] = []
+    for item in body.prospects:
+        existing = await db.prospects.find_one({"place_id": item.place_id}, {"_id": 0})
+        if existing:
+            continue
+        prospect = Prospect(**item.model_dump())
+        doc = prospect.model_dump()
+        doc["created_at"] = doc["created_at"].isoformat()
+        await db.prospects.insert_one(doc)
+        created.append(prospect)
+    return created
+
+
+@api_router.get("/admin/prospects", response_model=List[Prospect])
+async def get_prospects(_: bool = Depends(verify_admin)):
+    docs = await db.prospects.find({}, {"_id": 0}).sort("created_at", -1).to_list(5000)
+    for d in docs:
+        if isinstance(d.get('created_at'), str):
+            d['created_at'] = datetime.fromisoformat(d['created_at'])
+    return docs
 
 
 app.include_router(api_router)
