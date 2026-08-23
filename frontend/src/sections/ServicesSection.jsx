@@ -82,7 +82,7 @@ export default function ServicesSection() {
   return (
     <section id="services" data-testid="services-section" className="py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-6 md:px-10">
-          <div>
+          <Reveal y={24}>
             <Kicker waypoint="services">Υπηρεσίες</Kicker>
             <h2
               data-testid="services-headline"
@@ -93,19 +93,21 @@ export default function ServicesSection() {
                 μπορούμε να το <span className="text-baby-dark italic">χτίσουμε.</span>
               </span>
             </h2>
-          </div>
+          </Reveal>
 
-          <div className="mt-10 md:mt-12">
+          <Reveal delay={0.1} className="mt-10 md:mt-12">
             <p className="text-xs uppercase tracking-[0.25em] font-semibold text-ink/50">
               Η πλήρης λίστα — ομαδοποιημένη με βάση τι σημαίνει για εσένα
             </p>
-          </div>
+          </Reveal>
           <div className="mt-5 space-y-6" data-testid="services-categories">
             {categories.map((cat) => (
               <div key={cat.slug} data-testid={`services-category-${cat.slug}`}>
-                <p className="text-sm font-display font-semibold text-baby-dark tracking-tight">
-                  {cat.name}
-                </p>
+                <Reveal y={16} duration={0.4}>
+                  <p className="text-sm font-display font-semibold text-baby-dark tracking-tight">
+                    {cat.name}
+                  </p>
+                </Reveal>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {cat.services.map((s, i) => (
                     <Reveal key={s.n} delay={0.05 * i} margin="200px" duration={0.35}>
@@ -130,8 +132,9 @@ export default function ServicesSection() {
           </div>
 
           <div className="mt-10 md:mt-12">
+            <Reveal y={30} scale={0.97}>
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 rounded-[2rem] bg-baby-light border border-baby/40 px-6 md:px-10 py-7 md:py-9 relative overflow-hidden">
-              <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-baby/40 blur-3xl" />
+              <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-baby/40 blur-3xl animate-float-soft" />
               <div className="relative">
                 <h3 className="font-display text-2xl md:text-3xl font-medium tracking-tighter">
                   Δεν είσαι σίγουρος τι χρειάζεσαι;
@@ -152,6 +155,7 @@ export default function ServicesSection() {
                 </button>
               </Magnetic>
             </div>
+            </Reveal>
           </div>
         </div>
     </section>

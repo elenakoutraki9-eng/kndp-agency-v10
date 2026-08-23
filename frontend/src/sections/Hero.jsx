@@ -20,6 +20,13 @@ export default function Hero(props) {
   const imgMX = useTransform(mx, [-1, 1], [-10, 10]);
   const imgMY = useTransform(my, [-1, 1], [-8, 8]);
 
+  // "PC window closing" effect as the user scrolls away from the hero:
+  // the visual first collapses vertically (like a window shade), fades out,
+  // then snaps in horizontally near the end — mimicking a window closing.
+  const winScaleY = useTransform(scrollYProgress, [0.1, 0.8], [1, 0.03]);
+  const winScaleX = useTransform(scrollYProgress, [0.5, 0.9], [1, 0.35]);
+  const winOpacity = useTransform(scrollYProgress, [0.12, 0.72], [1, 0]);
+
   const [demoActive, setDemoActive] = useState(false);
 
   return (
@@ -90,8 +97,15 @@ export default function Hero(props) {
 
         <div className="lg:col-span-5 relative top-[4px] md:-top-[4px] lg:-top-[12px]">
           <motion.div
-            style={{ x: isMobile ? 0 : imgMX, y: isMobile ? 0 : imgMY }}
-            className="w-full origin-top"
+            style={{
+              x: isMobile ? 0 : imgMX,
+              y: isMobile ? 0 : imgMY,
+              scaleY: isMobile ? 1 : winScaleY,
+              scaleX: isMobile ? 1 : winScaleX,
+              opacity: isMobile ? 1 : winOpacity,
+              transformOrigin: "center center",
+            }}
+            className="w-full origin-top will-change-transform"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 24 }}

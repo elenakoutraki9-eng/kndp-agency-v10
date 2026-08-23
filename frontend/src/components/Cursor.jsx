@@ -1,27 +1,44 @@
 import { useEffect, useState } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion, useMotionValue } from "framer-motion";
 
 export default function Cursor() {
   const [enabled, setEnabled] = useState(false);
   const [hovering, setHovering] = useState(false);
+  const [down, setDown] = useState(false);
+  // Position tracked directly (no spring) so the dot sits exactly on the
+  // pointer — no trailing / follow-up lag.
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
-  const sx = useSpring(x, { stiffness: 500, damping: 40, mass: 0.4 });
-  const sy = useSpring(y, { stiffness: 500, damping: 40, mass: 0.4 });
 
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return;
     setEnabled(true);
+
+    // The blue dot IS the cursor — hide the native OS cursor everywhere.
+    const style = document.createElement("style");
+    style.setAttribute("data-cursor-hide", "true");
+    style.textContent = "*, *::before, *::after { cursor: none !important; }";
+    document.head.appendChild(style);
+
     const move = (e) => {
       x.set(e.clientX);
       y.set(e.clientY);
     };
-    const over = (e) => setHovering(!!e.target.closest("a,button,[data-cursor]"));
+    const over = (e) =>
+      setHovering(!!e.target.closest("a,button,input,textarea,select,[data-cursor]"));
+    const onDown = () => setDown(true);
+    const onUp = () => setDown(false);
+
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseover", over);
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("mouseup", onUp);
     return () => {
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseover", over);
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("mouseup", onUp);
+      style.remove();
     };
   }, [x, y]);
 
@@ -32,15 +49,13 @@ export default function Cursor() {
       aria-hidden
       data-testid="custom-cursor"
       className="pointer-events-none fixed left-0 top-0 z-[9999] hidden md:block"
-      style={{ x: sx, y: sy }}
+      style={{ x, y }}
     >
-      <motion.div
-        animate={{
-          scale: hovering ? 2.2 : 1,
-          opacity: hovering ? 0.9 : 0.5,
-        }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
-        className="h-8 w-8 -ml-4 -mt-4 rounded-full border-2 border-baby-dark/70 bg-baby/25"
+      {/* Small blue dot, matching the accent dot next to the KNDP logo */}
+      <motion.span
+        animate={{ scale: down ? 0.7 : hovering ? 2.6 : 1 }}
+        transition={{ type: "spring", stiffness: 650, damping: 28, mass: 0.3 }}
+        className="block h-3 w-3 -ml-1.5 -mt-1.5 rounded-full bg-baby shadow-[0_0_14px_rgba(120,170,255,0.75)]"
       />
     </motion.div>
   );
