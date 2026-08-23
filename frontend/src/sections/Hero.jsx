@@ -20,12 +20,14 @@ export default function Hero(props) {
   const imgMX = useTransform(mx, [-1, 1], [-10, 10]);
   const imgMY = useTransform(my, [-1, 1], [-8, 8]);
 
-  // "PC window closing" effect as the user scrolls away from the hero:
-  // the visual first collapses vertically (like a window shade), fades out,
-  // then snaps in horizontally near the end — mimicking a window closing.
-  const winScaleY = useTransform(scrollYProgress, [0.1, 0.8], [1, 0.03]);
-  const winScaleX = useTransform(scrollYProgress, [0.5, 0.9], [1, 0.35]);
-  const winOpacity = useTransform(scrollYProgress, [0.12, 0.72], [1, 0]);
+  // macOS "genie" minimize toward the bottom (like sucking into the dock):
+  // as the user scrolls, the window is pulled downward while pinching into a
+  // thin point at its bottom edge, then fades out near the end. Driven
+  // gradually and continuously by scroll progress.
+  const genieScaleX = useTransform(scrollYProgress, [0, 0.85], [1, 0.05]);
+  const genieScaleY = useTransform(scrollYProgress, [0, 0.85], [1, 0.14]);
+  const genieY = useTransform(scrollYProgress, [0, 0.95], [0, 200]);
+  const genieOpacity = useTransform(scrollYProgress, [0.55, 0.92], [1, 0]);
 
   const [demoActive, setDemoActive] = useState(false);
 
@@ -99,13 +101,13 @@ export default function Hero(props) {
           <motion.div
             style={{
               x: isMobile ? 0 : imgMX,
-              y: isMobile ? 0 : imgMY,
-              scaleY: isMobile ? 1 : winScaleY,
-              scaleX: isMobile ? 1 : winScaleX,
-              opacity: isMobile ? 1 : winOpacity,
-              transformOrigin: "center center",
+              y: isMobile ? 0 : genieY,
+              scaleX: isMobile ? 1 : genieScaleX,
+              scaleY: isMobile ? 1 : genieScaleY,
+              opacity: isMobile ? 1 : genieOpacity,
+              transformOrigin: "bottom center",
             }}
-            className="w-full origin-top will-change-transform"
+            className="w-full origin-bottom will-change-transform"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 24 }}
