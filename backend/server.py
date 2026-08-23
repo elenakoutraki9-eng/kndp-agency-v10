@@ -10,6 +10,7 @@ from typing import List, Optional
 import uuid
 import json
 import re
+import httpx
 from datetime import datetime, timezone
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
@@ -23,6 +24,9 @@ db = client[os.environ['DB_NAME']]
 
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'kndp2025')
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+GOOGLE_PLACES_API_KEY = os.environ.get('GOOGLE_PLACES_API_KEY')
+PLACES_BASE = "https://places.googleapis.com/v1"
+PLACES_DETAILS_MASK = "id,displayName,formattedAddress,nationalPhoneNumber,internationalPhoneNumber,websiteUri,rating,googleMapsUri"
 
 # Categories KNDP can build for a business (Greek labels shown to the user).
 IDEA_CATEGORIES = [
@@ -79,6 +83,21 @@ class ContactMessageCreate(BaseModel):
 class ContactUpdate(BaseModel):
     status: Optional[str] = None
     notes: Optional[str] = None
+
+
+class PlaceResult(BaseModel):
+    place_id: str
+    name: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    rating: Optional[float] = None
+    maps_url: Optional[str] = None
+
+
+class PlaceSearchResponse(BaseModel):
+    query: str
+    results: List[PlaceResult]
 
 
 @api_router.get("/")
@@ -247,6 +266,59 @@ async def update_contact(contact_id: str, body: ContactUpdate, _: bool = Depends
     if isinstance(doc.get('contacted_at'), str):
         doc['contacted_at'] = datetime.fromisoformat(doc['contacted_at'])
     return doc
+
+
+async def _get_place_details(client: httpx.AsyncClient, place_id: str) -> PlaceResult:
+    resp = await client.get(
+        f"{PLACES_BASE}/places/{place_id}",
+        headers={"X-Goog-Api-Key": GOOGLE_PLACES_API_KEY, "X-Goog-FieldMask": PLACES_DETAILS_MASK},
+    )
+    if resp.is_error:
+        raise HTTPException(status_code=502, detail="Google Place Details error")
+    p = resp.json()
+    display = p.get("displayName") or {}
+    return PlaceResult(
+        place_id=p.get("id", place_id),
+        name=display.get("text"),
+        address=p.get("formattedAddress"),
+        phone=p.get("internationalPhoneNumber") or p.get("nationalPhoneNumber"),
+        website=p.get("websiteUri"),
+        rating=p.get("rating"),
+        maps_url=p.get("googleMapsUri"),
+    )
+
+
+@api_router.get("/admin/places/search", response_model=PlaceSearchResponse)
+async def search_places(q: str, _: bool = Depends(verify_admin)):
+    query = (q or "").strip()
+    if len(query) < 2:
+        raise HTTPException(status_code=400, detail="Η αναζήτηση χρειάζεται τουλάχιστον 2 χαρακτήρες")
+    if not GOOGLE_PLACES_API_KEY:
+        raise HTTPException(status_code=500, detail="Το Google Places API key δεν έχει ρυθμιστεί")
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        search_resp = await client.post(
+            f"{PLACES_BASE}/places:searchText",
+            headers={
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+                "X-Goog-FieldMask": "places.id",
+            },
+            json={"textQuery": query, "pageSize": 15, "languageCode": "el"},
+        )
+        if search_resp.is_error:
+            detail = search_resp.json().get("error", {}).get("message", "Google Text Search error") if search_resp.text else "Google Text Search error"
+            raise HTTPException(status_code=502, detail=detail)
+
+        place_ids = [p["id"] for p in search_resp.json().get("places", []) if p.get("id")][:15]
+        results: List[PlaceResult] = []
+        for place_id in place_ids:
+            try:
+                results.append(await _get_place_details(client, place_id))
+            except HTTPException:
+                continue
+
+    return PlaceSearchResponse(query=query, results=results)
 
 
 app.include_router(api_router)
